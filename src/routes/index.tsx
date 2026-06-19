@@ -39,28 +39,21 @@ export const Route = createFileRoute("/")({
 });
 
 function Landing() {
-  // If signed in, fast-forward to home.
-  const [checking, setChecking] = useState(true);
+  // If signed in, fast-forward to home — but always render the landing
+  // immediately so the page is never stuck on a loading screen.
   useEffect(() => {
     let mounted = true;
-    supabase.auth.getUser().then(({ data }) => {
-      if (!mounted) return;
-      if (data.user) {
-        window.location.replace("/home");
-      } else {
-        setChecking(false);
-      }
-    });
-    return () => { mounted = false; };
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (!mounted) return;
+        if (data.session?.user) window.location.replace("/home");
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
   }, []);
-
-  if (checking) {
-    return (
-      <main className="min-h-[100svh] flex items-center justify-center">
-        <p className="serif-italic text-rust text-lg">Our Journey</p>
-      </main>
-    );
-  }
 
   return (
     <main className="relative z-10 min-h-[100svh] flex flex-col">
