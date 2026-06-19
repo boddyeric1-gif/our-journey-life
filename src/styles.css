@@ -1,12 +1,18 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
+@import "@fontsource/instrument-serif/400.css";
+@import "@fontsource/instrument-serif/400-italic.css";
+@import "@fontsource/instrument-sans/400.css";
+@import "@fontsource/instrument-sans/500.css";
+@import "@fontsource/instrument-sans/600.css";
 
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Relationship Quest — Warm Archive design system.
- * Cream canvas, deep ink text, burnt-rust accent, editorial serif headlines.
+ * Our Journey — "Soft Dusk" design system.
+ * Deep plum candlelit interior. Lavender shadows, dusk-rose accents,
+ * candlelight foreground. Mobile-first. Quiet, literary, restrained.
  * All colors use oklch.
  */
 
@@ -66,71 +72,79 @@
 
   --font-serif: "Instrument Serif", ui-serif, Georgia, serif;
   --font-sans: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+
+  --ease-quiet: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --duration-soft: 280ms;
 }
 
 :root {
   --radius: 1.25rem;
 
-  /* canvas family — warm cream paper */
-  --canvas: oklch(0.975 0.012 80);
-  --canvas-deep: oklch(0.945 0.018 75);
+  /* canvas family — deep plum interior, like a candlelit room */
+  --canvas: oklch(0.21 0.045 312);          /* #1A1426 deep plum */
+  --canvas-deep: oklch(0.31 0.055 312);     /* #3B2B4A raised plum */
 
-  /* ink family — deep walnut */
-  --ink: oklch(0.22 0.025 45);
-  --ink-soft: oklch(0.38 0.025 45);
-  --ink-mute: oklch(0.55 0.02 50);
+  /* ink family — warm candlelight */
+  --ink: oklch(0.92 0.045 75);              /* #E8C9B0 candlelight */
+  --ink-soft: oklch(0.76 0.038 60);
+  --ink-mute: oklch(0.58 0.028 50);
 
   /* accents */
-  --rust: oklch(0.46 0.14 35);          /* burnt-rust headline accent */
-  --clay: oklch(0.68 0.09 45);          /* warm clay */
-  --ochre: oklch(0.78 0.13 75);         /* honey */
-  --sage: oklch(0.62 0.05 145);         /* dusty sage */
+  --rust: oklch(0.71 0.075 32);             /* #C98A7D dusk rose — primary */
+  --clay: oklch(0.66 0.085 25);             /* warmer rose */
+  --ochre: oklch(0.82 0.09 80);             /* candle gold */
+  --sage: oklch(0.62 0.045 295);            /* lavender mist */
 
   --background: var(--canvas);
   --foreground: var(--ink);
-  --card: oklch(0.985 0.008 80);
+  --card: oklch(0.27 0.05 312);
   --card-foreground: var(--ink);
-  --popover: oklch(0.985 0.008 80);
+  --popover: oklch(0.27 0.05 312);
   --popover-foreground: var(--ink);
   --primary: var(--rust);
-  --primary-foreground: var(--canvas);
+  --primary-foreground: oklch(0.18 0.04 312);
   --secondary: var(--canvas-deep);
   --secondary-foreground: var(--ink);
   --muted: var(--canvas-deep);
   --muted-foreground: var(--ink-mute);
   --accent: var(--canvas-deep);
   --accent-foreground: var(--ink);
-  --destructive: oklch(0.55 0.18 25);
-  --destructive-foreground: var(--canvas);
-  --border: oklch(0.88 0.015 70);
-  --input: oklch(0.92 0.012 70);
-  --ring: oklch(0.46 0.14 35 / 35%);
+  --destructive: oklch(0.62 0.18 25);
+  --destructive-foreground: var(--ink);
+  --border: oklch(1 0 0 / 0.08);
+  --input: oklch(1 0 0 / 0.10);
+  --ring: oklch(0.71 0.075 32 / 0.45);
 }
 
+/* The Soft Dusk system is dark by nature; .dark mirrors :root for shadcn
+   components that flip themes. There's no "light mode" in this design. */
 .dark {
-  --canvas: oklch(0.18 0.015 45);
-  --canvas-deep: oklch(0.23 0.018 45);
-  --ink: oklch(0.94 0.012 80);
-  --ink-soft: oklch(0.78 0.015 70);
-  --ink-mute: oklch(0.62 0.015 60);
-  --rust: oklch(0.65 0.14 38);
+  --canvas: oklch(0.21 0.045 312);
+  --canvas-deep: oklch(0.31 0.055 312);
+  --ink: oklch(0.92 0.045 75);
+  --ink-soft: oklch(0.76 0.038 60);
+  --ink-mute: oklch(0.58 0.028 50);
+  --rust: oklch(0.71 0.075 32);
+  --clay: oklch(0.66 0.085 25);
+  --ochre: oklch(0.82 0.09 80);
+  --sage: oklch(0.62 0.045 295);
   --background: var(--canvas);
   --foreground: var(--ink);
-  --card: oklch(0.22 0.02 45);
+  --card: oklch(0.27 0.05 312);
   --card-foreground: var(--ink);
-  --popover: oklch(0.22 0.02 45);
+  --popover: oklch(0.27 0.05 312);
   --popover-foreground: var(--ink);
   --primary: var(--rust);
-  --primary-foreground: oklch(0.18 0.015 45);
-  --secondary: oklch(0.26 0.02 45);
+  --primary-foreground: oklch(0.18 0.04 312);
+  --secondary: var(--canvas-deep);
   --secondary-foreground: var(--ink);
-  --muted: oklch(0.26 0.02 45);
+  --muted: var(--canvas-deep);
   --muted-foreground: var(--ink-mute);
-  --accent: oklch(0.26 0.02 45);
+  --accent: var(--canvas-deep);
   --accent-foreground: var(--ink);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 14%);
-  --ring: oklch(0.65 0.14 38 / 40%);
+  --border: oklch(1 0 0 / 0.08);
+  --input: oklch(1 0 0 / 0.10);
+  --ring: oklch(0.71 0.075 32 / 0.45);
 }
 
 @layer base {
@@ -141,41 +155,40 @@
     background-color: var(--color-canvas);
     color: var(--color-ink);
     font-family: var(--font-sans);
-    font-feature-settings: "ss01", "cv11";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    /* safe-area for native shells */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
   }
   h1, h2, h3, .font-serif {
     font-family: var(--font-serif);
     font-weight: 400;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.005em;
   }
-  /* subtle grain canvas — non-essential, render as repeating radial */
+  /* Candlelit grain — a faint warm bloom from below */
   body::before {
     content: "";
     position: fixed;
     inset: 0;
     pointer-events: none;
     z-index: 0;
+    background:
+      radial-gradient(60% 50% at 50% 110%, oklch(0.71 0.075 32 / 0.16), transparent 70%),
+      radial-gradient(80% 60% at 50% -10%, oklch(0.62 0.045 295 / 0.12), transparent 70%);
+  }
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
     background-image:
-      radial-gradient(oklch(0.7 0.05 60 / 0.04) 1px, transparent 1px);
+      radial-gradient(oklch(0.92 0.045 75 / 0.03) 1px, transparent 1px);
     background-size: 3px 3px;
-    opacity: 0.7;
-  }
-  /* reusable card surfaces */
-  .surface-card {
-    background-color: var(--color-card);
-    border-radius: var(--radius-2xl);
-    box-shadow:
-      0 1px 0 0 oklch(1 0 0 / 0.6) inset,
-      0 1px 2px oklch(0.2 0.02 45 / 0.04),
-      0 12px 32px -12px oklch(0.2 0.02 45 / 0.08);
-    border: 1px solid oklch(0.2 0.02 45 / 0.06);
-  }
-  .surface-card-quiet {
-    background-color: var(--color-canvas-deep);
-    border-radius: var(--radius-xl);
-    border: 1px solid oklch(0.2 0.02 45 / 0.05);
+    opacity: 0.5;
   }
 }
 
@@ -183,5 +196,27 @@
   .text-balance { text-wrap: balance; }
   .text-pretty { text-wrap: pretty; }
   .serif-italic { font-family: var(--font-serif); font-style: italic; }
-  .hairline { border-color: oklch(0.2 0.02 45 / 0.08); }
+  .hairline { border-color: oklch(1 0 0 / 0.06); }
+  .ease-quiet { transition-timing-function: var(--ease-quiet); }
+}
+
+@utility surface-card {
+  background-color: var(--color-card);
+  border-radius: var(--radius-2xl);
+  border: 1px solid oklch(1 0 0 / 0.06);
+  box-shadow:
+    0 1px 0 0 oklch(1 0 0 / 0.04) inset,
+    0 24px 60px -28px oklch(0 0 0 / 0.55);
+}
+
+@utility surface-card-quiet {
+  background-color: var(--color-canvas-deep);
+  border-radius: var(--radius-xl);
+  border: 1px solid oklch(1 0 0 / 0.05);
+}
+
+@utility candle-glow {
+  box-shadow:
+    0 0 0 1px oklch(0.71 0.075 32 / 0.25),
+    0 12px 40px -12px oklch(0.71 0.075 32 / 0.35);
 }
