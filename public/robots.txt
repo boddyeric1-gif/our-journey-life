@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /home
+Disallow: /daily
+Disallow: /profile
+Disallow: /onboarding
+Disallow: /quests
+Disallow: /join/
+
+Sitemap: https://heart-sync-grow.lovable.app/sitemap.xml

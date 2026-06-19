@@ -1,0 +1,300 @@
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { XP_FOR, promptPositionFor, todayUTC, localToday, daysBetween, daysSinceUTC } from "@/lib/xp";
+
+// One unified server fn returning everything Home needs.
+export const getHomeState = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const promptToday = todayUTC();
+
+    // profile + ensure user_streaks row exists
+    const { data: profile } = await supabase
+      .from("profiles").select("*").eq("id", userId).maybeSingle();
+    await supabaseAdmin.from("user_streaks").upsert({ user_id: userId }, { onConflict: "user_id" });
+
+    const userTz = (profile as any)?.timezone ?? "UTC";
+    const userLocalToday = localToday(userTz);
+
+    // Parallel batch 1: streak, xp totals (own)
+    const [{ data: userStreak }, { data: xpRows }] = await Promise.all([
+      supabase.from("user_streaks").select("*").eq("user_id", userId).maybeSingle(),
+      supabase.from("xp_events").select("amount").eq("user_id", userId),
+    ]);
+    const totalXp = (xpRows ?? []).reduce((s, r) => s + (r.amount ?? 0), 0);
+
+    if (!profile?.current_couple_id) {
+      return {
+        kind: "unpaired" as const,
+        profile, totalXp,
+        userStreak: userStreak ?? null,
+        today: promptToday,
+        userLocalToday,
+      };
+    }
+
+    const coupleId = profile.current_couple_id;
+
+    // Parallel batch 2: couple, members, couple-streak upsert
+    await supabaseAdmin.from("couple_streaks").upsert({ couple_id: coupleId }, { onConflict: "couple_id" });
+    const [{ data: couple }, { data: members }, { data: coupleStreak }] = await Promise.all([
+      supabase.from("couples").select("*").eq("id", coupleId).maybeSingle(),
+      supabase.from("couple_members").select("user_id").eq("couple_id", coupleId),
+      supabase.from("couple_streaks").select("*").eq("couple_id", coupleId).maybeSingle(),
+    ]);
+    const partnerId = (members ?? []).find(m => m.user_id !== userId)?.user_id ?? null;
+
+    const position = couple ? promptPositionFor(couple.created_at as string, promptToday) : 1;
+
+    // Parallel batch 3
+    const [
+      partnerRes,
+      pendingInviteRes,
+      promptRes,
+      myResponseRes,
+      partnerResponseCountRes,
+      partnerResponseAuthRes,
+      soloTodayRes,
+      partnerXpRes,
+      lettersRes,
+      completionsRes,
+      chaptersRes,
+    ] = await Promise.all([
+      partnerId
+        ? supabase.from("profiles").select("id, display_name, avatar_url").eq("id", partnerId).maybeSingle()
+        : Promise.resolve({ data: null }),
+      !partnerId
+        ? supabase.from("invites").select("code").eq("couple_id", coupleId).is("used_by", null)
+            .order("created_at", { ascending: false }).limit(1).maybeSingle()
+        : Promise.resolve({ data: null }),
+      supabase.from("daily_prompts").select("*").eq("position", position).maybeSingle(),
+      supabase.from("daily_responses").select("*")
+        .eq("couple_id", coupleId).eq("prompt_date", promptToday).eq("user_id", userId).maybeSingle(),
+      // Service-role count of partner rows: tells us "sealed" without leaking body
+      partnerId
+        ? supabaseAdmin.from("daily_responses").select("id", { count: "exact", head: true })
+            .eq("couple_id", coupleId).eq("prompt_date", promptToday).eq("user_id", partnerId)
+        : Promise.resolve({ count: 0 }),
+      // The actual partner row — RLS only returns it once both submitted
+      partnerId
+        ? supabase.from("daily_responses").select("*")
+            .eq("couple_id", coupleId).eq("prompt_date", promptToday).eq("user_id", partnerId).maybeSingle()
+        : Promise.resolve({ data: null }),
+      supabase.from("solo_reflections").select("id, body")
+        .eq("user_id", userId).eq("prompt_date", promptToday).maybeSingle(),
+      partnerId
+        ? supabase.from("xp_events").select("amount").eq("user_id", partnerId)
+        : Promise.resolve({ data: [] }),
+      supabase.from("letters").select("*").eq("couple_id", coupleId)
+        .order("created_at", { ascending: false }).limit(20),
+      supabase.from("quest_step_completions").select("step_id").eq("user_id", userId),
+      supabase.from("quest_chapters").select("id, slug, title, summary, position, category_id").order("position"),
+    ]);
+
+    const partner = (partnerRes.data as any) ?? null;
+    const pendingInvite = (pendingInviteRes.data as any) ?? null;
+    const prompt = promptRes.data ?? null;
+    const myResponse = myResponseRes.data ?? null;
+    const partnerHasSubmitted = ((partnerResponseCountRes as any)?.count ?? 0) > 0;
+    const partnerResponseRaw = partnerResponseAuthRes.data ?? null;
+    // Defense in depth — body only when both submitted and we have our row.
+    const partnerResponse = myResponse && partnerResponseRaw
+      ? partnerResponseRaw
+      : (partnerHasSubmitted
+          ? { id: null as string | null, user_id: partnerId, body: null as string | null, sealed: true }
+          : null);
+
+    const partnerTotalXp = (partnerXpRes.data ?? []).reduce((s: number, r: any) => s + (r.amount ?? 0), 0);
+
+    // next quest step
+    const completedSet = new Set((completionsRes.data ?? []).map((c: any) => c.step_id));
+    let nextStep: {
+      chapterSlug: string; chapterTitle: string; stepId: string;
+      position: number; teaching: string; prompt: string; kind: string;
+    } | null = null;
+    for (const ch of chaptersRes.data ?? []) {
+      const { data: steps } = await supabase
+        .from("quest_steps").select("*").eq("chapter_id", ch.id).order("position");
+      const inc = (steps ?? []).find(s => !completedSet.has(s.id));
+      if (inc) {
+        nextStep = {
+          chapterSlug: ch.slug, chapterTitle: ch.title, stepId: inc.id,
+          position: inc.position, teaching: inc.teaching, prompt: inc.prompt, kind: inc.kind,
+        };
+        break;
+      }
+    }
+
+    const daysTogether = couple?.paired_at
+      ? daysSinceUTC((couple.paired_at as string).slice(0, 10), promptToday) + 1
+      : (couple?.created_at ? daysSinceUTC((couple.created_at as string).slice(0, 10), promptToday) + 1 : 1);
+
+    return {
+      kind: "paired" as const,
+      profile, couple, partner, pendingInvite,
+      prompt, myResponse, partnerResponse,
+      partnerHasSubmitted,
+      soloToday: soloTodayRes.data ?? null,
+      userStreak: userStreak ?? null,
+      coupleStreak: coupleStreak ?? null,
+      totalXp, partnerTotalXp,
+      letters: lettersRes.data ?? [],
+      nextStep,
+      today: promptToday,
+      userLocalToday,
+      daysTogether,
+    };
+  });
+
+// Submit my daily response. Idempotent XP via dedupe_key.
+export const submitDailyResponse = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({
+    promptId: z.string().uuid(),
+    body: z.string().min(1).max(1000),
+  }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const promptDate = todayUTC();
+
+    const { data: profile } = await supabase
+      .from("profiles").select("current_couple_id, timezone").eq("id", userId).maybeSingle();
+    if (!profile?.current_couple_id) throw new Error("You're not in a couple yet.");
+    const coupleId = profile.current_couple_id;
+    const userTz = (profile as any).timezone ?? "UTC";
+
+    const { error } = await supabase.from("daily_responses").upsert({
+      couple_id: coupleId, user_id: userId,
+      prompt_id: data.promptId, prompt_date: promptDate,
+      body: data.body.trim(),
+    }, { onConflict: "couple_id,user_id,prompt_date" });
+    if (error) throw new Error(error.message);
+
+    const { error: dailyXpError } = await supabaseAdmin.from("xp_events").upsert({
+      user_id: userId, couple_id: coupleId,
+      kind: "daily", amount: XP_FOR.daily, ref_id: data.promptId,
+      dedupe_key: `daily:${promptDate}`,
+    }, { onConflict: "user_id,kind,dedupe_key", ignoreDuplicates: true });
+    if (dailyXpError) {
+      console.error("[xp_events] daily upsert failed", dailyXpError);
+      throw new Error(`XP write failed: ${dailyXpError.message}`);
+    }
+
+    await advanceUserStreak(supabaseAdmin, userId, userTz);
+    await maybeAdvanceCoupleStreak(supabaseAdmin, coupleId, promptDate);
+
+    return { ok: true };
+  });
+
+export const submitSoloReflection = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({
+    promptId: z.string().uuid().nullable(),
+    body: z.string().min(1).max(2000),
+  }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const promptDate = todayUTC();
+
+    const { data: profile } = await supabase
+      .from("profiles").select("current_couple_id, timezone").eq("id", userId).maybeSingle();
+    const userTz = (profile as any)?.timezone ?? "UTC";
+
+    const { data: existing } = await supabase
+      .from("solo_reflections").select("id")
+      .eq("user_id", userId).eq("prompt_date", promptDate).maybeSingle();
+    if (existing) {
+      await supabase.from("solo_reflections").update({ body: data.body.trim() }).eq("id", existing.id);
+    } else {
+      await supabase.from("solo_reflections").insert({
+        user_id: userId, prompt_date: promptDate,
+        parent_prompt_id: data.promptId, body: data.body.trim(),
+      });
+      const { error: soloXpError } = await supabaseAdmin.from("xp_events").upsert({
+        user_id: userId, kind: "solo_reflection", amount: XP_FOR.solo_reflection,
+        dedupe_key: `solo:${promptDate}`,
+      }, { onConflict: "user_id,kind,dedupe_key", ignoreDuplicates: true });
+      if (soloXpError) {
+        console.error("[xp_events] solo_reflection upsert failed", soloXpError);
+        throw new Error(`XP write failed: ${soloXpError.message}`);
+      }
+    }
+
+    await advanceUserStreak(supabaseAdmin, userId, userTz);
+    if (profile?.current_couple_id) {
+      await maybeAdvanceCoupleStreak(supabaseAdmin, profile.current_couple_id, promptDate);
+    }
+    return { ok: true };
+  });
+
+async function advanceUserStreak(supabase: any, userId: string, userTz: string) {
+  const today = localToday(userTz);
+  const { data: s } = await supabase
+    .from("user_streaks").select("*").eq("user_id", userId).maybeSingle();
+  if (!s) {
+    await supabase.from("user_streaks").insert({
+      user_id: userId, current_streak: 1, longest_streak: 1, last_active_date: today,
+    });
+    return;
+  }
+  if (s.last_active_date === today) return;
+  const diff = s.last_active_date ? daysBetween(s.last_active_date, today) : null;
+
+  let newStreak = 1;
+  let freezes = s.freezes_available ?? 0;
+  if (diff === 1) newStreak = (s.current_streak ?? 0) + 1;
+  else if (diff === 2 && freezes > 0) {
+    newStreak = (s.current_streak ?? 0) + 1;
+    freezes -= 1;
+  } else newStreak = 1;
+
+  const longest = Math.max(s.longest_streak ?? 0, newStreak);
+  await supabase.from("user_streaks").update({
+    current_streak: newStreak,
+    longest_streak: longest,
+    last_active_date: today,
+    freezes_available: freezes,
+  }).eq("user_id", userId);
+}
+
+async function maybeAdvanceCoupleStreak(supabase: any, coupleId: string, promptDate: string) {
+  const { data: members } = await supabase
+    .from("couple_members").select("user_id").eq("couple_id", coupleId);
+  if (!members || members.length < 2) return;
+
+  let bothActive = true;
+  for (const m of members) {
+    const { count: rCount } = await supabase
+      .from("daily_responses").select("id", { count: "exact", head: true })
+      .eq("user_id", m.user_id).eq("couple_id", coupleId).eq("prompt_date", promptDate);
+    if (rCount && rCount > 0) continue;
+    const { count: sCount } = await supabase
+      .from("solo_reflections").select("id", { count: "exact", head: true })
+      .eq("user_id", m.user_id).eq("prompt_date", promptDate);
+    if (sCount && sCount > 0) continue;
+    bothActive = false;
+    break;
+  }
+  if (!bothActive) return;
+
+  const { data: cs } = await supabase
+    .from("couple_streaks").select("*").eq("couple_id", coupleId).maybeSingle();
+  if (!cs) {
+    await supabase.from("couple_streaks").insert({
+      couple_id: coupleId, current_streak: 1, longest_streak: 1, last_both_active_date: promptDate,
+    });
+    return;
+  }
+  if (cs.last_both_active_date === promptDate) return;
+  const diff = cs.last_both_active_date ? daysBetween(cs.last_both_active_date, promptDate) : null;
+  const newStreak = diff === 1 ? (cs.current_streak ?? 0) + 1 : 1;
+  const longest = Math.max(cs.longest_streak ?? 0, newStreak);
+  await supabase.from("couple_streaks").update({
+    current_streak: newStreak, longest_streak: longest, last_both_active_date: promptDate,
+  }).eq("couple_id", coupleId);
+}

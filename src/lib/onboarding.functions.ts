@@ -1,0 +1,124 @@
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { XP_FOR } from "@/lib/xp";
+
+const stage = z.enum(["dating", "engaged", "married", "long_term"]);
+const love = z.enum(["words", "acts", "gifts", "time", "touch"]);
+
+export const saveOnboarding = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({
+    displayName: z.string().min(1).max(60),
+    stage,
+    anniversary: z.string().nullable(),
+    loveLanguage: love.nullable(),
+    goals: z.array(z.string()).max(8).default([]),
+    firstLetter: z.string().max(500).nullable(),
+    timezone: z.string().max(64).optional(),
+  }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    await supabase.from("profiles").update({
+      display_name: data.displayName,
+      relationship_stage: data.stage,
+      anniversary: data.anniversary,
+      love_language: data.loveLanguage,
+      onboarded_at: new Date().toISOString(),
+      ...(data.timezone ? { timezone: data.timezone } : {}),
+    } as any).eq("id", userId);
+
+    const { data: profile } = await supabase
+      .from("profiles").select("current_couple_id").eq("id", userId).maybeSingle();
+
+    if (profile?.current_couple_id) {
+      if (data.goals.length) {
+        await supabase.from("couple_goals").upsert(
+          data.goals.map(g => ({ couple_id: profile.current_couple_id!, goal: g })),
+          { onConflict: "couple_id,goal" }
+        );
+      }
+      if (data.firstLetter && data.firstLetter.trim()) {
+        const { data: existing } = await supabase
+          .from("letters").select("id")
+          .eq("couple_id", profile.current_couple_id)
+          .eq("author_id", userId)
+          .eq("is_first_letter", true).maybeSingle();
+        if (!existing) {
+          const { data: ins } = await supabase.from("letters").insert({
+            couple_id: profile.current_couple_id,
+            author_id: userId,
+            body: data.firstLetter.trim(),
+            is_first_letter: true,
+          }).select("id").maybeSingle();
+          await supabaseAdmin.from("xp_events").upsert({
+            user_id: userId,
+            couple_id: profile.current_couple_id,
+            kind: "letter", amount: XP_FOR.letter,
+            ref_id: ins?.id ?? null,
+            dedupe_key: `first_letter:${profile.current_couple_id}`,
+          }, { onConflict: "user_id,kind,dedupe_key", ignoreDuplicates: true });
+        }
+      }
+    }
+
+    return { ok: true };
+  });
+
+export const saveFirstLetter = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({
+    coupleId: z.string().uuid(),
+    body: z.string().min(1).max(500),
+  }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: existing } = await supabase
+      .from("letters").select("id")
+      .eq("couple_id", data.coupleId)
+      .eq("author_id", userId)
+      .eq("is_first_letter", true).maybeSingle();
+    if (existing) {
+      await supabase.from("letters").update({ body: data.body.trim() }).eq("id", existing.id);
+    } else {
+      const { data: ins } = await supabase.from("letters").insert({
+        couple_id: data.coupleId, author_id: userId,
+        body: data.body.trim(), is_first_letter: true,
+      }).select("id").maybeSingle();
+      await supabaseAdmin.from("xp_events").upsert({
+        user_id: userId, couple_id: data.coupleId,
+        kind: "letter", amount: XP_FOR.letter,
+        ref_id: ins?.id ?? null,
+        dedupe_key: `first_letter:${data.coupleId}`,
+      }, { onConflict: "user_id,kind,dedupe_key", ignoreDuplicates: true });
+    }
+    return { ok: true };
+  });
+
+export const saveLetter = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({
+    body: z.string().min(1).max(2000),
+  }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: profile } = await supabase
+      .from("profiles").select("current_couple_id").eq("id", userId).maybeSingle();
+    if (!profile?.current_couple_id) throw new Error("You're not in a couple yet.");
+    const coupleId = profile.current_couple_id;
+    const { data: ins } = await supabase.from("letters").insert({
+      couple_id: coupleId, author_id: userId,
+      body: data.body.trim(), is_first_letter: false,
+    }).select("id").maybeSingle();
+    await supabaseAdmin.from("xp_events").upsert({
+      user_id: userId, couple_id: coupleId,
+      kind: "letter", amount: XP_FOR.letter,
+      ref_id: ins?.id ?? null,
+      dedupe_key: `letter:${ins?.id ?? crypto.randomUUID()}`,
+    }, { onConflict: "user_id,kind,dedupe_key", ignoreDuplicates: true });
+    return { ok: true };
+  });
