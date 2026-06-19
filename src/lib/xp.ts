@@ -84,3 +84,36 @@ export function generateInviteCode(): string {
   for (let i = 0; i < 6; i++) code += alphabet[Math.floor(Math.random() * alphabet.length)];
   return code;
 }
+
+// --- Streak transition (pure) -------------------------------------------------
+// Single source of truth for "advance a user's streak" called from any server fn.
+// Returns the next streak value, whether a freeze was spent, and which branch
+// fired (useful for telemetry + tests). Same-day is a no-op; +1 day extends;
+// +2 days spends one freeze if available, otherwise resets; anything else
+// resets to 1.
+
+export type StreakKind = "start" | "same-day" | "extend" | "freeze" | "reset";
+
+export interface AdvanceStreakInput {
+  today: string;            // YYYY-MM-DD in the user's local tz
+  lastActive: string | null;
+  current: number;
+  freezes: number;
+}
+
+export interface AdvanceStreakResult {
+  next: number;
+  freezesUsed: 0 | 1;
+  kind: StreakKind;
+}
+
+export function advanceStreak(input: AdvanceStreakInput): AdvanceStreakResult {
+  const { today, lastActive, current, freezes } = input;
+  if (!lastActive) return { next: 1, freezesUsed: 0, kind: "start" };
+  const diff = daysBetween(lastActive, today);
+  if (diff === 0) return { next: current, freezesUsed: 0, kind: "same-day" };
+  if (diff === 1) return { next: current + 1, freezesUsed: 0, kind: "extend" };
+  if (diff === 2 && freezes > 0) return { next: current + 1, freezesUsed: 1, kind: "freeze" };
+  return { next: 1, freezesUsed: 0, kind: "reset" };
+}
+
