@@ -14,16 +14,682 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      app_events: {
+        Row: {
+          couple_id: string | null
+          created_at: string
+          event: string
+          id: string
+          props: Json
+          user_id: string | null
+        }
+        Insert: {
+          couple_id?: string | null
+          created_at?: string
+          event: string
+          id?: string
+          props?: Json
+          user_id?: string | null
+        }
+        Update: {
+          couple_id?: string | null
+          created_at?: string
+          event?: string
+          id?: string
+          props?: Json
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_events_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      couple_goals: {
+        Row: {
+          couple_id: string
+          goal: string
+        }
+        Insert: {
+          couple_id: string
+          goal: string
+        }
+        Update: {
+          couple_id?: string
+          goal?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "couple_goals_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      couple_members: {
+        Row: {
+          couple_id: string
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          couple_id: string
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          couple_id?: string
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "couple_members_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      couple_streaks: {
+        Row: {
+          couple_id: string
+          current_streak: number
+          last_both_active_date: string | null
+          longest_streak: number
+        }
+        Insert: {
+          couple_id: string
+          current_streak?: number
+          last_both_active_date?: string | null
+          longest_streak?: number
+        }
+        Update: {
+          couple_id?: string
+          current_streak?: number
+          last_both_active_date?: string | null
+          longest_streak?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "couple_streaks_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: true
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      couples: {
+        Row: {
+          anniversary_date: string | null
+          bond_name: string | null
+          created_at: string
+          id: string
+          paired_at: string | null
+          status: Database["public"]["Enums"]["couple_status"]
+          subscription_tier: Database["public"]["Enums"]["subscription_tier"]
+        }
+        Insert: {
+          anniversary_date?: string | null
+          bond_name?: string | null
+          created_at?: string
+          id?: string
+          paired_at?: string | null
+          status?: Database["public"]["Enums"]["couple_status"]
+          subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
+        }
+        Update: {
+          anniversary_date?: string | null
+          bond_name?: string | null
+          created_at?: string
+          id?: string
+          paired_at?: string | null
+          status?: Database["public"]["Enums"]["couple_status"]
+          subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
+        }
+        Relationships: []
+      }
+      daily_prompts: {
+        Row: {
+          body: string
+          id: string
+          position: number
+          theme: string | null
+        }
+        Insert: {
+          body: string
+          id?: string
+          position: number
+          theme?: string | null
+        }
+        Update: {
+          body?: string
+          id?: string
+          position?: number
+          theme?: string | null
+        }
+        Relationships: []
+      }
+      daily_responses: {
+        Row: {
+          body: string
+          couple_id: string
+          created_at: string
+          id: string
+          prompt_date: string
+          prompt_id: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          couple_id: string
+          created_at?: string
+          id?: string
+          prompt_date: string
+          prompt_id: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          couple_id?: string
+          created_at?: string
+          id?: string
+          prompt_date?: string
+          prompt_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_responses_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_responses_prompt_id_fkey"
+            columns: ["prompt_id"]
+            isOneToOne: false
+            referencedRelation: "daily_prompts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      insights: {
+        Row: {
+          body: string
+          id: string
+          position: number
+          read_minutes: number
+          slug: string
+          subtitle: string | null
+          tags: string[]
+          title: string
+        }
+        Insert: {
+          body: string
+          id?: string
+          position: number
+          read_minutes?: number
+          slug: string
+          subtitle?: string | null
+          tags?: string[]
+          title: string
+        }
+        Update: {
+          body?: string
+          id?: string
+          position?: number
+          read_minutes?: number
+          slug?: string
+          subtitle?: string | null
+          tags?: string[]
+          title?: string
+        }
+        Relationships: []
+      }
+      invites: {
+        Row: {
+          code: string
+          couple_id: string
+          created_at: string
+          created_by: string
+          expires_at: string
+          id: string
+          used_at: string | null
+          used_by: string | null
+        }
+        Insert: {
+          code: string
+          couple_id: string
+          created_at?: string
+          created_by: string
+          expires_at?: string
+          id?: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Update: {
+          code?: string
+          couple_id?: string
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          id?: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invites_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      letters: {
+        Row: {
+          author_id: string
+          body: string
+          couple_id: string
+          created_at: string
+          id: string
+          is_first_letter: boolean
+          seen_at: string | null
+        }
+        Insert: {
+          author_id: string
+          body: string
+          couple_id: string
+          created_at?: string
+          id?: string
+          is_first_letter?: boolean
+          seen_at?: string | null
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          couple_id?: string
+          created_at?: string
+          id?: string
+          is_first_letter?: boolean
+          seen_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "letters_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          anniversary: string | null
+          avatar_url: string | null
+          created_at: string
+          current_couple_id: string | null
+          display_name: string | null
+          id: string
+          love_language: Database["public"]["Enums"]["love_language"] | null
+          onboarded_at: string | null
+          relationship_stage:
+            | Database["public"]["Enums"]["relationship_stage"]
+            | null
+          subscription_tier: Database["public"]["Enums"]["subscription_tier"]
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          anniversary?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          current_couple_id?: string | null
+          display_name?: string | null
+          id: string
+          love_language?: Database["public"]["Enums"]["love_language"] | null
+          onboarded_at?: string | null
+          relationship_stage?:
+            | Database["public"]["Enums"]["relationship_stage"]
+            | null
+          subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          anniversary?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          current_couple_id?: string | null
+          display_name?: string | null
+          id?: string
+          love_language?: Database["public"]["Enums"]["love_language"] | null
+          onboarded_at?: string | null
+          relationship_stage?:
+            | Database["public"]["Enums"]["relationship_stage"]
+            | null
+          subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_current_couple_fk"
+            columns: ["current_couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quest_categories: {
+        Row: {
+          accent: string | null
+          id: string
+          position: number
+          slug: string
+          subtitle: string | null
+          title: string
+        }
+        Insert: {
+          accent?: string | null
+          id?: string
+          position: number
+          slug: string
+          subtitle?: string | null
+          title: string
+        }
+        Update: {
+          accent?: string | null
+          id?: string
+          position?: number
+          slug?: string
+          subtitle?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      quest_chapters: {
+        Row: {
+          category_id: string
+          id: string
+          position: number
+          slug: string
+          summary: string | null
+          title: string
+        }
+        Insert: {
+          category_id: string
+          id?: string
+          position: number
+          slug: string
+          summary?: string | null
+          title: string
+        }
+        Update: {
+          category_id?: string
+          id?: string
+          position?: number
+          slug?: string
+          summary?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quest_chapters_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "quest_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quest_step_completions: {
+        Row: {
+          body: string | null
+          couple_id: string | null
+          created_at: string
+          id: string
+          step_id: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          couple_id?: string | null
+          created_at?: string
+          id?: string
+          step_id: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          couple_id?: string | null
+          created_at?: string
+          id?: string
+          step_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quest_step_completions_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quest_step_completions_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "quest_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quest_steps: {
+        Row: {
+          chapter_id: string
+          id: string
+          kind: Database["public"]["Enums"]["quest_step_kind"]
+          position: number
+          prompt: string
+          ritual: string | null
+          teaching: string
+          xp_reward: number
+        }
+        Insert: {
+          chapter_id: string
+          id?: string
+          kind: Database["public"]["Enums"]["quest_step_kind"]
+          position: number
+          prompt: string
+          ritual?: string | null
+          teaching: string
+          xp_reward?: number
+        }
+        Update: {
+          chapter_id?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["quest_step_kind"]
+          position?: number
+          prompt?: string
+          ritual?: string | null
+          teaching?: string
+          xp_reward?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quest_steps_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "quest_chapters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      solo_reflections: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          parent_prompt_id: string | null
+          prompt_date: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          parent_prompt_id?: string | null
+          prompt_date: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          parent_prompt_id?: string | null
+          prompt_date?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "solo_reflections_parent_prompt_id_fkey"
+            columns: ["parent_prompt_id"]
+            isOneToOne: false
+            referencedRelation: "daily_prompts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_streaks: {
+        Row: {
+          current_streak: number
+          freezes_available: number
+          last_active_date: string | null
+          longest_streak: number
+          user_id: string
+        }
+        Insert: {
+          current_streak?: number
+          freezes_available?: number
+          last_active_date?: string | null
+          longest_streak?: number
+          user_id: string
+        }
+        Update: {
+          current_streak?: number
+          freezes_available?: number
+          last_active_date?: string | null
+          longest_streak?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      xp_events: {
+        Row: {
+          amount: number
+          couple_id: string | null
+          created_at: string
+          dedupe_key: string | null
+          id: string
+          kind: Database["public"]["Enums"]["xp_kind"]
+          ref_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          couple_id?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          id?: string
+          kind: Database["public"]["Enums"]["xp_kind"]
+          ref_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          couple_id?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["xp_kind"]
+          ref_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "xp_events_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      daily_both_submitted: {
+        Args: { _couple_id: string; _prompt_date: string }
+        Returns: boolean
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_couple_member: { Args: { _couple_id: string }; Returns: boolean }
+      shares_couple_with: { Args: { _other: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
+      couple_status: "pending" | "active" | "archived"
+      love_language: "words" | "acts" | "gifts" | "time" | "touch"
+      quest_step_kind: "solo" | "couple"
+      relationship_stage: "dating" | "engaged" | "married" | "long_term"
+      subscription_tier: "free" | "premium"
+      xp_kind:
+        | "daily"
+        | "solo_reflection"
+        | "quest_step"
+        | "first_pair"
+        | "letter"
+        | "insight"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +816,21 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+      couple_status: ["pending", "active", "archived"],
+      love_language: ["words", "acts", "gifts", "time", "touch"],
+      quest_step_kind: ["solo", "couple"],
+      relationship_stage: ["dating", "engaged", "married", "long_term"],
+      subscription_tier: ["free", "premium"],
+      xp_kind: [
+        "daily",
+        "solo_reflection",
+        "quest_step",
+        "first_pair",
+        "letter",
+        "insight",
+      ],
+    },
   },
 } as const
