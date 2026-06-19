@@ -12,7 +12,7 @@ import { ArrowRight, Copy } from "lucide-react";
 export const Route = createFileRoute("/_authenticated/onboarding")({
   head: () => ({
     meta: [
-      { title: "Begin your quest — Relationship Quest" },
+      { title: "Begin your quest — Our Journey" },
       { name: "description", content: "A few quiet questions to set up your quest together." },
       { name: "robots", content: "noindex,nofollow" },
     ],
@@ -139,7 +139,7 @@ function OnboardingPage() {
   return (
     <main className="relative z-10 min-h-[100svh] max-w-md mx-auto px-6 pb-10">
       <header className="pt-8 flex items-center justify-between">
-        <p className="serif-italic text-rust text-lg">Relationship Quest</p>
+        <p className="serif-italic text-rust text-lg">Our Journey</p>
         <p className="text-xs text-ink-mute uppercase tracking-[0.18em]">{step + 1}/{totalSteps}</p>
       </header>
 
@@ -289,7 +289,7 @@ function OnboardingPage() {
               onClick={() => navigate({ to: "/home" })}
               className="mt-5 w-full inline-flex items-center justify-center gap-2 rounded-full bg-ink px-5 py-3.5 text-sm font-medium text-canvas hover:opacity-90"
             >
-              Enter Relationship Quest <ArrowRight className="h-4 w-4" />
+              Enter Our Journey <ArrowRight className="h-4 w-4" />
             </button>
           </StepBlock>
         )}

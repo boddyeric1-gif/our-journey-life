@@ -11,13 +11,13 @@ const PENDING_INVITE_KEY = "rq_pending_invite";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in — Relationship Quest" },
-      { name: "description", content: "Sign in or create your Relationship Quest account to begin your quest together." },
-      { property: "og:title", content: "Sign in — Relationship Quest" },
+      { title: "Sign in — Our Journey" },
+      { name: "description", content: "Sign in or create your Our Journey account to begin your quest together." },
+      { property: "og:title", content: "Sign in — Our Journey" },
       { property: "og:description", content: "Sign in or create your account to begin your quest together." },
-      { property: "og:url", content: "https://heart-sync-grow.lovable.app/auth" },
+      { property: "og:url", content: "https://ourjourney.app/auth" },
     ],
-    links: [{ rel: "canonical", href: "https://heart-sync-grow.lovable.app/auth" }],
+    links: [{ rel: "canonical", href: "https://ourjourney.app/auth" }],
   }),
   validateSearch: (s: Record<string, unknown>) => ({
     mode: (s.mode === "signup" ? "signup" : "signin") as Mode,
@@ -117,7 +117,7 @@ function AuthPage() {
   return (
     <main className="relative z-10 min-h-[100svh] flex flex-col">
       <header className="px-6 pt-8">
-        <Link to="/" className="serif-italic text-rust text-xl">Relationship Quest</Link>
+        <Link to="/" className="serif-italic text-rust text-xl">Our Journey</Link>
       </header>
 
       <section className="flex-1 px-6 pt-12 pb-12 max-w-md mx-auto w-full">

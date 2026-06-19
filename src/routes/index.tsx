@@ -5,22 +5,22 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Relationship Quest — daily rituals for closer love" },
+      { title: "Our Journey — daily rituals for closer love" },
       { name: "description", content: "A quiet quest log for couples. Daily prompts, gentle quests, and the small rituals that keep love alive — meaningful even when only one of you opens it." },
-      { property: "og:title", content: "Relationship Quest — daily rituals for closer love" },
+      { property: "og:title", content: "Our Journey — daily rituals for closer love" },
       { property: "og:description", content: "Daily prompts, gentle quests, and the small rituals that keep love alive. Built for two." },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://heart-sync-grow.lovable.app/" },
+      { property: "og:url", content: "https://ourjourney.app/" },
     ],
-    links: [{ rel: "canonical", href: "https://heart-sync-grow.lovable.app/" }],
+    links: [{ rel: "canonical", href: "https://ourjourney.app/" }],
     scripts: [
       {
         type: "application/ld+json",
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "WebSite",
-          name: "Relationship Quest",
-          url: "https://heart-sync-grow.lovable.app/",
+          name: "Our Journey",
+          url: "https://ourjourney.app/",
           description: "Daily rituals, prompts, and gentle quests for couples.",
         }),
       },
@@ -29,8 +29,8 @@ export const Route = createFileRoute("/")({
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Organization",
-          name: "Relationship Quest",
-          url: "https://heart-sync-grow.lovable.app/",
+          name: "Our Journey",
+          url: "https://ourjourney.app/",
         }),
       },
     ],
@@ -57,7 +57,7 @@ function Landing() {
   if (checking) {
     return (
       <main className="min-h-[100svh] flex items-center justify-center">
-        <p className="serif-italic text-rust text-lg">Relationship Quest</p>
+        <p className="serif-italic text-rust text-lg">Our Journey</p>
       </main>
     );
   }
@@ -65,7 +65,7 @@ function Landing() {
   return (
     <main className="relative z-10 min-h-[100svh] flex flex-col">
       <header className="px-6 pt-8 flex items-center justify-between">
-        <p className="serif-italic text-rust text-xl">Relationship Quest</p>
+        <p className="serif-italic text-rust text-xl">Our Journey</p>
         <Link to="/auth" className="text-sm text-ink-soft hover:text-ink underline-offset-4 hover:underline">
           Sign in
         </Link>

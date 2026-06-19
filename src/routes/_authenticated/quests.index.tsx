@@ -10,7 +10,7 @@ import { ArrowRight } from "lucide-react";
 export const Route = createFileRoute("/_authenticated/quests/")({
   head: () => ({
     meta: [
-      { title: "Quests — Relationship Quest" },
+      { title: "Quests — Our Journey" },
       { name: "description", content: "Multi-day chapters on listening, trust, repair, and the small work of love." },
       { name: "robots", content: "noindex,nofollow" },
     ],

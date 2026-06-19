@@ -11,7 +11,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/_authenticated/quests/$chapter")({
   head: ({ params }) => ({
     meta: [
-      { title: `Chapter: ${params.chapter} — Relationship Quest` },
+      { title: `Chapter: ${params.chapter} — Our Journey` },
       { name: "description", content: "A gentle, multi-day chapter for the two of you." },
       { name: "robots", content: "noindex,nofollow" },
     ],

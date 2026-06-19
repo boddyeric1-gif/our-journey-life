@@ -18,7 +18,7 @@ function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-canvas px-4">
       <div className="max-w-md text-center">
-        <p className="serif-italic text-rust text-2xl">Relationship Quest</p>
+        <p className="serif-italic text-rust text-2xl">Our Journey</p>
         <h1 className="mt-6 font-serif text-6xl text-ink">404</h1>
         <h2 className="mt-2 text-lg text-ink-soft">This page slipped between us.</h2>
         <div className="mt-8">
@@ -72,13 +72,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "theme-color", content: "#f5f1ea" },
-      { title: "Relationship Quest — daily rituals for closer love" },
+      { title: "Our Journey — daily rituals for closer love" },
       { name: "description", content: "A mobile-first quest log for couples — daily prompts, gentle exercises, and the small rituals that keep love alive." },
-      { property: "og:title", content: "Relationship Quest — daily rituals for closer love" },
+      { property: "og:title", content: "Our Journey — daily rituals for closer love" },
       { property: "og:description", content: "A mobile-first quest log for couples — daily prompts, gentle exercises, and the small rituals that keep love alive." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Relationship Quest — daily rituals for closer love" },
+      { name: "twitter:title", content: "Our Journey — daily rituals for closer love" },
       { name: "twitter:description", content: "A mobile-first quest log for couples — daily prompts, gentle exercises, and the small rituals that keep love alive." },
       { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/db958791-6670-42b2-b0a0-f30c23c1afe3" },
       { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/db958791-6670-42b2-b0a0-f30c23c1afe3" },

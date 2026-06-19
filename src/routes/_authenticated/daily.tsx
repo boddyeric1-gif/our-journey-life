@@ -12,7 +12,7 @@ import { ArrowLeft, Lock, Sparkles } from "lucide-react";
 export const Route = createFileRoute("/_authenticated/daily")({
   head: () => ({
     meta: [
-      { title: "Today's Spark — Relationship Quest" },
+      { title: "Today's Spark — Our Journey" },
       { name: "description", content: "One prompt a day. Both write. Both reveal together." },
       { name: "robots", content: "noindex,nofollow" },
     ],

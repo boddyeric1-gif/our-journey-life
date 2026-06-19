@@ -13,7 +13,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
     meta: [
-      { title: "You — Relationship Quest" },
+      { title: "You — Our Journey" },
       { name: "description", content: "Your profile, streak, and settings." },
       { name: "robots", content: "noindex,nofollow" },
     ],
@@ -96,7 +96,7 @@ function ProfilePage() {
         </button>
       </section>
 
-      <p className="px-5 mt-8 text-center text-xs text-ink-mute">Relationship Quest · Volume One · Beta</p>
+      <p className="px-5 mt-8 text-center text-xs text-ink-mute">Our Journey · Volume One · Beta</p>
     </AppShell>
   );
 }

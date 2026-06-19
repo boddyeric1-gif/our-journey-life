@@ -16,7 +16,7 @@ import { levelFromXp } from "@/lib/xp";
 export const Route = createFileRoute("/_authenticated/home")({
   head: () => ({
     meta: [
-      { title: "Your quest — Relationship Quest" },
+      { title: "Your quest — Our Journey" },
       { name: "description", content: "Today's Spark, your shared streak, and the small next step in your quest together." },
       { name: "robots", content: "noindex,nofollow" },
     ],

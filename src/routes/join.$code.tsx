@@ -12,9 +12,9 @@ const PENDING_INVITE_KEY = "rq_pending_invite";
 export const Route = createFileRoute("/join/$code")({
   head: () => ({
     meta: [
-      { title: "Accept your invite — Relationship Quest" },
-      { name: "description", content: "You've been invited to a couple on Relationship Quest. Sign in to accept." },
-      { property: "og:title", content: "You've been invited — Relationship Quest" },
+      { title: "Accept your invite — Our Journey" },
+      { name: "description", content: "You've been invited to a couple on Our Journey. Sign in to accept." },
+      { property: "og:title", content: "You've been invited — Our Journey" },
       { property: "og:description", content: "Accept your partner's invite to begin your quest together." },
       { name: "robots", content: "noindex,nofollow" },
     ],
@@ -84,7 +84,7 @@ function JoinPage() {
 
   return (
     <main className="relative z-10 min-h-[100svh] max-w-md mx-auto px-6 py-12">
-      <p className="serif-italic text-rust text-lg">Relationship Quest</p>
+      <p className="serif-italic text-rust text-lg">Our Journey</p>
       <p className="mt-8 text-[11px] uppercase tracking-[0.2em] text-ink-mute">A letter for you</p>
       <h1 className="mt-2 font-serif text-3xl text-ink leading-tight">
         <em className="serif-italic text-rust">{data.inviterName}</em> wrote you something.

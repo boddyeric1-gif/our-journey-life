@@ -36,7 +36,7 @@ export function RouteNotFound() {
   return (
     <main className="min-h-[100svh] flex items-center justify-center px-6">
       <div className="max-w-md text-center">
-        <p className="serif-italic text-rust text-lg">Relationship Quest</p>
+        <p className="serif-italic text-rust text-lg">Our Journey</p>
         <h1 className="mt-3 font-serif text-4xl text-ink">Not here</h1>
         <p className="mt-2 text-sm text-ink-mute">The page slipped between us.</p>
         <Link
