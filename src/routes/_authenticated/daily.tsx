@@ -35,6 +35,8 @@ function DailyPage() {
   const [solo, setSolo] = useState("");
 
   const data = home.data;
+  const coupleId = data?.kind === "paired" ? data.couple?.id ?? null : null;
+  useDailyRealtime(coupleId);
 
   const mutate = useMutation({
     mutationFn: () => {
