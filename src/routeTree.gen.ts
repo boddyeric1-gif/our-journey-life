@@ -9,7 +9,9 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -19,11 +21,22 @@ import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedDailyRouteImport } from './routes/_authenticated/daily'
 import { Route as AuthenticatedQuestsIndexRouteImport } from './routes/_authenticated/quests.index'
+import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as AuthenticatedQuestsChapterRouteImport } from './routes/_authenticated/quests.$chapter'
 
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -71,6 +84,11 @@ const AuthenticatedQuestsIndexRoute =
     path: '/quests/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
+  id: '/api/public/health',
+  path: '/api/public/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedQuestsChapterRoute =
   AuthenticatedQuestsChapterRouteImport.update({
     id: '/quests/$chapter',
@@ -81,25 +99,31 @@ const AuthenticatedQuestsChapterRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
   '/daily': typeof AuthenticatedDailyRoute
   '/home': typeof AuthenticatedHomeRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/join/$code': typeof JoinCodeRoute
   '/quests/$chapter': typeof AuthenticatedQuestsChapterRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/quests/': typeof AuthenticatedQuestsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
   '/daily': typeof AuthenticatedDailyRoute
   '/home': typeof AuthenticatedHomeRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/join/$code': typeof JoinCodeRoute
   '/quests/$chapter': typeof AuthenticatedQuestsChapterRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/quests': typeof AuthenticatedQuestsIndexRoute
 }
 export interface FileRoutesById {
@@ -107,13 +131,16 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
   '/_authenticated/daily': typeof AuthenticatedDailyRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/join/$code': typeof JoinCodeRoute
   '/_authenticated/quests/$chapter': typeof AuthenticatedQuestsChapterRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/_authenticated/quests/': typeof AuthenticatedQuestsIndexRoute
 }
 export interface FileRouteTypes {
@@ -121,38 +148,47 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/privacy'
     | '/sitemap.xml'
+    | '/terms'
     | '/daily'
     | '/home'
     | '/onboarding'
     | '/profile'
     | '/join/$code'
     | '/quests/$chapter'
+    | '/api/public/health'
     | '/quests/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
+    | '/privacy'
     | '/sitemap.xml'
+    | '/terms'
     | '/daily'
     | '/home'
     | '/onboarding'
     | '/profile'
     | '/join/$code'
     | '/quests/$chapter'
+    | '/api/public/health'
     | '/quests'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/privacy'
     | '/sitemap.xml'
+    | '/terms'
     | '/_authenticated/daily'
     | '/_authenticated/home'
     | '/_authenticated/onboarding'
     | '/_authenticated/profile'
     | '/join/$code'
     | '/_authenticated/quests/$chapter'
+    | '/api/public/health'
     | '/_authenticated/quests/'
   fileRoutesById: FileRoutesById
 }
@@ -160,17 +196,34 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  PrivacyRoute: typeof PrivacyRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  TermsRoute: typeof TermsRoute
   JoinCodeRoute: typeof JoinCodeRoute
+  ApiPublicHealthRoute: typeof ApiPublicHealthRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -236,6 +289,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedQuestsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/health': {
+      id: '/api/public/health'
+      path: '/api/public/health'
+      fullPath: '/api/public/health'
+      preLoaderRoute: typeof ApiPublicHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/quests/$chapter': {
       id: '/_authenticated/quests/$chapter'
       path: '/quests/$chapter'
@@ -271,8 +331,11 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  PrivacyRoute: PrivacyRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  TermsRoute: TermsRoute,
   JoinCodeRoute: JoinCodeRoute,
+  ApiPublicHealthRoute: ApiPublicHealthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
