@@ -7,4 +7,4 @@ Disallow: /onboarding
 Disallow: /quests
 Disallow: /join/
 
-Sitemap: https://heart-sync-grow.lovable.app/sitemap.xml
+Sitemap: https://our-journey.life/sitemap.xml
