@@ -77,11 +77,13 @@ export function promptPositionFor(coupleCreatedAt: string, today = todayUTC()): 
   return (idx % 60) + 1;
 }
 
-// 6-char invite code, exclude lookalikes
+// 6-char invite code, exclude lookalikes. Uses CSPRNG for unpredictability.
 export function generateInviteCode(): string {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const bytes = new Uint8Array(6);
+  crypto.getRandomValues(bytes);
   let code = "";
-  for (let i = 0; i < 6; i++) code += alphabet[Math.floor(Math.random() * alphabet.length)];
+  for (let i = 0; i < bytes.length; i++) code += alphabet[bytes[i]! % alphabet.length];
   return code;
 }
 
