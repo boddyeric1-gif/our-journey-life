@@ -1,0 +1,9 @@
+# Our Journey
+
+> A quiet, beautifully made couples app. Daily prompts, gentle quests, and the small rituals that keep love tended-to.
+
+## Pages
+
+- [/](/): Landing page — learn what Our Journey offers and begin your quest.
+- [/privacy](/privacy): Privacy policy — how we hold your data with care.
+- [/terms](/terms): Terms of service — a short agreement for using the app.
