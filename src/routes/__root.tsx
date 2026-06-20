@@ -84,6 +84,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Our Journey — a private space for two" },
       { name: "twitter:description", content: "A quiet, beautifully made couples app. Daily prompts, gentle quests, and the small rituals that keep love tended-to." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/060bc3a0-c03f-4fcc-b609-16e5307366b8" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/060bc3a0-c03f-4fcc-b609-16e5307366b8" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
