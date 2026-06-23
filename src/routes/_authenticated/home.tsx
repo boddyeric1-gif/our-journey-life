@@ -91,6 +91,9 @@ function HomePage() {
   const partnerLevel = data.kind === "paired" ? levelFromXp(partnerXp).level : null;
   const bondLevel = partnerLevel !== null ? Math.min(myLevel, partnerLevel) : null;
 
+  const goals = data.kind === "paired" ? (data.goals ?? []) : [];
+  const showGoals = goals.length > 0 && (daysTogether ?? 0) <= 28;
+
   return (
     <AppShell>
       <LevelHeader
@@ -102,6 +105,13 @@ function HomePage() {
         bondLevel={bondLevel}
       />
 
+      {showGoals && (
+        <p className="px-5 -mt-1 mb-3 text-[12px] text-ink-mute text-pretty">
+          Working on:{" "}
+          <span className="text-ink-soft">{goals.slice(0, 3).join(" · ")}</span>
+        </p>
+      )}
+
       <div className="mt-2">
         <TodayHero
           state={heroState}
@@ -112,6 +122,7 @@ function HomePage() {
           daysTogether={daysTogether}
           myPreview={myPreview}
           partnerPreview={partnerPreview}
+          autoUnsealed={data.kind === "paired" ? !!data.autoUnsealed : false}
         />
       </div>
 
