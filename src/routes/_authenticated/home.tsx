@@ -79,6 +79,9 @@ function HomePage() {
       inviteCode = data.pendingInvite?.code;
     } else if (!data.myResponse) {
       heroState = "no-prompt-answered";
+    } else if (data.autoUnsealed) {
+      // Partner missed it — open the page anyway so the user isn't stuck.
+      heroState = "both-done";
     } else if (data.myResponse && !partnerPreview) {
       heroState = "mine-done-partner-waiting";
     } else {
