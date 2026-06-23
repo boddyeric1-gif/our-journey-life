@@ -206,8 +206,8 @@ function OnboardingPage() {
         )}
 
         {step === 3 && (
-          <StepBlock eyebrow="Four" title={<>How do you feel <em className="serif-italic text-rust">most loved</em>?</>}>
-            <p className="text-sm text-ink-soft mt-3">A quick read — not a final answer. You can revisit anytime.</p>
+          <StepBlock eyebrow="Four" title={<>Which one do you <em className="serif-italic text-rust">reach for first</em>?</>}>
+            <p className="text-sm text-ink-soft mt-3">You'll likely move between these. This is just a starting point — you can revisit anytime.</p>
             <div className="mt-5 space-y-2">
               {LANGS.map(l => (
                 <button key={l.value} onClick={() => setLoveLang(l.value)}
