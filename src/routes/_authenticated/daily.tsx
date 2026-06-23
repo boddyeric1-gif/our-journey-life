@@ -83,7 +83,8 @@ function DailyPage() {
   const myDone = !!data.myResponse;
   const partnerBody = (data.partnerResponse as any)?.body ?? null;
   const partnerSealed = !!data.partnerHasSubmitted;
-  const revealed = myDone && !!partnerBody;
+  const autoUnsealed = !!(data as any).autoUnsealed;
+  const revealed = myDone && (!!partnerBody || autoUnsealed);
   const partnerName = data.partner?.display_name ?? "Your partner";
   const day = data.daysTogether ?? null;
 
