@@ -1,46 +1,44 @@
+## Problem
 
-## Goal
+Each Field Note in the `insights` table currently has a `body` of one short paragraph (~40–60 words), so the reader page opens to "two sentences and a back button." The reader UI itself is fine — it already splits `body` on blank lines into paragraphs and renders typography for a long read. The fix is in the content, not the components.
 
-Close the 5 error-level scanner findings (and the weak-randomness warning) that remain after the previous hardening pass. The earlier migration added triggers, but the scanners flag the underlying RLS policies / constraints directly — so we tighten the policies themselves and add a structural guarantee for daily_responses.
+## Approach
 
-## Migration: tighten RLS + add constraints
+Write one new migration that `UPDATE`s each of the 10 existing insights with a richer `body` (~350–500 words, ≈90s–2min at average reading pace) and sets `read_minutes` accordingly. Each note will follow the same shape so the collection feels cohesive:
 
-1. **daily_responses — prevent duplicate submissions**
-   - Add `UNIQUE (couple_id, user_id, prompt_date)` constraint.
-   - This structurally blocks the "submit a second row to trip `daily_both_submitted`" bypass, independent of policy wording.
+1. **Opening vignette** — a short, literary scene or anecdote that grounds the idea in a real moment between two people.
+2. **The core lesson / theme** — named explicitly in one line so the takeaway is unmistakable.
+3. **What the research says** — 1–2 paragraphs citing the actual professionals whose work the note is built on, with their findings in plain language.
+4. **How it shows up at home** — concrete examples of the pattern in everyday couple life.
+5. **A small practice** — one quiet thing to try this week.
 
-2. **app_events — scope inserts to caller's couple + event allowlist**
-   - Drop `users insert own events`.
-   - Recreate with `WITH CHECK (user_id = auth.uid() AND (couple_id IS NULL OR is_couple_member(couple_id)))`.
-   - Keep the existing `app_events_event_whitelist` CHECK constraint from the prior migration (already blocks `payment.*`, `subscription.*`, `xp.*`, `admin.*`, `server.*`).
+Researchers/works referenced per note (matched to existing topics):
 
-3. **letters — split update policies cleanly**
-   - Drop any lingering `letters member update` policy.
-   - Ensure only two update policies exist:
-     - `letters author update`: `USING/CHECK (author_id = auth.uid() AND is_couple_member(couple_id))`.
-     - `letters partner mark seen`: `USING (is_couple_member(couple_id) AND author_id <> auth.uid())` with `WITH CHECK` of the same. Column-level enforcement stays in the existing `letters_partner_only_seen_at` trigger (scanner cannot read triggers, but the policy now also blocks non-partners from touching the row at all).
+- 5-to-1 → John & Julie Gottman, *The Seven Principles for Making Marriage Work*
+- Soft startup → Gottman's "harsh vs. soft start-up" studies
+- Bids for connection → Gottman, *The Relationship Cure*
+- Repair → Gottman repair attempts; Dan Wile
+- Attachment → Bowlby, Ainsworth, Sue Johnson (*Hold Me Tight*), Amir Levine (*Attached*)
+- Rituals of connection → William Doherty (*The Intentional Family*), Gottman rituals research
+- Positive sentiment override → Robert Weiss, Gottman
+- Contempt → Gottman's "Four Horsemen"
+- Love languages → Gary Chapman, with Sue Johnson's critique from EFT
+- Six hours a week → Gottman's "Magic Six Hours"
 
-4. **profiles / couples — block subscription_tier at the policy layer**
-   - Revoke column UPDATE on `subscription_tier` from `authenticated`:
-     - `REVOKE UPDATE (subscription_tier) ON public.profiles FROM authenticated;`
-     - `REVOKE UPDATE (subscription_tier) ON public.couples FROM authenticated;`
-   - Re-grant explicit UPDATE on the remaining writable columns to `authenticated` so the self-update policies still work for legitimate fields (display_name, avatar_url, etc. on profiles; name, anniversary_date, etc. on couples).
-   - Keep the `prevent_subscription_tier_change` trigger as defense-in-depth.
+Paragraphs separated by blank lines so the existing reader (`body.split(/\n{2,}/)`) renders them cleanly. Voice stays warm, quiet, literary, brief — per the project's brand voice. No emojis, no hype, no fabricated quotes; references are attributed to real published work without inventing direct quotations.
 
-5. **Invite codes — CSPRNG** (warning, easy win)
-   - Update `generateInviteCode()` in `src/lib/xp.ts` to use `crypto.getRandomValues` instead of `Math.random()`. Edge-compatible.
+## Changes
+
+1. **New migration** `supabase/migrations/<timestamp>_enrich_insights.sql`
+   - `UPDATE public.insights SET body = $$...$$, read_minutes = 2 WHERE slug = '...';` for each of the 10 slugs.
+   - Uses dollar-quoted strings so apostrophes and line breaks are safe.
+   - Idempotent: re-running just rewrites the same rows.
+   - No schema changes, no RLS changes, no new columns.
+
+2. **No code changes.** The reader route `src/routes/_authenticated/insights.$slug.tsx`, the home list, and the server function `getInsight` already handle longer bodies, paragraphs, scroll progress, and the back button.
 
 ## Out of scope
 
-- The two `SECURITY DEFINER ... executable` linter warnings — these are intentional (`has_role`, `is_couple_member`, etc. are invoked by RLS policies; revoking EXECUTE breaks RLS). Will mark as ignored with explanation after migration.
-
-## Verification
-
-- Re-run `supabase--linter` and security scan.
-- Smoke-test daily flow (insert one response → second insert by same user same date fails with unique violation).
-- Confirm normal profile/couple updates still succeed for non-tier columns.
-
-## Files
-
-- New migration under `supabase/migrations/`.
-- Edit `src/lib/xp.ts` (one function).
+- No new fields (e.g., a separate "sources" column). Citations are woven into the prose so the reading experience stays one continuous piece.
+- No changes to the list page styling or transitions.
+- No new insights beyond the existing 10.
