@@ -102,12 +102,22 @@ export const getHomeState = createServerFn({ method: "GET" })
     const myResponse = myResponseRes.data ?? null;
     const partnerHasSubmitted = ((partnerResponseCountRes as any)?.count ?? 0) > 0;
     const partnerResponseRaw = partnerResponseAuthRes.data ?? null;
+
+    // 48h auto-unseal: if I submitted >=48h ago and partner still hasn't, open
+    // the reveal anyway so the seal isn't a dead-end. Body remains null when
+    // the partner didn't write one.
+    const myCreatedAt = (myResponse as any)?.created_at ? new Date((myResponse as any).created_at).getTime() : null;
+    const autoUnsealed =
+      !!myResponse && !partnerHasSubmitted && !!myCreatedAt && (Date.now() - myCreatedAt) >= 48 * 3600 * 1000;
+
     // Defense in depth — body only when both submitted and we have our row.
     const partnerResponse = myResponse && partnerResponseRaw
       ? partnerResponseRaw
       : (partnerHasSubmitted
           ? { id: null as string | null, user_id: partnerId, body: null as string | null, sealed: true }
-          : null);
+          : (autoUnsealed
+              ? { id: null as string | null, user_id: partnerId, body: null as string | null, sealed: false, missed: true }
+              : null));
 
     const partnerTotalXp = (partnerXpRes.data ?? []).reduce((s: number, r: any) => s + (r.amount ?? 0), 0);
 
@@ -139,12 +149,14 @@ export const getHomeState = createServerFn({ method: "GET" })
       profile, couple, partner, pendingInvite,
       prompt, myResponse, partnerResponse,
       partnerHasSubmitted,
+      autoUnsealed,
       soloToday: soloTodayRes.data ?? null,
       userStreak: userStreak ?? null,
       coupleStreak: coupleStreak ?? null,
       totalXp, partnerTotalXp,
       letters: lettersRes.data ?? [],
       nextStep,
+      goals: ((goalsRes.data ?? []) as { goal: string }[]).map(g => g.goal),
       today: promptToday,
       userLocalToday,
       daysTogether,
