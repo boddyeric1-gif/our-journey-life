@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { listQuests } from "@/lib/quest.functions";
 import { AppShell } from "@/components/app-shell";
 import { RouteError, RouteNotFound } from "@/components/route-boundaries";
-import { HeaderSkeleton, ListSkeleton } from "@/components/skeletons";
+import { ListSkeleton } from "@/components/skeletons";
 import { ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/quests/")({
@@ -27,16 +27,13 @@ function QuestsPage() {
   return (
     <AppShell>
       <header className="px-5 pt-8">
-        <p className="text-[11px] uppercase tracking-[0.2em] text-ink-mute">Volume One</p>
+        <p className="text-[11px] uppercase tracking-[0.2em] text-ink-mute">Chapters</p>
         <h1 className="mt-2 font-serif text-3xl text-ink leading-tight"><em className="serif-italic text-rust">Quests</em> &amp; chapters</h1>
         <p className="mt-2 text-sm text-ink-soft">Multi-day journeys. Some you do alone, some together. Each is a chapter.</p>
       </header>
 
-      {q.isLoading && (
-        <>
-          <HeaderSkeleton />
-          <div className="px-5 mt-4"><ListSkeleton rows={4} /></div>
-        </>
+      {(q.isLoading || !q.data) && (
+        <div className="px-5 mt-6"><ListSkeleton rows={4} /></div>
       )}
 
       <div className="px-5 mt-6 space-y-6">

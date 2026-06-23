@@ -4,7 +4,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { completeStep, getChapter } from "@/lib/quest.functions";
 import { AppShell } from "@/components/app-shell";
 import { RouteError, RouteNotFound } from "@/components/route-boundaries";
-import { ArrowLeft, ArrowRight, Check, Compass, Users, User as UserIcon, Sparkles, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Users, User as UserIcon, Sparkles, X } from "lucide-react";
+import { HeaderSkeleton, ListSkeleton } from "@/components/skeletons";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -32,7 +33,12 @@ function ChapterPage() {
   const [celebration, setCelebration] = useState<{ xp: number; chapterTitle: string | null } | null>(null);
 
   if (q.isLoading || !q.data) {
-    return (<AppShell><div className="p-10 text-ink-mute">Loading…</div></AppShell>);
+    return (
+      <AppShell>
+        <HeaderSkeleton />
+        <div className="px-5 mt-6"><ListSkeleton rows={3} /></div>
+      </AppShell>
+    );
   }
 
   const { chapter: ch, category, steps } = q.data;
@@ -55,7 +61,7 @@ function ChapterPage() {
               const res = await completer({ data: { stepId: step.id, body } });
               await qc.invalidateQueries();
               if (!res.alreadyCompleted) {
-                toast.success(`Step ${step.position} complete · +${step.xp_reward} XP`);
+                toast.success(`Step ${step.position} complete.`);
                 if (res.chapterComplete) {
                   setCelebration({ xp: step.xp_reward, chapterTitle: res.chapterTitle ?? ch.title });
                 }
@@ -66,40 +72,34 @@ function ChapterPage() {
       </div>
 
       {celebration && (
-        <div className="fixed inset-0 z-50 bg-ink/50 flex items-center justify-center p-5"
-             onClick={() => setCelebration(null)}>
+        <div
+          className="fixed inset-0 z-50 bg-ink/50 flex items-center justify-center p-5"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="chapter-celebration-title"
+          onClick={() => setCelebration(null)}
+        >
           <div className="surface-card w-full max-w-md p-7 text-center relative overflow-hidden"
                onClick={(e) => e.stopPropagation()}>
             <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-rust/30 to-transparent pointer-events-none" />
-            <button onClick={() => setCelebration(null)} aria-label="Close celebration"
+            <button onClick={() => setCelebration(null)} aria-label="Close"
                     className="absolute top-3 right-3 p-1 text-ink-mute hover:text-ink">
-              <X className="h-4 w-4" />
+              <X className="h-4 w-4" aria-hidden />
             </button>
-            <Sparkles className="h-6 w-6 text-rust mx-auto relative" />
+            <Sparkles className="h-6 w-6 text-rust mx-auto relative" aria-hidden />
             <p className="mt-3 text-[11px] uppercase tracking-[0.2em] text-ink-mute">Chapter complete</p>
-            <h2 className="mt-2 font-serif text-3xl text-ink leading-tight text-balance">
+            <h2 id="chapter-celebration-title" className="mt-2 font-serif text-3xl text-ink leading-tight text-balance">
               <em className="serif-italic text-rust">{celebration.chapterTitle}</em>
             </h2>
             <p className="mt-3 text-sm text-ink-soft">
               A small archive of your work, kept. Take the win — then take a breath.
             </p>
-            <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-canvas-deep px-4 py-2">
-              <Sparkles className="h-4 w-4 text-rust" />
-              <span className="text-sm text-ink">+{celebration.xp} XP earned</span>
-            </div>
-            <div className="mt-6 flex gap-2">
-              <button onClick={() => { setCelebration(null); navigate({ to: "/quests" }); }}
-                      className="flex-1 rounded-full border border-border bg-card px-5 py-3 text-sm text-ink hover:bg-canvas-deep">
-                Back to quests
-              </button>
-              <button onClick={() => { setCelebration(null); navigate({ to: "/quests" }); }}
-                      className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-ink px-5 py-3 text-sm font-medium text-canvas hover:opacity-90">
-                Next chapter <ArrowRight className="h-4 w-4" />
-              </button>
-            </div>
-            <p className="mt-4 text-[11px] text-ink-mute inline-flex items-center justify-center gap-1.5">
-              <Compass className="h-3 w-3" /> Volume One
-            </p>
+            <button
+              onClick={() => { setCelebration(null); navigate({ to: "/quests" }); }}
+              className="mt-6 w-full inline-flex items-center justify-center gap-2 rounded-full bg-ink px-5 py-3 text-sm font-medium text-canvas hover:opacity-90"
+            >
+              Back to quests <ArrowRight className="h-4 w-4" aria-hidden />
+            </button>
           </div>
         </div>
       )}
@@ -122,9 +122,8 @@ function StepCard({ step, onComplete }: {
           {done ? <Check className="h-3.5 w-3.5" /> : step.position}
         </span>
         <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.16em] text-ink-mute">
-          {step.kind === "couple" ? <><Users className="h-3 w-3" /> Together</> : <><UserIcon className="h-3 w-3" /> Solo</>}
+          {step.kind === "couple" ? <><Users className="h-3 w-3" aria-hidden /> Together</> : <><UserIcon className="h-3 w-3" aria-hidden /> Solo</>}
         </span>
-        <span className="ml-auto text-[11px] text-ink-mute">+{step.xp_reward} XP</span>
       </div>
       <p className="mt-3 text-sm text-ink-soft leading-relaxed text-pretty">{step.teaching}</p>
       <p className="mt-3 serif-italic text-rust">"</p>
