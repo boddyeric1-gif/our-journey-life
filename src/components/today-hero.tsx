@@ -12,6 +12,7 @@ type Props = {
   partnerSubmitted?: boolean;
   myPreview?: string | null;
   partnerPreview?: string | null;
+  autoUnsealed?: boolean;
 };
 
 function dayEyebrow(n?: number | null, fallback = "Today's Spark") {
