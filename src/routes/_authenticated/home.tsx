@@ -142,16 +142,23 @@ function HomePage() {
         </div>
         <div className="space-y-3">
           {(insights.data?.insights ?? []).slice(0, 4).map(it => (
-            <article key={it.id} className="surface-card-quiet p-4 hover:bg-canvas-deep/60 transition">
-              <div className="flex items-start gap-3">
-                <BookOpen className="h-4 w-4 text-rust mt-1" />
-                <div className="flex-1">
-                  <h3 className="font-serif text-base text-ink leading-snug">{it.title}</h3>
-                  <p className="mt-1 text-sm text-ink-soft text-pretty">{it.subtitle}</p>
-                  <p className="mt-2 text-[11px] uppercase tracking-[0.16em] text-ink-mute">{it.read_minutes} min</p>
+            <Link
+              key={it.id}
+              to="/insights/$slug"
+              params={{ slug: it.slug }}
+              className="block surface-card-quiet p-4 hover:bg-canvas-deep/60 active:scale-[0.99] transition"
+            >
+              <article>
+                <div className="flex items-start gap-3">
+                  <BookOpen className="h-4 w-4 text-rust mt-1" />
+                  <div className="flex-1">
+                    <h3 className="font-serif text-base text-ink leading-snug">{it.title}</h3>
+                    <p className="mt-1 text-sm text-ink-soft text-pretty">{it.subtitle}</p>
+                    <p className="mt-2 text-[11px] uppercase tracking-[0.16em] text-ink-mute">{it.read_minutes} min read</p>
+                  </div>
                 </div>
-              </div>
-            </article>
+              </article>
+            </Link>
           ))}
         </div>
       </section>

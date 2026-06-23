@@ -23,6 +23,7 @@ import { Route as AuthenticatedDailyRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedQuestsIndexRouteImport } from './routes/_authenticated/quests.index'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as AuthenticatedQuestsChapterRouteImport } from './routes/_authenticated/quests.$chapter'
+import { Route as AuthenticatedInsightsSlugRouteImport } from './routes/_authenticated/insights.$slug'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -95,6 +96,12 @@ const AuthenticatedQuestsChapterRoute =
     path: '/quests/$chapter',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedInsightsSlugRoute =
+  AuthenticatedInsightsSlugRouteImport.update({
+    id: '/insights/$slug',
+    path: '/insights/$slug',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/join/$code': typeof JoinCodeRoute
+  '/insights/$slug': typeof AuthenticatedInsightsSlugRoute
   '/quests/$chapter': typeof AuthenticatedQuestsChapterRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/quests/': typeof AuthenticatedQuestsIndexRoute
@@ -122,6 +130,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/join/$code': typeof JoinCodeRoute
+  '/insights/$slug': typeof AuthenticatedInsightsSlugRoute
   '/quests/$chapter': typeof AuthenticatedQuestsChapterRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/quests': typeof AuthenticatedQuestsIndexRoute
@@ -139,6 +148,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/join/$code': typeof JoinCodeRoute
+  '/_authenticated/insights/$slug': typeof AuthenticatedInsightsSlugRoute
   '/_authenticated/quests/$chapter': typeof AuthenticatedQuestsChapterRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/_authenticated/quests/': typeof AuthenticatedQuestsIndexRoute
@@ -156,6 +166,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/profile'
     | '/join/$code'
+    | '/insights/$slug'
     | '/quests/$chapter'
     | '/api/public/health'
     | '/quests/'
@@ -171,6 +182,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/profile'
     | '/join/$code'
+    | '/insights/$slug'
     | '/quests/$chapter'
     | '/api/public/health'
     | '/quests'
@@ -187,6 +199,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/_authenticated/profile'
     | '/join/$code'
+    | '/_authenticated/insights/$slug'
     | '/_authenticated/quests/$chapter'
     | '/api/public/health'
     | '/_authenticated/quests/'
@@ -303,6 +316,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedQuestsChapterRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/insights/$slug': {
+      id: '/_authenticated/insights/$slug'
+      path: '/insights/$slug'
+      fullPath: '/insights/$slug'
+      preLoaderRoute: typeof AuthenticatedInsightsSlugRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -311,6 +331,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedInsightsSlugRoute: typeof AuthenticatedInsightsSlugRoute
   AuthenticatedQuestsChapterRoute: typeof AuthenticatedQuestsChapterRoute
   AuthenticatedQuestsIndexRoute: typeof AuthenticatedQuestsIndexRoute
 }
@@ -320,6 +341,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedInsightsSlugRoute: AuthenticatedInsightsSlugRoute,
   AuthenticatedQuestsChapterRoute: AuthenticatedQuestsChapterRoute,
   AuthenticatedQuestsIndexRoute: AuthenticatedQuestsIndexRoute,
 }

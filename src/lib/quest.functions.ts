@@ -129,3 +129,13 @@ export const listInsights = createServerFn({ method: "GET" })
     const { data } = await context.supabase.from("insights").select("*").order("position");
     return { insights: data ?? [] };
   });
+
+export const getInsight = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ slug: z.string() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { data: insight } = await context.supabase
+      .from("insights").select("*").eq("slug", data.slug).maybeSingle();
+    if (!insight) throw new Error("Field note not found");
+    return { insight };
+  });
