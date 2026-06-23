@@ -43,7 +43,7 @@ function DailyPage() {
       if (!data || data.kind !== "paired" || !data.prompt) throw new Error("No prompt");
       return submit({ data: { promptId: data.prompt.id, body: response } });
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["home-state"] }); toast.success("Sealed. +50 XP."); setResponse(""); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["home-state"] }); toast.success("Sealed."); setResponse(""); },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Couldn't save"),
   });
 
@@ -52,7 +52,7 @@ function DailyPage() {
       if (!data || data.kind !== "paired") throw new Error("Not ready");
       return submitSolo({ data: { promptId: data.prompt?.id ?? null, body: solo } });
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["home-state"] }); toast.success("Saved to your private timeline. +30 XP."); setSolo(""); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["home-state"] }); toast.success("Saved to your private timeline."); setSolo(""); },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Couldn't save"),
   });
 
@@ -123,7 +123,7 @@ function DailyPage() {
             className="w-full rounded-2xl border border-border bg-card px-5 py-4 text-base text-ink placeholder:text-ink-mute outline-none focus:border-rust"
           />
           <div className="mt-1 flex justify-between text-[11px] text-ink-mute">
-            <span>+50 XP · neither of you can read the other until both seal</span>
+            <span>Neither of you can read the other until both seal.</span>
             <span>{response.length}/1000</span>
           </div>
           <button
@@ -143,7 +143,7 @@ function DailyPage() {
           </h2>
           <p className="mt-2 text-sm text-ink-soft text-pretty">
             {partnerSealed
-              ? `You both arrived. Refresh to open today together.`
+              ? `You both arrived. Opening today together…`
               : `Your answer is waiting. When ${partnerName} arrives, today opens for both of you.`}
           </p>
           <div className="mt-4 text-left">
@@ -158,14 +158,6 @@ function DailyPage() {
               </div>
             </div>
           )}
-          {partnerSealed && (
-            <button
-              onClick={() => qc.invalidateQueries({ queryKey: ["home-state"] })}
-              className="mt-5 w-full rounded-full bg-ink px-5 py-3 text-sm font-medium text-canvas hover:opacity-90"
-            >
-              Reveal together
-            </button>
-          )}
         </section>
       )}
 
@@ -176,7 +168,7 @@ function DailyPage() {
             <ResponseCard who="You" body={data.myResponse?.body ?? ""} />
             <ResponseCard who={partnerName} body={partnerBody ?? ""} accent />
           </div>
-          <p className="mt-3 text-center text-[11px] text-ink-mute">+50 XP earned · {day ? `Day ${day} together` : "noted in your archive"}</p>
+          {day && <p className="mt-3 text-center text-[11px] text-ink-mute">Day {day} together</p>}
         </section>
       )}
 
@@ -204,7 +196,7 @@ function DailyPage() {
               disabled={!solo.trim() || mutateSolo.isPending}
               className="mt-3 w-full rounded-full border border-border bg-card px-5 py-3 text-sm font-medium text-ink hover:bg-canvas-deep disabled:opacity-60"
             >
-              {mutateSolo.isPending ? "Saving…" : "Save reflection · +30 XP"}
+              {mutateSolo.isPending ? "Saving…" : "Save reflection"}
             </button>
           </>
         )}
