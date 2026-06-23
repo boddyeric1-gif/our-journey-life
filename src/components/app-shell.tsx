@@ -6,7 +6,7 @@ import { getHomeState } from "@/lib/home.functions";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative z-10 min-h-[100svh] pb-24 max-w-xl mx-auto">
+    <div className="relative z-10 min-h-[100svh] pb-28 max-w-xl mx-auto">
       {children}
       <BottomTabs />
     </div>
@@ -27,8 +27,8 @@ function BottomTabs() {
 
   const tabs = [
     { to: "/home" as const, label: "Home", icon: Home, match: (p: string) => p === "/home", emphasis: false, dot: false },
-    { to: "/quests" as const, label: "Quests", icon: Compass, match: (p: string) => p.startsWith("/quests"), emphasis: false, dot: false },
     { to: "/daily" as const, label: "Daily", icon: Sparkles, match: (p: string) => p === "/daily", emphasis: true, dot: !!dailyDot },
+    { to: "/quests" as const, label: "Quests", icon: Compass, match: (p: string) => p.startsWith("/quests"), emphasis: false, dot: false },
     { to: "/profile" as const, label: "You", icon: User, match: (p: string) => p === "/profile", emphasis: false, dot: false },
   ];
   return (
@@ -45,7 +45,7 @@ function BottomTabs() {
               <Link
                 key={t.to}
                 to={t.to}
-                className={`relative flex-1 flex flex-col items-center gap-0.5 py-2 rounded-xl transition ${
+                className={`relative flex-1 flex flex-col items-center gap-0.5 py-2.5 rounded-xl transition ${
                   active ? "text-rust" : "text-ink-mute hover:text-ink"
                 }`}
               >
