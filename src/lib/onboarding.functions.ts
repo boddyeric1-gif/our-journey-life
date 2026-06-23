@@ -98,6 +98,26 @@ export const saveFirstLetter = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const updateCoupleGoals = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({
+    goals: z.array(z.string().min(1).max(80)).max(8),
+  }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const { data: profile } = await supabase
+      .from("profiles").select("current_couple_id").eq("id", userId).maybeSingle();
+    if (!profile?.current_couple_id) throw new Error("Not in a couple.");
+    const coupleId = profile.current_couple_id;
+    await supabase.from("couple_goals").delete().eq("couple_id", coupleId);
+    if (data.goals.length) {
+      await supabase.from("couple_goals").insert(
+        data.goals.map(g => ({ couple_id: coupleId, goal: g })),
+      );
+    }
+    return { ok: true };
+  });
+
 export const saveLetter = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({
