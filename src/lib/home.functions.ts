@@ -62,6 +62,7 @@ export const getHomeState = createServerFn({ method: "GET" })
       lettersRes,
       completionsRes,
       chaptersRes,
+      goalsRes,
     ] = await Promise.all([
       partnerId
         ? supabase.from("profiles").select("id, display_name, avatar_url").eq("id", partnerId).maybeSingle()
@@ -92,6 +93,7 @@ export const getHomeState = createServerFn({ method: "GET" })
         .order("created_at", { ascending: false }).limit(20),
       supabase.from("quest_step_completions").select("step_id").eq("user_id", userId),
       supabase.from("quest_chapters").select("id, slug, title, summary, position, category_id").order("position"),
+      supabase.from("couple_goals").select("goal").eq("couple_id", coupleId),
     ]);
 
     const partner = (partnerRes.data as any) ?? null;
