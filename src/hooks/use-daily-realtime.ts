@@ -24,8 +24,7 @@ export function useDailyRealtime(coupleId: string | null | undefined) {
           filter: `couple_id=eq.${coupleId}`,
         },
         () => {
-          queryClient.invalidateQueries({ queryKey: ["home"] });
-          queryClient.invalidateQueries({ queryKey: ["daily"] });
+          queryClient.invalidateQueries({ queryKey: ["home-state"] });
         },
       )
       .subscribe();
