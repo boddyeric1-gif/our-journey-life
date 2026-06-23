@@ -19,14 +19,6 @@ export const Route = createFileRoute("/_authenticated/insights/$slug")({
   notFoundComponent: RouteNotFound,
 });
 
-function categoryFromTags(tags: string[] | null | undefined): string {
-  const first = tags?.[0];
-  if (!first) return "Field note";
-  return first
-    .split("-")
-    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
-}
 
 function InsightReader() {
   const { slug } = Route.useParams();
@@ -43,8 +35,9 @@ function InsightReader() {
     function onScroll() {
       const el = articleRef.current;
       if (!el) return;
-      const rect = el.getBoundingClientRect();
       const viewport = window.innerHeight;
+      if (el.offsetHeight <= viewport) { setProgress(1); return; }
+      const rect = el.getBoundingClientRect();
       const total = Math.max(1, el.offsetHeight - viewport);
       const scrolled = Math.min(Math.max(-rect.top, 0), total);
       setProgress(Math.min(1, scrolled / total));
@@ -74,7 +67,6 @@ function InsightReader() {
     title: string; subtitle: string | null; body: string;
     read_minutes: number; tags: string[] | null;
   };
-  const category = categoryFromTags(insight.tags);
   const paragraphs = insight.body.split(/\n{2,}/).map(p => p.trim()).filter(Boolean);
 
   return (
@@ -104,8 +96,8 @@ function InsightReader() {
         className="px-6 pt-8 pb-16 max-w-prose mx-auto motion-safe:animate-[fadeUp_400ms_ease-out_both]"
       >
         <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-ink-mute">
-          <BookOpen className="h-3.5 w-3.5 text-rust" />
-          <span>{category}</span>
+          <BookOpen className="h-3.5 w-3.5 text-rust" aria-hidden />
+          <span>Field note</span>
           <span aria-hidden>·</span>
           <span>{insight.read_minutes} min read</span>
         </div>

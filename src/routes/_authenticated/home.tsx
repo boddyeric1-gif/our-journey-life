@@ -12,6 +12,7 @@ import { RouteError, RouteNotFound } from "@/components/route-boundaries";
 import { ArrowRight, BookOpen, Compass } from "lucide-react";
 import { useEffect } from "react";
 import { levelFromXp } from "@/lib/xp";
+import { useDailyRealtime } from "@/hooks/use-daily-realtime";
 
 export const Route = createFileRoute("/_authenticated/home")({
   head: () => ({
@@ -39,6 +40,10 @@ function HomePage() {
       navigate({ to: "/onboarding" });
     }
   }, [home.data, navigate]);
+
+  const coupleIdForRealtime =
+    home.data && home.data.kind === "paired" ? home.data.couple?.id ?? null : null;
+  useDailyRealtime(coupleIdForRealtime);
 
   if (home.isLoading || !home.data) {
     return (
@@ -138,7 +143,7 @@ function HomePage() {
       <section className="px-5 mt-6">
         <div className="flex items-end justify-between mb-3">
           <h2 className="font-serif text-xl text-ink">Field notes</h2>
-          <span className="text-[11px] uppercase tracking-[0.16em] text-ink-mute">90-second reads</span>
+          <span className="text-[11px] uppercase tracking-[0.16em] text-ink-mute">1–3 min reads</span>
         </div>
         <div className="space-y-3">
           {(insights.data?.insights ?? []).slice(0, 4).map(it => (

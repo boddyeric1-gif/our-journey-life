@@ -99,11 +99,27 @@ export function LettersInbox({
       </div>
 
       {composing && (
-        <div className="fixed inset-0 z-50 bg-ink/40 flex items-end sm:items-center justify-center p-4" onClick={() => setComposing(false)}>
+        <div
+          className="fixed inset-0 z-50 bg-ink/40 flex items-end sm:items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="letter-compose-title"
+          onClick={() => {
+            if (!body.trim() || confirm("Discard this letter?")) setComposing(false);
+          }}
+        >
           <div className="surface-card w-full max-w-md p-5" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
-              <h3 className="font-serif text-lg text-ink">Write a letter</h3>
-              <button onClick={() => setComposing(false)} className="p-1 text-ink-mute hover:text-ink"><X className="h-4 w-4" /></button>
+              <h3 id="letter-compose-title" className="font-serif text-lg text-ink">Write a letter</h3>
+              <button
+                onClick={() => {
+                  if (!body.trim() || confirm("Discard this letter?")) setComposing(false);
+                }}
+                aria-label="Close"
+                className="p-1 text-ink-mute hover:text-ink"
+              >
+                <X className="h-4 w-4" aria-hidden />
+              </button>
             </div>
             <textarea
               autoFocus

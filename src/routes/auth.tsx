@@ -15,9 +15,9 @@ export const Route = createFileRoute("/auth")({
       { name: "description", content: "Sign in or create your Our Journey account to begin your quest together." },
       { property: "og:title", content: "Sign in — Our Journey" },
       { property: "og:description", content: "Sign in or create your account to begin your quest together." },
-      { property: "og:url", content: "https://ourjourney.app/auth" },
+      { property: "og:url", content: "https://our-journey.life/auth" },
     ],
-    links: [{ rel: "canonical", href: "https://ourjourney.app/auth" }],
+    links: [{ rel: "canonical", href: "https://our-journey.life/auth" }],
   }),
   validateSearch: (s: Record<string, unknown>) => ({
     mode: (s.mode === "signup" ? "signup" : "signin") as Mode,
@@ -151,13 +151,15 @@ function AuthPage() {
           <LabeledInput label="Email" type="email" value={email} onChange={setEmail} placeholder="you@example.com" autoComplete="email" required />
           <LabeledInput label="Password" type="password" value={password} onChange={setPassword} placeholder="At least 8 characters" minLength={8}
             autoComplete={mode === "signup" ? "new-password" : "current-password"} required />
-          <LabeledInput
-            label="Invite code (optional)" value={code}
-            onChange={(v) => setCode(v.toUpperCase())}
-            placeholder="ABC123"
-            autoComplete="off"
-            maxLength={12}
-          />
+          {(join || code) && (
+            <LabeledInput
+              label="Invite code" value={code}
+              onChange={(v) => setCode(v.toUpperCase())}
+              placeholder="ABC123"
+              autoComplete="off"
+              maxLength={12}
+            />
+          )}
 
           <button
             type="submit"

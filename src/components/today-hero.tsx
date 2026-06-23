@@ -40,11 +40,11 @@ export function TodayHero(props: Props) {
                 toast.success("Code copied. Send it to your partner.");
               } catch { /* ignore */ }
             }}
-            className="mt-5 w-full inline-flex items-center justify-between rounded-2xl bg-canvas-deep px-5 py-4 hover:bg-canvas-deep/80 transition"
+            className="mt-5 w-full inline-flex items-center justify-between gap-3 rounded-2xl bg-canvas-deep px-5 py-4 hover:bg-canvas-deep/80 transition"
           >
-            <span className="text-[11px] uppercase tracking-[0.2em] text-ink-mute">Invite code</span>
-            <span className="font-serif text-3xl tracking-[0.3em] text-ink">{props.inviteCode}</span>
-            <Copy className="h-4 w-4 text-ink-mute" />
+            <span className="shrink-0 text-[11px] uppercase tracking-[0.2em] text-ink-mute">Invite code</span>
+            <span className="min-w-0 font-serif text-2xl sm:text-3xl tracking-[0.18em] sm:tracking-[0.3em] text-ink truncate">{props.inviteCode}</span>
+            <Copy className="h-4 w-4 text-ink-mute shrink-0" aria-hidden />
           </button>
         )}
 
@@ -97,7 +97,6 @@ export function TodayHero(props: Props) {
         >
           Write your answer <ArrowRight className="h-4 w-4" />
         </Link>
-        <p className="mt-3 text-center text-xs text-ink-mute">+50 XP · advances your streak</p>
       </HeroFrame>
     );
   }
@@ -108,7 +107,7 @@ export function TodayHero(props: Props) {
       <HeroFrame eyebrow={dayEyebrow(props.daysTogether, "Sealed for tonight")} tone="quiet">
         <p className="text-[11px] uppercase tracking-[0.18em] text-ink-mute">
           {sealedBoth
-            ? `You both sealed it · refresh to reveal`
+            ? `You both sealed it`
             : `Waiting on ${props.partnerName ?? "your partner"}`}
         </p>
         <h2 className="mt-2 font-serif text-2xl text-ink leading-snug text-balance">
@@ -117,7 +116,7 @@ export function TodayHero(props: Props) {
             : "Your answer is sealed. Theirs will open it."}
         </h2>
         <div className="mt-4 rounded-2xl border border-dashed border-border bg-card/60 px-4 py-5 text-center">
-          <Lock className="h-5 w-5 text-ink-mute mx-auto" />
+          <Lock className="h-5 w-5 text-ink-mute mx-auto" aria-hidden />
           <p className="mt-2 serif-italic text-rust text-sm">
             {sealedBoth ? "two seals, ready to break" : "until you both arrive"}
           </p>
@@ -126,11 +125,8 @@ export function TodayHero(props: Props) {
           to="/daily"
           className="mt-5 w-full inline-flex items-center justify-center gap-2 rounded-full bg-ink px-5 py-3 text-sm font-medium text-canvas hover:opacity-90"
         >
-          <Sparkles className="h-4 w-4" /> {sealedBoth ? "Open today" : "Write a solo reflection"}
+          <Sparkles className="h-4 w-4" aria-hidden /> {sealedBoth ? "Open today" : "Write a solo reflection"}
         </Link>
-        {!sealedBoth && (
-          <p className="mt-2 text-center text-xs text-ink-mute">+30 XP · keeps your streak alive</p>
-        )}
       </HeroFrame>
     );
   }
