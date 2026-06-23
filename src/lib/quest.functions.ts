@@ -150,13 +150,27 @@ export const completeStep = createServerFn({ method: "POST" })
     let chapterComplete = false;
     let chapterTitle: string | null = null;
     if (step?.chapter_id) {
-      const [{ data: chSteps }, { data: chDone }, { data: chRow }] = await Promise.all([
-        supabase.from("quest_steps").select("id").eq("chapter_id", step.chapter_id),
+      // Find partner (if any) to evaluate together-step completeness.
+      const { data: members } = profile?.current_couple_id
+        ? await supabase.from("couple_members").select("user_id").eq("couple_id", profile.current_couple_id)
+        : { data: null as { user_id: string }[] | null };
+      const partnerId = (members ?? []).find(m => m.user_id !== userId)?.user_id ?? null;
+
+      const [{ data: chSteps }, { data: chDoneMine }, partnerCompsRes, { data: chRow }] = await Promise.all([
+        supabase.from("quest_steps").select("id, kind").eq("chapter_id", step.chapter_id),
         supabase.from("quest_step_completions").select("step_id").eq("user_id", userId),
+        partnerId
+          ? supabaseAdmin.from("quest_step_completions").select("step_id").eq("user_id", partnerId)
+          : Promise.resolve({ data: [] as { step_id: string }[] }),
         supabase.from("quest_chapters").select("title").eq("id", step.chapter_id).maybeSingle(),
       ]);
-      const doneSet = new Set((chDone ?? []).map(c => c.step_id));
-      chapterComplete = (chSteps ?? []).every(s => doneSet.has(s.id));
+      const mineSet = new Set((chDoneMine ?? []).map(c => c.step_id));
+      const partnerSet = new Set(((partnerCompsRes as any).data ?? []).map((c: any) => c.step_id));
+      chapterComplete = (chSteps ?? []).every(s =>
+        s.kind === "couple" && partnerId
+          ? (mineSet.has(s.id) && partnerSet.has(s.id))
+          : mineSet.has(s.id),
+      );
       chapterTitle = chRow?.title ?? null;
     }
 
