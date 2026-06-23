@@ -27,6 +27,8 @@ export const getChapter = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({ slug: z.string() }).parse(d))
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
     const { data: ch } = await supabase
       .from("quest_chapters").select("*").eq("slug", data.slug).maybeSingle();
     if (!ch) throw new Error("Chapter not found");
@@ -34,14 +36,52 @@ export const getChapter = createServerFn({ method: "GET" })
       .from("quest_categories").select("*").eq("id", ch.category_id).maybeSingle();
     const { data: steps } = await supabase
       .from("quest_steps").select("*").eq("chapter_id", ch.id).order("position");
-    const { data: completions } = await supabase
+    const stepIds = (steps ?? []).map(s => s.id);
+    const { data: myCompletions } = await supabase
       .from("quest_step_completions").select("step_id, created_at, body")
       .eq("user_id", userId)
-      .in("step_id", (steps ?? []).map(s => s.id));
-    const done = new Map((completions ?? []).map(c => [c.step_id, c]));
+      .in("step_id", stepIds);
+    const mine = new Map((myCompletions ?? []).map(c => [c.step_id, c]));
+
+    // Partner completions — admin client, step_id only (no body leak).
+    let partnerId: string | null = null;
+    let partnerName: string | null = null;
+    const partnerDone = new Set<string>();
+    const { data: profile } = await supabase
+      .from("profiles").select("current_couple_id").eq("id", userId).maybeSingle();
+    if (profile?.current_couple_id && stepIds.length) {
+      const { data: members } = await supabase
+        .from("couple_members").select("user_id").eq("couple_id", profile.current_couple_id);
+      partnerId = (members ?? []).find(m => m.user_id !== userId)?.user_id ?? null;
+      if (partnerId) {
+        const [{ data: pComps }, { data: pProfile }] = await Promise.all([
+          supabaseAdmin.from("quest_step_completions").select("step_id")
+            .eq("user_id", partnerId).in("step_id", stepIds),
+          supabase.from("profiles").select("display_name").eq("id", partnerId).maybeSingle(),
+        ]);
+        for (const c of pComps ?? []) partnerDone.add(c.step_id);
+        partnerName = pProfile?.display_name ?? null;
+      }
+    }
+
     return {
       chapter: ch, category: cat,
-      steps: (steps ?? []).map(s => ({ ...s, completion: done.get(s.id) ?? null })),
+      hasPartner: !!partnerId,
+      partnerName,
+      steps: (steps ?? []).map(s => {
+        const myDone = mine.has(s.id);
+        const partnerHas = partnerDone.has(s.id);
+        const requiresBoth = s.kind === "couple" && !!partnerId;
+        const done = requiresBoth ? (myDone && partnerHas) : myDone;
+        return {
+          ...s,
+          completion: mine.get(s.id) ?? null,
+          myDone,
+          partnerDone: partnerHas,
+          requiresBoth,
+          done,
+        };
+      }),
     };
   });
 
