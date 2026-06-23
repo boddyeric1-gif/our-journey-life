@@ -79,6 +79,9 @@ function HomePage() {
       inviteCode = data.pendingInvite?.code;
     } else if (!data.myResponse) {
       heroState = "no-prompt-answered";
+    } else if (data.autoUnsealed) {
+      // Partner missed it — open the page anyway so the user isn't stuck.
+      heroState = "both-done";
     } else if (data.myResponse && !partnerPreview) {
       heroState = "mine-done-partner-waiting";
     } else {
@@ -91,6 +94,9 @@ function HomePage() {
   const partnerLevel = data.kind === "paired" ? levelFromXp(partnerXp).level : null;
   const bondLevel = partnerLevel !== null ? Math.min(myLevel, partnerLevel) : null;
 
+  const goals = data.kind === "paired" ? (data.goals ?? []) : [];
+  const showGoals = goals.length > 0 && (daysTogether ?? 0) <= 28;
+
   return (
     <AppShell>
       <LevelHeader
@@ -102,6 +108,13 @@ function HomePage() {
         bondLevel={bondLevel}
       />
 
+      {showGoals && (
+        <p className="px-5 -mt-1 mb-3 text-[12px] text-ink-mute text-pretty">
+          Working on:{" "}
+          <span className="text-ink-soft">{goals.slice(0, 3).join(" · ")}</span>
+        </p>
+      )}
+
       <div className="mt-2">
         <TodayHero
           state={heroState}
@@ -112,6 +125,7 @@ function HomePage() {
           daysTogether={daysTogether}
           myPreview={myPreview}
           partnerPreview={partnerPreview}
+          autoUnsealed={data.kind === "paired" ? !!data.autoUnsealed : false}
         />
       </div>
 

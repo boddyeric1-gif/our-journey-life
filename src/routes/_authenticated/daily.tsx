@@ -83,7 +83,8 @@ function DailyPage() {
   const myDone = !!data.myResponse;
   const partnerBody = (data.partnerResponse as any)?.body ?? null;
   const partnerSealed = !!data.partnerHasSubmitted;
-  const revealed = myDone && !!partnerBody;
+  const autoUnsealed = !!(data as any).autoUnsealed;
+  const revealed = myDone && (!!partnerBody || autoUnsealed);
   const partnerName = data.partner?.display_name ?? "Your partner";
   const day = data.daysTogether ?? null;
 
@@ -163,10 +164,21 @@ function DailyPage() {
 
       {revealed && (
         <section className="mx-5 mt-5">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-rust">Revealed</p>
+          <p className="text-[11px] uppercase tracking-[0.18em] text-rust">
+            {autoUnsealed && !partnerBody ? "Auto-opened" : "Revealed"}
+          </p>
+          {autoUnsealed && !partnerBody && (
+            <p className="mt-1 text-[12px] text-ink-soft">
+              {partnerName} didn't get to this one. Your reflection is kept.
+            </p>
+          )}
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <ResponseCard who="You" body={data.myResponse?.body ?? ""} />
-            <ResponseCard who={partnerName} body={partnerBody ?? ""} accent />
+            {partnerBody
+              ? <ResponseCard who={partnerName} body={partnerBody} accent />
+              : <div className="rounded-2xl border border-dashed border-border bg-card/60 px-4 py-5 text-center text-sm text-ink-mute">
+                  No answer from {partnerName} this time.
+                </div>}
           </div>
           {day && <p className="mt-3 text-center text-[11px] text-ink-mute">Day {day} together</p>}
         </section>

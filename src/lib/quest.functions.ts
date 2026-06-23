@@ -27,6 +27,8 @@ export const getChapter = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({ slug: z.string() }).parse(d))
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
     const { data: ch } = await supabase
       .from("quest_chapters").select("*").eq("slug", data.slug).maybeSingle();
     if (!ch) throw new Error("Chapter not found");
@@ -34,14 +36,52 @@ export const getChapter = createServerFn({ method: "GET" })
       .from("quest_categories").select("*").eq("id", ch.category_id).maybeSingle();
     const { data: steps } = await supabase
       .from("quest_steps").select("*").eq("chapter_id", ch.id).order("position");
-    const { data: completions } = await supabase
+    const stepIds = (steps ?? []).map(s => s.id);
+    const { data: myCompletions } = await supabase
       .from("quest_step_completions").select("step_id, created_at, body")
       .eq("user_id", userId)
-      .in("step_id", (steps ?? []).map(s => s.id));
-    const done = new Map((completions ?? []).map(c => [c.step_id, c]));
+      .in("step_id", stepIds);
+    const mine = new Map((myCompletions ?? []).map(c => [c.step_id, c]));
+
+    // Partner completions — admin client, step_id only (no body leak).
+    let partnerId: string | null = null;
+    let partnerName: string | null = null;
+    const partnerDone = new Set<string>();
+    const { data: profile } = await supabase
+      .from("profiles").select("current_couple_id").eq("id", userId).maybeSingle();
+    if (profile?.current_couple_id && stepIds.length) {
+      const { data: members } = await supabase
+        .from("couple_members").select("user_id").eq("couple_id", profile.current_couple_id);
+      partnerId = (members ?? []).find(m => m.user_id !== userId)?.user_id ?? null;
+      if (partnerId) {
+        const [{ data: pComps }, { data: pProfile }] = await Promise.all([
+          supabaseAdmin.from("quest_step_completions").select("step_id")
+            .eq("user_id", partnerId).in("step_id", stepIds),
+          supabase.from("profiles").select("display_name").eq("id", partnerId).maybeSingle(),
+        ]);
+        for (const c of pComps ?? []) partnerDone.add(c.step_id);
+        partnerName = pProfile?.display_name ?? null;
+      }
+    }
+
     return {
       chapter: ch, category: cat,
-      steps: (steps ?? []).map(s => ({ ...s, completion: done.get(s.id) ?? null })),
+      hasPartner: !!partnerId,
+      partnerName,
+      steps: (steps ?? []).map(s => {
+        const myDone = mine.has(s.id);
+        const partnerHas = partnerDone.has(s.id);
+        const requiresBoth = s.kind === "couple" && !!partnerId;
+        const done = requiresBoth ? (myDone && partnerHas) : myDone;
+        return {
+          ...s,
+          completion: mine.get(s.id) ?? null,
+          myDone,
+          partnerDone: partnerHas,
+          requiresBoth,
+          done,
+        };
+      }),
     };
   });
 
@@ -110,13 +150,27 @@ export const completeStep = createServerFn({ method: "POST" })
     let chapterComplete = false;
     let chapterTitle: string | null = null;
     if (step?.chapter_id) {
-      const [{ data: chSteps }, { data: chDone }, { data: chRow }] = await Promise.all([
-        supabase.from("quest_steps").select("id").eq("chapter_id", step.chapter_id),
+      // Find partner (if any) to evaluate together-step completeness.
+      const { data: members } = profile?.current_couple_id
+        ? await supabase.from("couple_members").select("user_id").eq("couple_id", profile.current_couple_id)
+        : { data: null as { user_id: string }[] | null };
+      const partnerId = (members ?? []).find(m => m.user_id !== userId)?.user_id ?? null;
+
+      const [{ data: chSteps }, { data: chDoneMine }, partnerCompsRes, { data: chRow }] = await Promise.all([
+        supabase.from("quest_steps").select("id, kind").eq("chapter_id", step.chapter_id),
         supabase.from("quest_step_completions").select("step_id").eq("user_id", userId),
+        partnerId
+          ? supabaseAdmin.from("quest_step_completions").select("step_id").eq("user_id", partnerId)
+          : Promise.resolve({ data: [] as { step_id: string }[] }),
         supabase.from("quest_chapters").select("title").eq("id", step.chapter_id).maybeSingle(),
       ]);
-      const doneSet = new Set((chDone ?? []).map(c => c.step_id));
-      chapterComplete = (chSteps ?? []).every(s => doneSet.has(s.id));
+      const mineSet = new Set((chDoneMine ?? []).map(c => c.step_id));
+      const partnerSet = new Set(((partnerCompsRes as any).data ?? []).map((c: any) => c.step_id));
+      chapterComplete = (chSteps ?? []).every(s =>
+        s.kind === "couple" && partnerId
+          ? (mineSet.has(s.id) && partnerSet.has(s.id))
+          : mineSet.has(s.id),
+      );
       chapterTitle = chRow?.title ?? null;
     }
 

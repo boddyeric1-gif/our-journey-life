@@ -12,6 +12,7 @@ type Props = {
   partnerSubmitted?: boolean;
   myPreview?: string | null;
   partnerPreview?: string | null;
+  autoUnsealed?: boolean;
 };
 
 function dayEyebrow(n?: number | null, fallback = "Today's Spark") {
@@ -132,12 +133,18 @@ export function TodayHero(props: Props) {
   }
 
   if (props.state === "both-done") {
+    const auto = !!props.autoUnsealed;
     return (
-      <HeroFrame eyebrow={dayEyebrow(props.daysTogether, "Today · Revealed")} tone="rust">
+      <HeroFrame eyebrow={dayEyebrow(props.daysTogether, auto ? "Today · Auto-opened" : "Today · Revealed")} tone="rust">
         <Heart className="h-5 w-5 text-rust" />
         <h2 className="mt-2 font-serif text-2xl text-ink leading-snug text-balance">
-          You both answered today.
+          {auto ? "Opened on your own." : "You both answered today."}
         </h2>
+        {auto && (
+          <p className="mt-2 text-[12px] text-ink-soft">
+            {props.partnerName ?? "Your partner"} didn't get to this one. You can still keep going.
+          </p>
+        )}
         {(props.myPreview || props.partnerPreview) && (
           <div className="mt-4 grid gap-3">
             {props.myPreview && (
@@ -158,7 +165,7 @@ export function TodayHero(props: Props) {
           to="/daily"
           className="mt-5 w-full inline-flex items-center justify-center gap-2 rounded-full bg-canvas-deep px-5 py-3 text-sm font-medium text-ink hover:bg-canvas-deep/80"
         >
-          Read together <ArrowRight className="h-4 w-4" />
+          {auto ? "Open today" : "Read together"} <ArrowRight className="h-4 w-4" />
         </Link>
       </HeroFrame>
     );
