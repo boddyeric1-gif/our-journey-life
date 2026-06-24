@@ -74,6 +74,8 @@ function AtlasPage() {
   });
 
   if (!ent.isLoading && !owns) {
+    const p = ent.data?.progress;
+    const t = { level: 15, sharedDays: 30 };
     return (
       <AppShell>
         <div className="px-5 pt-10">
@@ -83,11 +85,25 @@ function AtlasPage() {
             Your story together, gathered into a quiet scrapbook you can re-read
             or save to your device as a keepsake.
           </p>
+
+          {p && (
+            <div className="mt-6 surface-card-quiet p-5">
+              <p className="text-[11px] uppercase tracking-[0.18em] text-ink-mute">Earn it together</p>
+              <p className="mt-2 text-sm text-ink-soft">
+                Reach <em className="serif-italic text-rust not-italic">Level {t.level}</em> and{" "}
+                <em className="serif-italic text-rust not-italic">{t.sharedDays} shared days</em> together.
+              </p>
+              <p className="mt-2 text-[12px] text-ink-mute">
+                You're at Level {p.level} · {p.sharedDays} shared days.
+              </p>
+            </div>
+          )}
+
           <Link
             to="/premium"
-            className="mt-6 inline-flex w-full items-center justify-center rounded-2xl bg-ink py-3.5 text-sm font-medium text-canvas"
+            className="mt-4 inline-flex w-full items-center justify-center rounded-2xl bg-ink py-3.5 text-sm font-medium text-canvas"
           >
-            Unlock the Atlas
+            Or unlock the Atlas now
           </Link>
         </div>
       </AppShell>
