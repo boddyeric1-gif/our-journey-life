@@ -16,7 +16,7 @@ export const getHomeState = createServerFn({ method: "GET" })
       .from("profiles").select("*").eq("id", userId).maybeSingle();
     await supabaseAdmin.from("user_streaks").upsert({ user_id: userId }, { onConflict: "user_id" });
 
-    const userTz = (profile as any)?.timezone ?? "UTC";
+    const userTz = (profile as { timezone?: string | null } | null)?.timezone ?? "UTC";
     const userLocalToday = localToday(userTz);
 
     // Parallel batch 1: streak, xp total (own) via aggregate RPC

@@ -11,6 +11,8 @@ export const Route = createFileRoute("/")({
       { property: "og:description", content: "Daily prompts, gentle quests, and the small rituals that keep love alive. Built for two." },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://our-journey.life/" },
+      { property: "og:image", content: "https://our-journey.life/og-cover.jpg" },
+      { name: "twitter:image", content: "https://our-journey.life/og-cover.jpg" },
     ],
     links: [{ rel: "canonical", href: "https://our-journey.life/" }],
     scripts: [
