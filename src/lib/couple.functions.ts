@@ -164,3 +164,25 @@ export const leaveCouple = createServerFn({ method: "POST" })
     await supabase.from("profiles").update({ current_couple_id: null }).eq("id", userId);
     return { ok: true };
   });
+
+// Mark partner letters as seen by the current user. Letters trigger only
+// allows non-author updates to seen_at (see letters_partner_only_seen_at).
+export const markLettersSeen = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({
+    letterIds: z.array(z.string().uuid()).max(50),
+  }).parse(d))
+  .handler(async ({ context, data }) => {
+    if (data.letterIds.length === 0) return { ok: true, updated: 0 };
+    const { supabase, userId } = context;
+    const nowIso = new Date().toISOString();
+    // RLS + DB trigger enforce: only partner letters get a seen_at write.
+    const { error, count } = await supabase
+      .from("letters")
+      .update({ seen_at: nowIso }, { count: "exact" })
+      .in("id", data.letterIds)
+      .neq("author_id", userId)
+      .is("seen_at", null);
+    if (error) throw new Error(error.message);
+    return { ok: true, updated: count ?? 0 };
+  });
