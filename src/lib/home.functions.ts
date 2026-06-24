@@ -71,7 +71,6 @@ export const getHomeState = createServerFn({ method: "GET" })
       myRhythmRes,
       partnerRhythmRes,
       mySoloRhythmRes,
-      partnerSoloRhythmRes,
     ] = await Promise.all([
       partnerId
         ? supabase.from("profiles").select("id, display_name, avatar_url").eq("id", partnerId).maybeSingle()
@@ -104,19 +103,17 @@ export const getHomeState = createServerFn({ method: "GET" })
       supabase.from("quest_chapters").select("id, slug, title, summary, position, category_id").order("position"),
       supabase.from("couple_goals").select("goal").eq("couple_id", coupleId),
       // Rhythm: who contributed each of the last 14 days. Service-role for the
-      // partner so we can read presence-only without leaking response bodies.
+      // partner so we can read daily-response presence-only without leaking
+      // response bodies. Partner solo reflections are intentionally NOT read
+      // here — solo reflections are private to the author.
       supabaseAdmin.from("daily_responses").select("prompt_date")
         .eq("couple_id", coupleId).eq("user_id", userId).gte("prompt_date", rhythmStartISO),
       partnerId
         ? supabaseAdmin.from("daily_responses").select("prompt_date")
             .eq("couple_id", coupleId).eq("user_id", partnerId).gte("prompt_date", rhythmStartISO)
         : Promise.resolve({ data: [] }),
-      supabaseAdmin.from("solo_reflections").select("prompt_date")
+      supabase.from("solo_reflections").select("prompt_date")
         .eq("user_id", userId).gte("prompt_date", rhythmStartISO),
-      partnerId
-        ? supabaseAdmin.from("solo_reflections").select("prompt_date")
-            .eq("user_id", partnerId).gte("prompt_date", rhythmStartISO)
-        : Promise.resolve({ data: [] }),
     ]);
 
     const partner = (partnerRes.data as any) ?? null;
