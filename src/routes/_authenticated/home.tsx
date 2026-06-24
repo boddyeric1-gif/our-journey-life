@@ -37,9 +37,16 @@ function HomePage() {
   const [lettersOpen, setLettersOpen] = useState(false);
 
   useEffect(() => {
-    if (home.data && "profile" in home.data && home.data.profile && !home.data.profile.onboarded_at) {
-      navigate({ to: "/onboarding" });
-    }
+    if (!home.data || !("profile" in home.data) || !home.data.profile) return;
+    const p = home.data.profile;
+    // Only redirect when required onboarding fields are truly missing.
+    const missingRequired = !p.onboarded_at || !p.display_name;
+    if (!missingRequired) return;
+    // Prevent repeated redirects within the same browser session.
+    const KEY = "onboarding-redirect-attempted";
+    if (typeof window !== "undefined" && window.sessionStorage.getItem(KEY)) return;
+    if (typeof window !== "undefined") window.sessionStorage.setItem(KEY, "1");
+    navigate({ to: "/onboarding" });
   }, [home.data, navigate]);
 
   const coupleIdForRealtime =
