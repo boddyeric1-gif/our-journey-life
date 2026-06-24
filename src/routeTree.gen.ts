@@ -23,10 +23,14 @@ import { Route as AuthenticatedPremiumRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedDailyRouteImport } from './routes/_authenticated/daily'
+import { Route as AuthenticatedAtlasRouteImport } from './routes/_authenticated/atlas'
 import { Route as AuthenticatedQuestsIndexRouteImport } from './routes/_authenticated/quests.index'
+import { Route as AuthenticatedCapsuleIndexRouteImport } from './routes/_authenticated/capsule.index'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as AuthenticatedQuestsChapterRouteImport } from './routes/_authenticated/quests.$chapter'
 import { Route as AuthenticatedInsightsSlugRouteImport } from './routes/_authenticated/insights.$slug'
+import { Route as AuthenticatedCapsuleNewRouteImport } from './routes/_authenticated/capsule.new'
+import { Route as AuthenticatedCapsuleIdRouteImport } from './routes/_authenticated/capsule.$id'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const TermsRoute = TermsRouteImport.update({
@@ -98,10 +102,21 @@ const AuthenticatedDailyRoute = AuthenticatedDailyRouteImport.update({
   path: '/daily',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAtlasRoute = AuthenticatedAtlasRouteImport.update({
+  id: '/atlas',
+  path: '/atlas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedQuestsIndexRoute =
   AuthenticatedQuestsIndexRouteImport.update({
     id: '/quests/',
     path: '/quests/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedCapsuleIndexRoute =
+  AuthenticatedCapsuleIndexRouteImport.update({
+    id: '/capsule/',
+    path: '/capsule/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
@@ -121,6 +136,16 @@ const AuthenticatedInsightsSlugRoute =
     path: '/insights/$slug',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedCapsuleNewRoute = AuthenticatedCapsuleNewRouteImport.update({
+  id: '/capsule/new',
+  path: '/capsule/new',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCapsuleIdRoute = AuthenticatedCapsuleIdRouteImport.update({
+  id: '/capsule/$id',
+  path: '/capsule/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -136,15 +161,19 @@ export interface FileRoutesByFullPath {
   '/security': typeof SecurityRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/atlas': typeof AuthenticatedAtlasRoute
   '/daily': typeof AuthenticatedDailyRoute
   '/home': typeof AuthenticatedHomeRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/premium': typeof AuthenticatedPremiumRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/join/$code': typeof JoinCodeRoute
+  '/capsule/$id': typeof AuthenticatedCapsuleIdRoute
+  '/capsule/new': typeof AuthenticatedCapsuleNewRoute
   '/insights/$slug': typeof AuthenticatedInsightsSlugRoute
   '/quests/$chapter': typeof AuthenticatedQuestsChapterRoute
   '/api/public/health': typeof ApiPublicHealthRoute
+  '/capsule/': typeof AuthenticatedCapsuleIndexRoute
   '/quests/': typeof AuthenticatedQuestsIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -156,15 +185,19 @@ export interface FileRoutesByTo {
   '/security': typeof SecurityRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/atlas': typeof AuthenticatedAtlasRoute
   '/daily': typeof AuthenticatedDailyRoute
   '/home': typeof AuthenticatedHomeRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/premium': typeof AuthenticatedPremiumRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/join/$code': typeof JoinCodeRoute
+  '/capsule/$id': typeof AuthenticatedCapsuleIdRoute
+  '/capsule/new': typeof AuthenticatedCapsuleNewRoute
   '/insights/$slug': typeof AuthenticatedInsightsSlugRoute
   '/quests/$chapter': typeof AuthenticatedQuestsChapterRoute
   '/api/public/health': typeof ApiPublicHealthRoute
+  '/capsule': typeof AuthenticatedCapsuleIndexRoute
   '/quests': typeof AuthenticatedQuestsIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -178,15 +211,19 @@ export interface FileRoutesById {
   '/security': typeof SecurityRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/_authenticated/atlas': typeof AuthenticatedAtlasRoute
   '/_authenticated/daily': typeof AuthenticatedDailyRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/premium': typeof AuthenticatedPremiumRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/join/$code': typeof JoinCodeRoute
+  '/_authenticated/capsule/$id': typeof AuthenticatedCapsuleIdRoute
+  '/_authenticated/capsule/new': typeof AuthenticatedCapsuleNewRoute
   '/_authenticated/insights/$slug': typeof AuthenticatedInsightsSlugRoute
   '/_authenticated/quests/$chapter': typeof AuthenticatedQuestsChapterRoute
   '/api/public/health': typeof ApiPublicHealthRoute
+  '/_authenticated/capsule/': typeof AuthenticatedCapsuleIndexRoute
   '/_authenticated/quests/': typeof AuthenticatedQuestsIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -200,15 +237,19 @@ export interface FileRouteTypes {
     | '/security'
     | '/sitemap.xml'
     | '/terms'
+    | '/atlas'
     | '/daily'
     | '/home'
     | '/onboarding'
     | '/premium'
     | '/profile'
     | '/join/$code'
+    | '/capsule/$id'
+    | '/capsule/new'
     | '/insights/$slug'
     | '/quests/$chapter'
     | '/api/public/health'
+    | '/capsule/'
     | '/quests/'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -220,15 +261,19 @@ export interface FileRouteTypes {
     | '/security'
     | '/sitemap.xml'
     | '/terms'
+    | '/atlas'
     | '/daily'
     | '/home'
     | '/onboarding'
     | '/premium'
     | '/profile'
     | '/join/$code'
+    | '/capsule/$id'
+    | '/capsule/new'
     | '/insights/$slug'
     | '/quests/$chapter'
     | '/api/public/health'
+    | '/capsule'
     | '/quests'
     | '/api/public/payments/webhook'
   id:
@@ -241,15 +286,19 @@ export interface FileRouteTypes {
     | '/security'
     | '/sitemap.xml'
     | '/terms'
+    | '/_authenticated/atlas'
     | '/_authenticated/daily'
     | '/_authenticated/home'
     | '/_authenticated/onboarding'
     | '/_authenticated/premium'
     | '/_authenticated/profile'
     | '/join/$code'
+    | '/_authenticated/capsule/$id'
+    | '/_authenticated/capsule/new'
     | '/_authenticated/insights/$slug'
     | '/_authenticated/quests/$chapter'
     | '/api/public/health'
+    | '/_authenticated/capsule/'
     | '/_authenticated/quests/'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
@@ -368,11 +417,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDailyRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/atlas': {
+      id: '/_authenticated/atlas'
+      path: '/atlas'
+      fullPath: '/atlas'
+      preLoaderRoute: typeof AuthenticatedAtlasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/quests/': {
       id: '/_authenticated/quests/'
       path: '/quests'
       fullPath: '/quests/'
       preLoaderRoute: typeof AuthenticatedQuestsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/capsule/': {
+      id: '/_authenticated/capsule/'
+      path: '/capsule'
+      fullPath: '/capsule/'
+      preLoaderRoute: typeof AuthenticatedCapsuleIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/public/health': {
@@ -396,6 +459,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInsightsSlugRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/capsule/new': {
+      id: '/_authenticated/capsule/new'
+      path: '/capsule/new'
+      fullPath: '/capsule/new'
+      preLoaderRoute: typeof AuthenticatedCapsuleNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/capsule/$id': {
+      id: '/_authenticated/capsule/$id'
+      path: '/capsule/$id'
+      fullPath: '/capsule/$id'
+      preLoaderRoute: typeof AuthenticatedCapsuleIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
       path: '/api/public/payments/webhook'
@@ -407,24 +484,32 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAtlasRoute: typeof AuthenticatedAtlasRoute
   AuthenticatedDailyRoute: typeof AuthenticatedDailyRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPremiumRoute: typeof AuthenticatedPremiumRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedCapsuleIdRoute: typeof AuthenticatedCapsuleIdRoute
+  AuthenticatedCapsuleNewRoute: typeof AuthenticatedCapsuleNewRoute
   AuthenticatedInsightsSlugRoute: typeof AuthenticatedInsightsSlugRoute
   AuthenticatedQuestsChapterRoute: typeof AuthenticatedQuestsChapterRoute
+  AuthenticatedCapsuleIndexRoute: typeof AuthenticatedCapsuleIndexRoute
   AuthenticatedQuestsIndexRoute: typeof AuthenticatedQuestsIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAtlasRoute: AuthenticatedAtlasRoute,
   AuthenticatedDailyRoute: AuthenticatedDailyRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPremiumRoute: AuthenticatedPremiumRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedCapsuleIdRoute: AuthenticatedCapsuleIdRoute,
+  AuthenticatedCapsuleNewRoute: AuthenticatedCapsuleNewRoute,
   AuthenticatedInsightsSlugRoute: AuthenticatedInsightsSlugRoute,
   AuthenticatedQuestsChapterRoute: AuthenticatedQuestsChapterRoute,
+  AuthenticatedCapsuleIndexRoute: AuthenticatedCapsuleIndexRoute,
   AuthenticatedQuestsIndexRoute: AuthenticatedQuestsIndexRoute,
 }
 

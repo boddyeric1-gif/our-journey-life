@@ -124,10 +124,20 @@ function ProfilePage() {
       )}
 
       <section className="mx-5 mt-6 space-y-2">
+        <Link to="/capsule"
+          className="w-full inline-flex items-center justify-between rounded-2xl border border-border bg-card px-5 py-4 text-sm text-ink hover:bg-canvas-deep">
+          <span>Time Capsule</span>
+          <span className="text-xs text-ink-mute">Letters that wait</span>
+        </Link>
+        <Link to="/atlas"
+          className="w-full inline-flex items-center justify-between rounded-2xl border border-border bg-card px-5 py-4 text-sm text-ink hover:bg-canvas-deep">
+          <span>The Atlas</span>
+          <span className="text-xs text-ink-mute">Your story, gathered</span>
+        </Link>
         <Link to="/premium"
           className="w-full inline-flex items-center justify-between rounded-2xl border border-border bg-card px-5 py-4 text-sm text-ink hover:bg-canvas-deep">
           <span>Premium unlocks</span>
-          <span className="text-xs text-ink-mute">Capsule · Atlas</span>
+          <span className="text-xs text-ink-mute">Manage</span>
         </Link>
       </section>
 

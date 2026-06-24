@@ -49,6 +49,38 @@ export type Database = {
           },
         ]
       }
+      atlas_notes: {
+        Row: {
+          body: string
+          couple_id: string
+          created_at: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          body?: string
+          couple_id: string
+          created_at?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          body?: string
+          couple_id?: string
+          created_at?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "atlas_notes_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: true
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       couple_entitlements: {
         Row: {
           amount_cents: number | null
@@ -635,6 +667,62 @@ export type Database = {
             columns: ["parent_prompt_id"]
             isOneToOne: false
             referencedRelation: "daily_prompts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      time_capsules: {
+        Row: {
+          audio_duration_sec: number | null
+          audio_path: string | null
+          author_id: string
+          body: string | null
+          couple_id: string
+          created_at: string
+          id: string
+          kind: string
+          recipient: string
+          title: string
+          unlock_at: string
+          unlocked_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          audio_duration_sec?: number | null
+          audio_path?: string | null
+          author_id: string
+          body?: string | null
+          couple_id: string
+          created_at?: string
+          id?: string
+          kind: string
+          recipient?: string
+          title: string
+          unlock_at: string
+          unlocked_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          audio_duration_sec?: number | null
+          audio_path?: string | null
+          author_id?: string
+          body?: string | null
+          couple_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          recipient?: string
+          title?: string
+          unlock_at?: string
+          unlocked_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_capsules_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
             referencedColumns: ["id"]
           },
         ]
