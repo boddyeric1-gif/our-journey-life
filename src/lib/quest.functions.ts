@@ -73,16 +73,6 @@ export const getChapter = createServerFn({ method: "GET" })
     if (coupleId && stepIds.length) {
       const { data: members } = await supabase
         .from("couple_members").select("user_id").eq("couple_id", coupleId);
-
-    // Partner completions — admin client, step_id only (no body leak).
-    let partnerId: string | null = null;
-    let partnerName: string | null = null;
-    const partnerDone = new Set<string>();
-    const { data: profile } = await supabase
-      .from("profiles").select("current_couple_id").eq("id", userId).maybeSingle();
-    if (profile?.current_couple_id && stepIds.length) {
-      const { data: members } = await supabase
-        .from("couple_members").select("user_id").eq("couple_id", profile.current_couple_id);
       partnerId = (members ?? []).find(m => m.user_id !== userId)?.user_id ?? null;
       if (partnerId) {
         const [{ data: pComps }, { data: pProfile }] = await Promise.all([
