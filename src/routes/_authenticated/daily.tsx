@@ -6,7 +6,7 @@ import { AppShell } from "@/components/app-shell";
 import { RouteError, RouteNotFound } from "@/components/route-boundaries";
 import { HeaderSkeleton, HeroSkeleton } from "@/components/skeletons";
 import { useDailyRealtime } from "@/hooks/use-daily-realtime";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, Lock, Sparkles } from "lucide-react";
 

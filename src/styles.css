@@ -198,6 +198,28 @@
   .serif-italic { font-family: var(--font-serif); font-style: italic; }
   .hairline { border-color: oklch(1 0 0 / 0.06); }
   .ease-quiet { transition-timing-function: var(--ease-quiet); }
+
+  /* Daily reveal: a one-time, ~1.2s synchronized fade-in for both responses.
+     Used by [data-reveal="enter"] on the reveal region. Respects reduced motion. */
+  @keyframes reveal-rise {
+    0%   { opacity: 0; transform: translateY(8px); filter: blur(2px); }
+    60%  { opacity: 0.9; filter: blur(0); }
+    100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+  }
+  @keyframes reveal-seal-fade {
+    0%   { opacity: 1; }
+    100% { opacity: 0; }
+  }
+  [data-reveal="enter"] .reveal-prompt     { animation: reveal-rise 700ms var(--ease-quiet) both; }
+  [data-reveal="enter"] .reveal-mine       { animation: reveal-rise 900ms var(--ease-quiet) 150ms both; }
+  [data-reveal="enter"] .reveal-theirs     { animation: reveal-rise 1100ms var(--ease-quiet) 300ms both; }
+  [data-reveal="enter"] .reveal-seal-line  { animation: reveal-seal-fade 600ms var(--ease-quiet) 200ms both; }
+  @media (prefers-reduced-motion: reduce) {
+    [data-reveal="enter"] .reveal-prompt,
+    [data-reveal="enter"] .reveal-mine,
+    [data-reveal="enter"] .reveal-theirs,
+    [data-reveal="enter"] .reveal-seal-line { animation: none; }
+  }
 }
 
 @utility surface-card {
