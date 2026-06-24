@@ -93,8 +93,10 @@ export const getHomeState = createServerFn({ method: "GET" })
         ? supabase.from("daily_responses").select("*")
             .eq("couple_id", coupleId).eq("prompt_date", promptToday).eq("user_id", partnerId).maybeSingle()
         : Promise.resolve({ data: null }),
+      // A6: solo reflections are dated in the author's local timezone so
+      // late-night entries count toward the local day, matching streaks.
       supabase.from("solo_reflections").select("id, body")
-        .eq("user_id", userId).eq("prompt_date", promptToday).maybeSingle(),
+        .eq("user_id", userId).eq("prompt_date", userLocalToday).maybeSingle(),
       partnerId
         ? supabase.rpc("user_total_xp", { _user_id: partnerId })
         : Promise.resolve({ data: 0 }),
