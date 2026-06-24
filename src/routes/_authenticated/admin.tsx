@@ -97,15 +97,17 @@ function AdminPage() {
 
   if (isLoading || !data) {
     return (
-      <AppShell title="Admin">
+      <AppShell>
         <HeaderSkeleton />
       </AppShell>
     );
   }
 
   return (
-    <AppShell title="Admin">
+    <AppShell>
       <div className="space-y-6 pb-12">
+        <h1 className="text-2xl font-semibold">Admin</h1>
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
