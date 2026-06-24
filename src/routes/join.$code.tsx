@@ -16,6 +16,8 @@ export const Route = createFileRoute("/join/$code")({
       { name: "description", content: "You've been invited to a couple on Our Journey. Sign in to accept." },
       { property: "og:title", content: "You've been invited — Our Journey" },
       { property: "og:description", content: "Accept your partner's invite to begin your quest together." },
+      { property: "og:image", content: "https://our-journey.life/og-cover.jpg" },
+      { name: "twitter:image", content: "https://our-journey.life/og-cover.jpg" },
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),
