@@ -343,6 +343,7 @@ export type Database = {
           current_couple_id: string | null
           display_name: string | null
           id: string
+          journey_intention: string | null
           love_language: Database["public"]["Enums"]["love_language"] | null
           onboarded_at: string | null
           relationship_stage:
@@ -359,6 +360,7 @@ export type Database = {
           current_couple_id?: string | null
           display_name?: string | null
           id: string
+          journey_intention?: string | null
           love_language?: Database["public"]["Enums"]["love_language"] | null
           onboarded_at?: string | null
           relationship_stage?:
@@ -375,6 +377,7 @@ export type Database = {
           current_couple_id?: string | null
           display_name?: string | null
           id?: string
+          journey_intention?: string | null
           love_language?: Database["public"]["Enums"]["love_language"] | null
           onboarded_at?: string | null
           relationship_stage?:
