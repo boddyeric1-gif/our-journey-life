@@ -1,103 +1,183 @@
-# Our Journey — Audit & Premium Brainstorm
+# Premium features — scope, in/out of reach (v2)
 
-Scope: improvements to surfaces already in the app (Home, Daily, Quests, Chapter, Insights, Onboarding, Profile, Letters) plus two paid one-time unlocks. No new free features.
+## What already exists (the rails)
 
----
+- `couple_entitlements` table + `couple_has_entitlement(couple_id, product)` helper
+- Stripe checkout (`time_capsule_onetime`, `the_atlas_onetime`, `capsule_atlas_bundle_onetime`)
+- Webhook grants/revokes entitlements on success, refund, dispute
+- `/premium` page renders the three SKUs and gates Unlock on pairing
+- `profile.tsx` already shows a "Capsule · Atlas" status row
 
-## Part 1 — Ranked improvements (most → least beneficial)
-
-### 1. Make the Daily reveal feel like a real moment
-Today it's a state flip. Add a one-time, ~1.2s synchronized reveal: both responses fade in side-by-side with the prompt floating above, a faint "sealed → opened" line, and a single quiet haptic on mobile. After the first view it stays as a static side-by-side. This is the emotional core of the product and currently reads like a form submit.
-
-### 2. Replace the streak with a "rhythm" model
-Streak counters punish couples for life. Swap the flame number for a 14-dot rhythm ring (filled = both wrote, half = one wrote, empty = skipped). Keeps honest signal, removes shame, and makes a missed day recoverable instead of catastrophic. Snowflake/freeze logic collapses into the same view.
-
-### 3. Tighten the Home hero to one decision
-Home currently surfaces prompt + previews + invite + goals + inbox + insights teaser. Collapse to: greeting line, rhythm ring, one hero card with the single next action ("Write today's Spark" / "Waiting on [partner]" / "Open today's reveal"), then a single secondary row. Everything else moves below the fold.
-
-### 4. Chapter step UX — show the why, not just the task
-Each step currently shows title + body + textarea. Add a 1-line "why this matters" pulled from the step's theme (attachment, repair, bids, etc.) and a soft word-count floor (~40 words) before submit enables, with copy "take your time" rather than a hard error. Lifts reflection quality without changing schema.
-
-### 5. Letters inbox → "Letters" surface
-Inbox is buried on Home. Promote to its own tab affordance inside the existing nav (no new route file needed — reuse `letters-inbox.tsx` as a sheet from the app shell). Add unread dot, sort by unread first, and a gentle "write one back" CTA inside an opened letter.
-
-### 6. Onboarding: pacing + a real "why we're here"
-Add one screen between name and love-language: "In one sentence, why are you here?" Free-text, private to the writer, surfaced back on their 30/60/90-day recap. Highest-leverage data we're not capturing.
-
-### 7. Insights detail polish
-`insights.$slug.tsx` reads like a doc. Add: estimated read time, a pull-quote block, and a single "try this tonight" ritual at the end that links into a matching chapter step if one exists.
-
-### 8. Profile: make goals living
-Goals are editable but static. Show a faint "last reviewed" date and prompt a 30-second re-check every 4 weeks. Couples drift; goals should drift with them visibly.
-
-### 9. Empty + waiting states
-"Waiting on partner" screens are flat. Replace with a soft illustration block + an honest line ("They haven't opened today yet. That's okay.") + a single "nudge" action that sends one push/email per 24h max.
-
-### 10. Typography + spacing pass
-Body copy is 15/22 in most places; bump to 16/26 on prompts and reflections, tighten card padding from 24 to 20, and standardize on two type sizes per screen. Mobile readability win, zero logic risk.
-
-### 11. Haptics + sound, restrained
-One haptic on submit, one on reveal, none anywhere else. No sound by default; optional "chime on reveal" in Profile.
-
-### 12. Accessibility sweep
-Focus rings on all card-as-button surfaces, `aria-live="polite"` on the reveal region, prefers-reduced-motion respected on the reveal animation, and ensure the rhythm ring has a text equivalent.
+What's missing is the actual product behind the paywall. Scope for each follows.
 
 ---
 
-## Part 2 — Two premium one-time unlocks
+## 1. The Time Capsule
 
-Design constraints I held to: each must be (a) emotionally meaningful, not a utility; (b) impossible to fake with the free tier; (c) re-openable forever after purchase, not a subscription; (d) sold separately so a couple can buy one without the other.
+**Promise:** "Sealed letters and voice notes that unlock on a future date."
 
-### Brainstorm pool (rejected, for context)
-- Extra chapters → feels like a content drip, not premium.
-- Custom themes → cosmetic, doesn't deepen the relationship.
-- AI couples coach chat → undermines the app's quiet voice and raises safety concerns.
-- Export to PDF → utility, not luxury.
-- Voice notes on daily → nice, but a feature not a moment.
-- Anniversary video montage → too gimmicky, AI-slop risk.
+### Data model (new migration)
+```text
+time_capsules
+  id uuid pk
+  couple_id uuid fk → couples (RLS via is_couple_member)
+  author_id uuid fk → auth.users
+  kind text check ('letter','voice')
+  title text
+  body text                 -- letter text (null for voice)
+  audio_path text           -- storage key (null for letter)
+  audio_duration_sec int
+  unlock_at timestamptz not null
+  unlocked_at timestamptz   -- set when first viewed after unlock_at
+  recipient text check ('partner','both','self')
+  created_at, updated_at
+```
+- Indexes: `(couple_id, unlock_at)`, `(couple_id, unlocked_at)`
+- RLS SELECT: `is_couple_member(couple_id)` AND (`now() >= unlock_at` OR `author_id = auth.uid()`). Author always sees their own; partner blocked until unlock.
+- Private storage bucket `time-capsules`; signed URLs minted server-side only after unlock check.
 
-### Premium Unlock A — **The Time Capsule** (one-time purchase)
+### Server functions (`src/lib/timeCapsule.functions.ts`)
+- `createTimeCapsule` — entitlement-gated; `unlock_at > now() + 1d` and `≤ now() + 10y`.
+- `listTimeCapsules` — sealed (metadata only) + opened (full content).
+- `getTimeCapsule(id)` — re-checks unlock; voice returns short-TTL signed URL.
+- `deleteTimeCapsule(id)` — author-only, before unlock.
+- `markCapsuleOpened(id)` — sets `unlocked_at` for the opening UX.
 
-A sealed, dated letter exchange to your future selves. On purchase, the couple co-creates a single capsule:
+### Routes / UI
+- `/_authenticated/capsule.index.tsx` — Sealed | Opened tabs, countdown chips, "New capsule" CTA.
+- `/_authenticated/capsule.new.tsx` — kind toggle, title, body or recorder, date picker, recipient.
+- `/_authenticated/capsule.$id.tsx` — locked view (countdown, "from your partner") vs opened (letter / audio).
+- Home card: "1 capsule unlocks in 12 days" / "A capsule from Ana is ready to open."
 
-- Each partner privately answers 7 curated prompts (e.g. "What do you want us to remember about right now?", "What are you afraid we'll forget?", "What's a promise you want to keep to them?").
-- They each record one ~60s voice note answering an 8th prompt of their choice.
-- They jointly pick the seal date: 1, 3, 5, or 10 years out.
-- The capsule is cryptographically sealed — neither partner can re-read their own or the other's answers until the date.
-- A single Home card appears year-round: "Capsule sealed until March 14, 2028" with a quiet countdown.
-- On unseal day, a guided 20-minute reveal flow walks them through opening together, with a 9th "now" prompt to compare who they were vs. who they became.
+### In reach
+- Letters end-to-end.
+- Voice via `MediaRecorder` → upload to Cloud storage (edge-safe; no native deps).
+- Time-locked RLS using `now()` (server-trusted clock).
+- Subtle countdown / opening animation (no confetti, per brand voice).
+- Edit/delete before seal date.
 
-Why it justifies a price: it's a one-shot artifact with a multi-year payoff, requires storage of audio for years, and creates a reason to keep the app installed.
+### Out of reach / cut
+- **Scheduled push/email on unlock day.** No cron primitive in this template. Use "next-app-open detection" instead. True notifications need pg_cron + a provider — future.
+- **End-to-end encryption.** Adds key-management UX (recovery phrases, lost-device). Out unless you want it.
+- **Server-side audio transcoding / waveforms.** No ffmpeg on workerd. Store recorder's native webm/opus, play as-is.
+- **Sharing outside the couple** (e.g. "letter to future child"). Not in this model.
 
-Premium-feel details: physical-letter typography, wax-seal motif (subtle, not skeuomorphic), an emailed PDF transcript on unseal, and the option to add up to 3 additional unseal dates later (each as a free "letter" inside the capsule).
-
-### Premium Unlock B — **The Atlas** (one-time purchase)
-
-A living, private map of the relationship — sold as the "deep" companion to the daily/quest loop.
-
-Three connected surfaces, unlocked together:
-
-1. **Patterns** — a quarterly synthesis generated from the couple's reflections (server-side, on demand, not a chat). Reads like a thoughtful letter: "Over the last 90 days you returned to repair three times. Here's what you each tend to do first." Generated max 4×/year per couple. Human-edited prompt templates, not freeform AI chat.
-2. **The Map** — a single-page visual: chapters completed, themes you've returned to, words you each use most when describing the other, the rhythm ring across the full history. Designed to feel like a printable keepsake.
-3. **Rituals Library** — 24 curated rituals (weekly check-in, repair script, monthly state-of-us, gratitude exchange, conflict timeout protocol, etc.), each with a "schedule into our rhythm" action that quietly slots into upcoming Daily slots.
-
-Why it justifies a price: it's the "therapist's binder" version of the app — synthesis + structure + library — and it's the natural upgrade for couples who finish the free chapters and want depth, not more prompts.
-
-Premium-feel details: serif-led layout distinct from the rest of the app, exportable as a single bound PDF once per quarter, and the Patterns letter is signed off with the date and a single hand-set pull-quote from the couple's own words.
-
-### Why two, sold separately
-- **Capsule** is for couples in a good place who want to mark it.
-- **Atlas** is for couples doing the work who want to see the shape of it.
-Different emotional jobs, different buyers, often bought at different moments in the relationship. Bundling them would flatten both.
+### Open questions
+- Min/max unlock window? (proposed: 1 day–10 years)
+- Edit allowed until 24h before unlock? (proposed: yes)
+- Voice max length? (proposed: 3 min)
 
 ---
 
-## Part 3 — Suggested sequencing if you greenlight any of this
+## 2. The Atlas — Scrapbook (revised)
 
-1. Items 1–3 from Part 1 (reveal moment, rhythm model, Home focus) — biggest perceived-quality lift, ~1–2 days of work, no schema changes.
-2. Items 4–6 — meaningful depth, small schema additions for onboarding "why".
-3. Premium Unlock A (Capsule) — needs payments + storage + scheduled unseal job, but is self-contained.
-4. Items 7–12 — polish pass.
-5. Premium Unlock B (Atlas) — largest scope; do last, after the free product is tight enough to deserve a premium tier.
+**Promise:** "Your story together, gathered into one quiet scrapbook you can hold onto."
 
-No code changes in this plan — say the word on which items to build and I'll scope each in turn.
+Reframed from "printable" to a **scrapbook view inside the app, exportable to the user's device as a file**. No print stylesheet, no "Save as PDF" instruction — a real download.
+
+### Concept
+A long, scrollable, page-by-page scrapbook of your relationship, composed automatically from data you've already created. Calm typography, soft cards, generous spacing — designed to be re-read, not just generated once. Two ways out:
+1. **In-app view** — the primary experience. Pages flip / scroll, contents stay live (re-aggregates each visit).
+2. **Export** — one tap saves a snapshot of the current scrapbook to the user's device.
+
+### Scrapbook pages (v1)
+1. **Cover** — names, "since" date, days together.
+2. **Rhythm** — current/longest streak, monthly heatmap of shared days (SVG, no chart lib).
+3. **The first letter** — full excerpt + date.
+4. **Letters, gathered** — count, longest letter snippet, most recent.
+5. **Chapters walked** — completed quest chapters with dates.
+6. **Themes** — 6–10 pill cluster of recurring tags from quests/responses.
+7. **Milestones** — timeline of XP-bearing events.
+8. **A blank page** — "Add a note before you save this." (free-text field, persisted per couple, stored in `atlas_notes`.)
+
+### Data sources (all already in DB)
+- `couples.created_at`, `couple_streaks`, `daily_responses`, `letters`,
+  `quest_step_completions`, `xp_events`.
+
+### Data model (small additions)
+
+```text
+atlas_notes
+  couple_id uuid pk fk → couples
+  body text
+  updated_at timestamptz
+  -- RLS: is_couple_member(couple_id); INSERT/UPDATE/SELECT for members
+```
+
+### Server functions (`src/lib/atlas.functions.ts`)
+- `getAtlas` — entitlement-gated; returns a single typed DTO with everything for the scrapbook (one round trip). Cached 5 min per couple.
+- `saveAtlasNote(body)` — upserts the closing-page note.
+
+### Routes / UI
+- `/_authenticated/atlas.index.tsx` — the scrapbook itself. Vertical "pages" with `scroll-snap-y: mandatory`, soft page-turn transitions, restrained motion. Each page is a self-contained card. The closing page has the editable note + the export button.
+
+### Export — what's actually feasible on this stack
+
+The Worker runtime can't run Chromium, sharp, or canvas. **Two viable export formats, both edge-safe:**
+
+**A. PDF via `pdf-lib`** (recommended for "saved to files")
+- Pure JS, ships in workerd. We hand-lay out each scrapbook page (text, lines, simple SVG-style shapes, images embedded as PNG).
+- Server fn `exportAtlasPdf` builds the bytes from the same DTO and returns a download. The mobile share sheet / Files app handles "save to device" natively.
+- Pros: a real file (`.pdf`) the user owns, identical on every device, opens in any reader.
+- Cons: layout has to be re-implemented in pdf-lib's primitives — it doesn't render HTML. We build ~8 layout templates once; new data flows through them.
+
+**B. PNG snapshot per page** (alternative or addition)
+- Render the heatmap and pages as SVG, return a zip of PNGs converted via `@resvg/resvg-wasm` (WASM, edge-safe). Or skip server rendering entirely and let the browser convert each page-card to a canvas with `html-to-image` (client-side, no server cost) → save as a multi-image zip.
+- Pros: faithful to the in-app look.
+- Cons: a zip of images is awkward to "open" later; PDF is the better keepsake.
+
+**Recommendation:** ship PDF export (A) as the export format. Treat the in-app scrapbook as the primary experience; the PDF is the "take it with you" version. Skip B for v1.
+
+### Export UX
+- "Save scrapbook" button on the closing page.
+- Calls `exportAtlasPdf`, receives a Blob, triggers a download named `Our-Journey-Atlas-{date}.pdf`.
+- On iOS: that download opens the share sheet → Save to Files / AirDrop / Mail. Same on Android via the system download notification.
+- We do **not** need (and shouldn't add) a native share API call — the browser download is the universal path.
+
+### In reach
+- All eight scrapbook pages from existing data.
+- SQL aggregation with proper indexes; 5-min server cache.
+- PDF export via pdf-lib (works on workerd, no native deps).
+- Editable closing note, persisted per couple.
+- Re-renders live each visit; export reflects current state.
+- Both partners see the same scrapbook.
+
+### Out of reach / cut
+- **HTML → PDF on the server.** Requires Chromium; not on workerd.
+- **Mailing a physical printed copy** (Lulu / Printful). Separate plan.
+- **Photo uploads inside the scrapbook.** Possible but adds storage + moderation. Defer to v2; we can leave a "Photos coming soon" placeholder if you want.
+- **Drag-to-rearrange page builder.** The Atlas is generated, not authored.
+- **Server-rendered chart images.** Heatmaps stay as inline SVG → redrawn into pdf-lib using rects.
+- **Native iOS/Android share sheets via Web Share API.** We can wire it as a progressive enhancement, but the download fallback is the contract.
+
+### Open questions
+- Photos in v1, or "v2 coming soon"? (proposed: v2)
+- Include each partner's solo reflections as a personal section visible only to them, or keep the scrapbook strictly shared? (proposed: shared only, privacy-safer)
+- AI-summarized themes (~1 credit per render, cached weekly on `couples`) or simple SQL tag counts? (proposed: SQL for v1; AI later behind a toggle)
+
+---
+
+## Suggested build order
+
+1. **Migration:** `time_capsules` + `atlas_notes` tables, `time-capsules` private storage bucket, all RLS.
+2. **Time Capsule** server fns + 3 routes + home-screen unlock notice.
+3. **Atlas** aggregation server fn (`getAtlas`) + `saveAtlasNote`.
+4. **Atlas** in-app scrapbook route with 8 pages, scroll-snap, closing note.
+5. **Atlas** `exportAtlasPdf` server fn using pdf-lib + download button.
+6. **Profile/premium polish:** "Open Capsule" / "View Atlas" entry points only when entitled.
+7. **Tests (Vitest):** entitlement gating, unlock-time RLS behaviour, Atlas aggregation correctness, PDF byte-length sanity.
+
+## Cross-cutting
+
+- Every server fn: `requireSupabaseAuth` + entitlement re-check (defense in depth).
+- All routes get `errorComponent` + `notFoundComponent`.
+- Mobile-first, one primary action per screen, restrained motion.
+- No new client-side secrets; voice upload uses a signed POST URL minted server-side.
+
+---
+
+**Tell me:**
+1. PDF export via pdf-lib confirmed for v1 (option A)?
+2. Photos: v1 placeholder, v1 real upload, or skip entirely?
+3. Capsule scheduled notifications: ship without (next-open detection) for v1?
+4. Themes: SQL counts or AI-summarized with weekly cache?
