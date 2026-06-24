@@ -832,6 +832,7 @@ export type Database = {
       }
       is_couple_member: { Args: { _couple_id: string }; Returns: boolean }
       shares_couple_with: { Args: { _other: string }; Returns: boolean }
+      user_total_xp: { Args: { _user_id: string }; Returns: number }
     }
     Enums: {
       app_role: "admin" | "user"
