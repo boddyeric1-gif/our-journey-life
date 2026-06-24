@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getHomeState } from "@/lib/home.functions";
@@ -122,6 +122,14 @@ function ProfilePage() {
           )}
         </section>
       )}
+
+      <section className="mx-5 mt-6 space-y-2">
+        <Link to="/premium"
+          className="w-full inline-flex items-center justify-between rounded-2xl border border-border bg-card px-5 py-4 text-sm text-ink hover:bg-canvas-deep">
+          <span>Premium unlocks</span>
+          <span className="text-xs text-ink-mute">Capsule · Atlas</span>
+        </Link>
+      </section>
 
       <section className="mx-5 mt-6 space-y-2">
         {d.kind === "paired" && (

@@ -12,11 +12,13 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as CheckoutReturnRouteImport } from './routes/checkout-return'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as JoinCodeRouteImport } from './routes/join.$code'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedPremiumRouteImport } from './routes/_authenticated/premium'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedDailyRouteImport } from './routes/_authenticated/daily'
@@ -24,6 +26,7 @@ import { Route as AuthenticatedQuestsIndexRouteImport } from './routes/_authenti
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as AuthenticatedQuestsChapterRouteImport } from './routes/_authenticated/quests.$chapter'
 import { Route as AuthenticatedInsightsSlugRouteImport } from './routes/_authenticated/insights.$slug'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -38,6 +41,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
+  id: '/checkout-return',
+  path: '/checkout-return',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -62,6 +70,11 @@ const JoinCodeRoute = JoinCodeRouteImport.update({
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPremiumRoute = AuthenticatedPremiumRouteImport.update({
+  id: '/premium',
+  path: '/premium',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
@@ -102,118 +115,144 @@ const AuthenticatedInsightsSlugRoute =
     path: '/insights/$slug',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/checkout-return': typeof CheckoutReturnRoute
   '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/daily': typeof AuthenticatedDailyRoute
   '/home': typeof AuthenticatedHomeRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/premium': typeof AuthenticatedPremiumRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/join/$code': typeof JoinCodeRoute
   '/insights/$slug': typeof AuthenticatedInsightsSlugRoute
   '/quests/$chapter': typeof AuthenticatedQuestsChapterRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/quests/': typeof AuthenticatedQuestsIndexRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/checkout-return': typeof CheckoutReturnRoute
   '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/daily': typeof AuthenticatedDailyRoute
   '/home': typeof AuthenticatedHomeRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/premium': typeof AuthenticatedPremiumRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/join/$code': typeof JoinCodeRoute
   '/insights/$slug': typeof AuthenticatedInsightsSlugRoute
   '/quests/$chapter': typeof AuthenticatedQuestsChapterRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/quests': typeof AuthenticatedQuestsIndexRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/checkout-return': typeof CheckoutReturnRoute
   '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/_authenticated/daily': typeof AuthenticatedDailyRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/premium': typeof AuthenticatedPremiumRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/join/$code': typeof JoinCodeRoute
   '/_authenticated/insights/$slug': typeof AuthenticatedInsightsSlugRoute
   '/_authenticated/quests/$chapter': typeof AuthenticatedQuestsChapterRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/_authenticated/quests/': typeof AuthenticatedQuestsIndexRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/auth'
+    | '/checkout-return'
     | '/privacy'
     | '/sitemap.xml'
     | '/terms'
     | '/daily'
     | '/home'
     | '/onboarding'
+    | '/premium'
     | '/profile'
     | '/join/$code'
     | '/insights/$slug'
     | '/quests/$chapter'
     | '/api/public/health'
     | '/quests/'
+    | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
+    | '/checkout-return'
     | '/privacy'
     | '/sitemap.xml'
     | '/terms'
     | '/daily'
     | '/home'
     | '/onboarding'
+    | '/premium'
     | '/profile'
     | '/join/$code'
     | '/insights/$slug'
     | '/quests/$chapter'
     | '/api/public/health'
     | '/quests'
+    | '/api/public/payments/webhook'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/checkout-return'
     | '/privacy'
     | '/sitemap.xml'
     | '/terms'
     | '/_authenticated/daily'
     | '/_authenticated/home'
     | '/_authenticated/onboarding'
+    | '/_authenticated/premium'
     | '/_authenticated/profile'
     | '/join/$code'
     | '/_authenticated/insights/$slug'
     | '/_authenticated/quests/$chapter'
     | '/api/public/health'
     | '/_authenticated/quests/'
+    | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  CheckoutReturnRoute: typeof CheckoutReturnRoute
   PrivacyRoute: typeof PrivacyRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   JoinCodeRoute: typeof JoinCodeRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -237,6 +276,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout-return': {
+      id: '/checkout-return'
+      path: '/checkout-return'
+      fullPath: '/checkout-return'
+      preLoaderRoute: typeof CheckoutReturnRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -272,6 +318,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/premium': {
+      id: '/_authenticated/premium'
+      path: '/premium'
+      fullPath: '/premium'
+      preLoaderRoute: typeof AuthenticatedPremiumRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/onboarding': {
@@ -323,6 +376,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInsightsSlugRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -330,6 +390,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDailyRoute: typeof AuthenticatedDailyRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedPremiumRoute: typeof AuthenticatedPremiumRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedInsightsSlugRoute: typeof AuthenticatedInsightsSlugRoute
   AuthenticatedQuestsChapterRoute: typeof AuthenticatedQuestsChapterRoute
@@ -340,6 +401,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDailyRoute: AuthenticatedDailyRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedPremiumRoute: AuthenticatedPremiumRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedInsightsSlugRoute: AuthenticatedInsightsSlugRoute,
   AuthenticatedQuestsChapterRoute: AuthenticatedQuestsChapterRoute,
@@ -353,22 +415,14 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  CheckoutReturnRoute: CheckoutReturnRoute,
   PrivacyRoute: PrivacyRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   JoinCodeRoute: JoinCodeRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
