@@ -170,10 +170,9 @@ export const getHomeState = createServerFn({ method: "GET" })
       ...((myRhythmRes.data ?? []) as { prompt_date: string }[]).map(r => r.prompt_date),
       ...((mySoloRhythmRes.data ?? []) as { prompt_date: string }[]).map(r => r.prompt_date),
     ]);
-    const theirsDays = new Set([
-      ...((partnerRhythmRes.data ?? []) as { prompt_date: string }[]).map(r => r.prompt_date),
-      ...((partnerSoloRhythmRes.data ?? []) as { prompt_date: string }[]).map(r => r.prompt_date),
-    ]);
+    const theirsDays = new Set(
+      ((partnerRhythmRes.data ?? []) as { prompt_date: string }[]).map(r => r.prompt_date),
+    );
     const rhythm: ("both" | "mine" | "theirs" | "empty")[] = [];
     for (let i = 13; i >= 0; i--) {
       const d = new Date();
