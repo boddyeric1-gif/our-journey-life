@@ -16,6 +16,7 @@ export const saveOnboarding = createServerFn({ method: "POST" })
     goals: z.array(z.string()).max(8).default([]),
     firstLetter: z.string().max(500).nullable(),
     timezone: z.string().max(64).optional(),
+    journeyIntention: z.string().max(280).nullable().optional(),
   }).parse(d))
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
@@ -28,6 +29,9 @@ export const saveOnboarding = createServerFn({ method: "POST" })
       love_language: data.loveLanguage,
       onboarded_at: new Date().toISOString(),
       ...(data.timezone ? { timezone: data.timezone } : {}),
+      ...(data.journeyIntention !== undefined
+        ? { journey_intention: data.journeyIntention?.trim() || null }
+        : {}),
     } as any).eq("id", userId);
 
     const { data: profile } = await supabase
