@@ -64,8 +64,8 @@ export const getAtlas = createServerFn({ method: "GET" })
       supabase.from("letters").select("id, author_id, body, created_at, is_first_letter")
         .eq("couple_id", coupleId).order("created_at", { ascending: true }),
       supabase.from("quest_step_completions")
-        .select("step_id, completed_at, quest_steps!inner(chapter_id, quest_chapters!inner(title, category_id))")
-        .eq("couple_id", coupleId).order("completed_at", { ascending: true }),
+        .select("step_id, created_at, quest_steps!inner(chapter_id, quest_chapters!inner(title, category_id))")
+        .eq("couple_id", coupleId).order("created_at", { ascending: true }),
       supabase.from("daily_responses").select("prompt_date, user_id")
         .eq("couple_id", coupleId).gte("prompt_date", heatStartISO),
       supabase.from("xp_events").select("kind, created_at, amount").eq("couple_id", coupleId)
@@ -119,7 +119,7 @@ export const getAtlas = createServerFn({ method: "GET" })
 
     // Chapters completed (one row per distinct chapter)
     const chapterRows = (chaptersRes.data ?? []) as Array<{
-      completed_at: string;
+      created_at: string;
       quest_steps: { chapter_id: string; quest_chapters: { title: string; category_id: string | null } };
     }>;
     const seenChapter = new Set<string>();
@@ -128,13 +128,13 @@ export const getAtlas = createServerFn({ method: "GET" })
       const id = row.quest_steps.chapter_id;
       if (seenChapter.has(id)) continue;
       seenChapter.add(id);
-      chapters.push({ title: row.quest_steps.quest_chapters.title, completedAt: row.completed_at });
+      chapters.push({ title: row.quest_steps.quest_chapters.title, completedAt: row.created_at });
     }
 
     // Themes: count quest completions grouped by category label.
     const categoryLabel = new Map<string, string>();
-    for (const c of (categoriesRes.data ?? []) as { id: string; label: string }[]) {
-      categoryLabel.set(c.id, c.label);
+    for (const c of (categoriesRes.data ?? []) as { id: string; title: string }[]) {
+      categoryLabel.set(c.id, c.title);
     }
     const themeCounts = new Map<string, number>();
     for (const row of chapterRows) {
@@ -223,7 +223,7 @@ export const exportAtlasPdf = createServerFn({ method: "POST" })
 
     const doc = await PDFDocument.create();
     const serif = await doc.embedFont(StandardFonts.TimesRoman);
-    const serifItalic = await doc.embedFont(StandardFonts.TimesItalic);
+    const serifItalic = await doc.embedFont(StandardFonts.TimesRomanItalic);
     const sans = await doc.embedFont(StandardFonts.Helvetica);
 
     const W = 595.28; // A4 portrait
@@ -479,8 +479,8 @@ async function buildAtlasInline(supabase: any, userId: string): Promise<AtlasDTO
     supabase.from("letters").select("id, author_id, body, created_at, is_first_letter")
       .eq("couple_id", coupleId).order("created_at", { ascending: true }),
     supabase.from("quest_step_completions")
-      .select("step_id, completed_at, quest_steps!inner(chapter_id, quest_chapters!inner(title, category_id))")
-      .eq("couple_id", coupleId).order("completed_at", { ascending: true }),
+      .select("step_id, created_at, quest_steps!inner(chapter_id, quest_chapters!inner(title, category_id))")
+      .eq("couple_id", coupleId).order("created_at", { ascending: true }),
     supabase.from("daily_responses").select("prompt_date, user_id")
       .eq("couple_id", coupleId).gte("prompt_date", heatStartISO),
     supabase.from("xp_events").select("kind, created_at, amount").eq("couple_id", coupleId)
@@ -527,7 +527,7 @@ async function buildAtlasInline(supabase: any, userId: string): Promise<AtlasDTO
     : null;
 
   const chapterRows = (chaptersRes.data ?? []) as Array<{
-    completed_at: string;
+    created_at: string;
     quest_steps: { chapter_id: string; quest_chapters: { title: string; category_id: string | null } };
   }>;
   const seenChapter = new Set<string>();
@@ -536,12 +536,12 @@ async function buildAtlasInline(supabase: any, userId: string): Promise<AtlasDTO
     const id = row.quest_steps.chapter_id;
     if (seenChapter.has(id)) continue;
     seenChapter.add(id);
-    chapters.push({ title: row.quest_steps.quest_chapters.title, completedAt: row.completed_at });
+    chapters.push({ title: row.quest_steps.quest_chapters.title, completedAt: row.created_at });
   }
 
   const categoryLabel = new Map<string, string>();
-  for (const c of (categoriesRes.data ?? []) as { id: string; label: string }[]) {
-    categoryLabel.set(c.id, c.label);
+  for (const c of (categoriesRes.data ?? []) as { id: string; title: string }[]) {
+    categoryLabel.set(c.id, c.title);
   }
   const themeCounts = new Map<string, number>();
   for (const row of chapterRows) {
