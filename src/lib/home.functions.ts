@@ -67,6 +67,7 @@ export const getHomeState = createServerFn({ method: "GET" })
       lettersRes,
       completionsRes,
       chaptersRes,
+      allStepsRes,
       goalsRes,
       myRhythmRes,
       partnerRhythmRes,
@@ -143,16 +144,22 @@ export const getHomeState = createServerFn({ method: "GET" })
 
     const partnerTotalXp = Number((partnerXpRes as { data: number | null }).data ?? 0);
 
-    // next quest step
-    const completedSet = new Set((completionsRes.data ?? []).map((c: any) => c.step_id));
+    // A1: find next quest step with one in-memory scan instead of N queries.
+    const completedSet = new Set((completionsRes.data ?? []).map((c: { step_id: string }) => c.step_id));
+    type StepRow = { id: string; chapter_id: string; position: number; teaching: string; prompt: string; kind: string };
+    const stepsByChapter = new Map<string, StepRow[]>();
+    for (const s of (allStepsRes.data ?? []) as StepRow[]) {
+      const arr = stepsByChapter.get(s.chapter_id) ?? [];
+      arr.push(s);
+      stepsByChapter.set(s.chapter_id, arr);
+    }
     let nextStep: {
       chapterSlug: string; chapterTitle: string; stepId: string;
       position: number; teaching: string; prompt: string; kind: string;
     } | null = null;
-    for (const ch of chaptersRes.data ?? []) {
-      const { data: steps } = await supabase
-        .from("quest_steps").select("*").eq("chapter_id", ch.id).order("position");
-      const inc = (steps ?? []).find(s => !completedSet.has(s.id));
+    for (const ch of (chaptersRes.data ?? []) as Array<{ id: string; slug: string; title: string }>) {
+      const steps = (stepsByChapter.get(ch.id) ?? []).slice().sort((a, b) => a.position - b.position);
+      const inc = steps.find(s => !completedSet.has(s.id));
       if (inc) {
         nextStep = {
           chapterSlug: ch.slug, chapterTitle: ch.title, stepId: inc.id,
