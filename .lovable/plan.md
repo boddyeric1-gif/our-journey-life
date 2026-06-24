@@ -1,30 +1,27 @@
+## Verification completed
 
-# Fix: admin role not granted to new account
+- The admin account `emb.creations.llc@gmail.com` exists and has the `admin` role.
+- That account is in couple `4be21f48-b9c8-426c-993e-311da4f404be`.
+- No other account currently has the `admin` role.
+- Advanced Quest access works because the quests code calls `couple_unlocked(..., 'quests_advanced')`, which includes the admin-couple bypass.
+- The Atlas and Time Capsule pages are still locked because their visible paywall state comes from `getCoupleEntitlements`, which currently recalculates unlocks from paid rows + level/shared-day progress and does not call `couple_unlocked` for `time_capsule` or `the_atlas`.
 
-## What happened
+## Plan
 
-The earlier admin migration ran a `SELECT id FROM auth.users WHERE email = 'emb.creations.llc@gmail.com'` at the moment it executed — and the account didn't exist yet, so zero rows were inserted into `user_roles`. I verified: that user now exists (id `b25f590e-…`) but has no admin row. That's why premium features still show as locked.
+1. Update `getCoupleEntitlements` in `src/lib/payments.functions.ts` so the returned `timeCapsule` and `atlas` booleans come from the database unlock function:
+   - `couple_unlocked(coupleId, 'time_capsule')`
+   - `couple_unlocked(coupleId, 'the_atlas')`
 
-The couple is fine (the user is in one couple), so as soon as the admin row exists, `couple_has_admin` returns true and `couple_unlocked` short-circuits to true for all products.
+2. Keep the existing `paid` fields separate so the payment UI still knows whether access came from payment versus free/admin unlock.
 
-## Fix (two parts)
+3. Keep `computeCoupleProgress` for progress messaging only, so non-admin accounts still see the correct free-access requirements.
 
-### 1. Insert the missing admin row now
+4. Verify after implementation that:
+   - Admin couple unlocks return true for Advanced Quests, Time Capsule, and Atlas.
+   - `getCoupleEntitlements` cannot incorrectly show Time Capsule or Atlas as locked for the admin account.
+   - Regular accounts still require either paid entitlement or the level/shared-day free unlock thresholds.
 
-A one-row `INSERT` into `public.user_roles` for that user_id with role `admin`. Uses the data-insert path, not a schema migration.
+## Expected result
 
-### 2. Make it self-healing for future signups
-
-Update the existing `public.handle_new_user()` function (already triggered on `auth.users` insert) to also insert an admin role row whenever a new account is created with `emb.creations.llc@gmail.com`. This is purely a function body change in the `public` schema — no new triggers, no edits to `auth`.
-
-That way if you ever delete and re-create the admin account, or sign up on a fresh device/email-change flow, the role is granted automatically.
-
-## After the fix
-
-You'll need to sign out and back in once so the client re-fetches the unlock state. After that, `/admin` will recognize you as admin and all premium gates (Advanced Chapters, Time Capsule, Atlas) unlock for your couple.
-
-## Out of scope
-
-- No changes to RLS, `couple_unlocked`, `couple_has_admin`, or the `/admin` page.
-- No new admins added — only the one email you already specified.
-- Hydration warning visible in console (from `/auth`) is unrelated and not addressed here.
+- `emb.creations.llc@gmail.com` gets unrestricted access to The Atlas and The Time Capsule without paying.
+- Every other account remains gated by payment or the free unlock requirements for Time Capsule, Atlas, and Advanced Quests.

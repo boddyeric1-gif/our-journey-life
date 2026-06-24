@@ -131,8 +131,9 @@ export const getCoupleEntitlements = createServerFn({ method: 'GET' })
       };
     }
 
-    // Paid entitlements + couple-level progress, in parallel.
-    const [{ data: rows }, { data: xpVal }, { data: daysVal }] = await Promise.all([
+    // Paid entitlements, couple progress, and authoritative unlock checks
+    // (which include the admin-couple bypass) in parallel.
+    const [{ data: rows }, { data: xpVal }, { data: daysVal }, tcUnlockedRes, atlasUnlockedRes] = await Promise.all([
       supabase
         .from('couple_entitlements')
         .select('product, status')
@@ -140,6 +141,8 @@ export const getCoupleEntitlements = createServerFn({ method: 'GET' })
         .eq('status', 'active'),
       supabase.rpc('couple_total_xp', { _couple_id: coupleId }),
       supabase.rpc('couple_shared_days', { _couple_id: coupleId }),
+      supabase.rpc('couple_unlocked', { _couple_id: coupleId, _product: 'time_capsule' }),
+      supabase.rpc('couple_unlocked', { _couple_id: coupleId, _product: 'the_atlas' }),
     ]);
 
     const set = new Set((rows ?? []).map(r => r.product as string));
@@ -149,13 +152,17 @@ export const getCoupleEntitlements = createServerFn({ method: 'GET' })
       the_atlas: paid.atlas,
     });
 
-    // "Unlocked" surfaces use OR of paid + earned, so existing pages keep
-    // working unchanged.
+    // Authoritative unlock = DB function result (admin bypass + paid + earned).
+    // Fall back to the locally-computed progress only if the RPC returned null.
+    const timeCapsule = tcUnlockedRes.data ?? progress.unlocks.time_capsule;
+    const atlas = atlasUnlockedRes.data ?? progress.unlocks.the_atlas;
+
     return {
       coupleId,
-      timeCapsule: progress.unlocks.time_capsule,
-      atlas: progress.unlocks.the_atlas,
+      timeCapsule,
+      atlas,
       paid,
       progress,
     };
   });
+
