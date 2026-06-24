@@ -134,18 +134,18 @@ export const inspectCouple = createServerFn({ method: "POST" })
 
     const { data: members } = await supabaseAdmin
       .from("couple_members")
-      .select("user_id, role")
+      .select("user_id")
       .eq("couple_id", data.couple_id);
 
-    const enriched: Array<{ user_id: string; email: string | null; role: string | null }> = [];
+    const enriched: Array<{ user_id: string; email: string | null }> = [];
     for (const m of members ?? []) {
       const { data: u } = await supabaseAdmin.auth.admin.getUserById(m.user_id);
       enriched.push({
         user_id: m.user_id,
         email: u?.user?.email ?? null,
-        role: m.role ?? null,
       });
     }
+
 
     const products = ["quests_advanced", "time_capsule", "the_atlas"];
     const unlocks: Record<string, boolean> = {};
