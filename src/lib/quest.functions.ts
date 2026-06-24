@@ -7,17 +7,28 @@ export const listQuests = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const [{ data: cats }, { data: chapters }, { data: steps }, { data: completions }] = await Promise.all([
-      supabase.from("quest_categories").select("*").order("position"),
-      supabase.from("quest_chapters").select("*").order("position"),
-      supabase.from("quest_steps").select("id, chapter_id, position, kind, xp_reward").order("position"),
-      supabase.from("quest_step_completions").select("step_id").eq("user_id", userId),
-    ]);
+    const { data: profile } = await supabase
+      .from("profiles").select("current_couple_id").eq("id", userId).maybeSingle();
+    const coupleId = profile?.current_couple_id as string | null;
+
+    const [{ data: cats }, { data: chapters }, { data: steps }, { data: completions }, advancedRpc] =
+      await Promise.all([
+        supabase.from("quest_categories").select("*").order("position"),
+        supabase.from("quest_chapters").select("*").order("position"),
+        supabase.from("quest_steps").select("id, chapter_id, position, kind, xp_reward").order("position"),
+        supabase.from("quest_step_completions").select("step_id").eq("user_id", userId),
+        coupleId
+          ? supabase.rpc("couple_unlocked", { _couple_id: coupleId, _product: "quests_advanced" })
+          : Promise.resolve({ data: false }),
+      ]);
+
+    const advancedUnlocked = !!(advancedRpc as { data: boolean | null }).data;
     const done = new Set((completions ?? []).map(c => c.step_id));
     const chaptersWithProgress = (chapters ?? []).map(ch => {
       const chSteps = (steps ?? []).filter(s => s.chapter_id === ch.id);
       const completed = chSteps.filter(s => done.has(s.id)).length;
-      return { ...ch, total: chSteps.length, completed };
+      const locked = (ch as { is_advanced?: boolean }).is_advanced === true && !advancedUnlocked;
+      return { ...ch, total: chSteps.length, completed, locked };
     });
     return { categories: cats ?? [], chapters: chaptersWithProgress };
   });
@@ -32,6 +43,18 @@ export const getChapter = createServerFn({ method: "GET" })
     const { data: ch } = await supabase
       .from("quest_chapters").select("*").eq("slug", data.slug).maybeSingle();
     if (!ch) throw new Error("Chapter not found");
+
+    // Advanced chapters are gated on couple-level unlock.
+    const { data: profile } = await supabase
+      .from("profiles").select("current_couple_id").eq("id", userId).maybeSingle();
+    const coupleId = profile?.current_couple_id as string | null;
+    if ((ch as { is_advanced?: boolean }).is_advanced === true) {
+      const { data: unlocked } = coupleId
+        ? await supabase.rpc("couple_unlocked", { _couple_id: coupleId, _product: "quests_advanced" })
+        : { data: false };
+      if (!unlocked) throw new Error("This chapter unlocks at Level 8 with 14 shared days.");
+    }
+
     const { data: cat } = await supabase
       .from("quest_categories").select("*").eq("id", ch.category_id).maybeSingle();
     const { data: steps } = await supabase
@@ -42,6 +65,14 @@ export const getChapter = createServerFn({ method: "GET" })
       .eq("user_id", userId)
       .in("step_id", stepIds);
     const mine = new Map((myCompletions ?? []).map(c => [c.step_id, c]));
+
+    // Partner completions — admin client, step_id only (no body leak).
+    let partnerId: string | null = null;
+    let partnerName: string | null = null;
+    const partnerDone = new Set<string>();
+    if (coupleId && stepIds.length) {
+      const { data: members } = await supabase
+        .from("couple_members").select("user_id").eq("couple_id", coupleId);
 
     // Partner completions — admin client, step_id only (no body leak).
     let partnerId: string | null = null;
