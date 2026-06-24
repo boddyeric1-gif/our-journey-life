@@ -65,6 +65,7 @@ function OnboardingPage() {
   const [anniversary, setAnniversary] = useState("");
   const [loveLang, setLoveLang] = useState<LL | null>(null);
   const [goals, setGoals] = useState<string[]>([]);
+  const [goalsLimitHint, setGoalsLimitHint] = useState(false);
   const [letter, setLetter] = useState("");
   const [inviteCode, setInviteCode] = useState<string | null>(null);
 
