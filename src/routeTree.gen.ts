@@ -24,6 +24,7 @@ import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedDailyRouteImport } from './routes/_authenticated/daily'
 import { Route as AuthenticatedAtlasRouteImport } from './routes/_authenticated/atlas'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedQuestsIndexRouteImport } from './routes/_authenticated/quests.index'
 import { Route as AuthenticatedCapsuleIndexRouteImport } from './routes/_authenticated/capsule.index'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
@@ -107,6 +108,11 @@ const AuthenticatedAtlasRoute = AuthenticatedAtlasRouteImport.update({
   path: '/atlas',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedQuestsIndexRoute =
   AuthenticatedQuestsIndexRouteImport.update({
     id: '/quests/',
@@ -161,6 +167,7 @@ export interface FileRoutesByFullPath {
   '/security': typeof SecurityRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/atlas': typeof AuthenticatedAtlasRoute
   '/daily': typeof AuthenticatedDailyRoute
   '/home': typeof AuthenticatedHomeRoute
@@ -185,6 +192,7 @@ export interface FileRoutesByTo {
   '/security': typeof SecurityRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/atlas': typeof AuthenticatedAtlasRoute
   '/daily': typeof AuthenticatedDailyRoute
   '/home': typeof AuthenticatedHomeRoute
@@ -211,6 +219,7 @@ export interface FileRoutesById {
   '/security': typeof SecurityRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/atlas': typeof AuthenticatedAtlasRoute
   '/_authenticated/daily': typeof AuthenticatedDailyRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
@@ -237,6 +246,7 @@ export interface FileRouteTypes {
     | '/security'
     | '/sitemap.xml'
     | '/terms'
+    | '/admin'
     | '/atlas'
     | '/daily'
     | '/home'
@@ -261,6 +271,7 @@ export interface FileRouteTypes {
     | '/security'
     | '/sitemap.xml'
     | '/terms'
+    | '/admin'
     | '/atlas'
     | '/daily'
     | '/home'
@@ -286,6 +297,7 @@ export interface FileRouteTypes {
     | '/security'
     | '/sitemap.xml'
     | '/terms'
+    | '/_authenticated/admin'
     | '/_authenticated/atlas'
     | '/_authenticated/daily'
     | '/_authenticated/home'
@@ -424,6 +436,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAtlasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/quests/': {
       id: '/_authenticated/quests/'
       path: '/quests'
@@ -484,6 +503,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAtlasRoute: typeof AuthenticatedAtlasRoute
   AuthenticatedDailyRoute: typeof AuthenticatedDailyRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
@@ -499,6 +519,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedAtlasRoute: AuthenticatedAtlasRoute,
   AuthenticatedDailyRoute: AuthenticatedDailyRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,

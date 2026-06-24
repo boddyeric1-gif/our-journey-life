@@ -1,119 +1,54 @@
-# Couple Level Unlocks (v2 — anti-grind)
+## Goal
 
-Turn XP into a shared progression that unlocks premium features. Paid entitlements keep working unchanged — reaching a milestone is an *alternative* way in, earned by ~a month of consistent shared use, not a 5-minute quest grind.
+Let you test every premium feature without paying, by promoting your account (`emb.creations.llc@gmail.com`) to an admin and giving any couple containing an admin full unlock access. Add a small hidden `/admin` page so you can manage roles and inspect couples going forward.
 
-## Anti-grind: dual gate
+## How the bypass works
 
-A single XP threshold is grindable because quest steps award up to 240 couple XP each, so a couple could blow past a level in one sitting. To prevent that, every unlock requires **two conditions simultaneously**:
+All premium gates already flow through one database function: `public.couple_unlocked(couple_id, product)`. It's called from `quest.functions.ts`, `timeCapsule.functions.ts`, and `atlas.functions.ts`. Extending it is a one-line change that unlocks Time Capsule, The Atlas, and advanced quests everywhere at once — no scattering of bypass logic across the app.
 
-1. **Couple level ≥ milestone** (XP-based, can spike from quests)
-2. **Shared active days ≥ minimum** (calendar-bound, cannot be grinded — at most one per day, and only when **both partners** logged a daily response or solo reflection that day)
+Bypass rule: if **any member of the couple** has the `admin` role, every product returns `unlocked = true`. So when you pair with a test partner (or your real partner), that couple sees the full premium experience.
 
-Shared days come from counting dates where `couple_both_active_on(couple_id, date) = true` — that RPC already exists. One row of progress per real calendar day, per couple. No amount of quest-grinding moves this number.
+## Migration (single file)
 
-## Milestones (raised by 5, with shared-day floors)
+1. Grant `admin` role to your user:
+   ```sql
+   INSERT INTO public.user_roles (user_id, role)
+   SELECT id, 'admin' FROM auth.users WHERE email = 'emb.creations.llc@gmail.com'
+   ON CONFLICT (user_id, role) DO NOTHING;
+   ```
+2. Add helper `public.couple_has_admin(_couple_id uuid)` — `SECURITY DEFINER`, `STABLE`, joins `couple_members` → `user_roles`, scoped via `is_couple_member` so it isn't a data leak. `REVOKE ... FROM anon`, `GRANT ... TO authenticated, service_role`.
+3. Patch `public.couple_unlocked` to short-circuit `RETURN TRUE` when `couple_has_admin(_couple_id)` — placed right after the existing paid-entitlement short-circuit so admin works for couples with no paid record.
+4. Add RLS to `user_roles`: admins can SELECT/INSERT/DELETE all rows (`USING (has_role(auth.uid(), 'admin'))`). Existing self-read policy stays.
 
-```text
-Feature                Level   Couple XP    Shared Days
-Advanced quests          8       4,900          14
-Time Capsule            11      10,000          21
-The Atlas               15      19,600          30
-```
+## Hidden `/admin` page
 
-Why these survive a quest binge: even if a couple completes every quest step on day 1, the shared-days floor still forces ~2 weeks before the first unlock and a full month before The Atlas. The XP floor stops a couple who *only* opens the app at midnight to mark "active" from coasting in without doing the work.
+New protected route `src/routes/_authenticated/admin.tsx`. Guard with a `beforeLoad` that calls a new server fn `requireAdmin()` (uses `requireSupabaseAuth` + `has_role` RPC) and throws `redirect({ to: '/' })` for non-admins. Not linked from any nav — you reach it by typing the URL.
 
-## Realistic pacing (sanity check)
+Page contents (kept minimal, brand-aligned):
+- **You** card: your email, user id, admin badge, your couple id, current `couple_unlocked` status for each product (sanity check the bypass).
+- **Admins** list: rows of `{ email, user_id, granted_at }` with a "Revoke" button. A small input + "Grant admin" button (looks up user by email server-side).
+- **Lookup couple** input: paste a couple id → shows members, XP, shared days, entitlements, and unlock status per product.
 
-Sustainable daily couple XP without quests:
-- Daily prompt: 100 (50 each)
-- Solo reflections: ~60
-- Letters / insights: ~30 typical
-- **≈ 180–200 couple XP/day** baseline
+Server functions in `src/lib/admin.functions.ts` (all `requireSupabaseAuth` + admin check inside the handler):
+- `getAdminOverview()` — your row + admin list.
+- `grantAdminByEmail({ email })` — loads `supabaseAdmin` inside the handler (Auth Admin lookup by email), inserts into `user_roles`.
+- `revokeAdmin({ user_id })` — deletes role; refuses to revoke the last admin.
+- `inspectCouple({ couple_id })` — returns members, RPC results.
 
-Cumulative (no quests):
-- Day 14 → ~2,700 XP (Level 6) + 14 shared days → still locked
-- Day 21 → ~4,100 XP (Level 7) + 21 shared days → still locked
-- Day 30 → ~5,800 XP (Level 8) + 30 shared days → Advanced quests unlocked, Time Capsule close
-- Quests, when done together, accelerate XP but cannot accelerate shared days, so they shorten the gap **only after** the floor is met
+## UI rules
 
-A motivated couple completes everything in ~5–7 weeks. A grinder cannot shortcut it.
-
-## Model
-
-Re-use `levelFromXp()` so curve, UI, and tests don't change — only the input does.
-
-`couple_total_xp(_couple_id)` = `SUM(xp_events.amount)` joined to `couple_members` for that couple.
-
-`couple_shared_days(_couple_id)` = `COUNT(DISTINCT date)` from `daily_responses` ∪ `solo_reflections` where both partners are present on the same date (mirrors `couple_both_active_on` aggregated, executed in one query).
-
-Unlock check:
-```text
-unlocked(feature) ⇔
-  couple_total_xp >= XP_FLOOR[feature]
-  AND couple_shared_days >= DAYS_FLOOR[feature]
-  OR couple_has_entitlement(couple, product)  -- paid path
-```
-
-## Database
-
-```sql
-ALTER TABLE public.quest_chapters
-  ADD COLUMN IF NOT EXISTS is_advanced boolean NOT NULL DEFAULT false;
-
-CREATE OR REPLACE FUNCTION public.couple_total_xp(_couple_id uuid) RETURNS bigint ...;
-CREATE OR REPLACE FUNCTION public.couple_shared_days(_couple_id uuid) RETURNS integer ...;
-
--- Extend existing entitlement check with the dual-gate fallback
-CREATE OR REPLACE FUNCTION public.couple_has_entitlement(_couple_id uuid, _product text) ...;
-```
-
-Both new functions: `SECURITY DEFINER`, `STABLE`, guarded by `is_couple_member`. `GRANT EXECUTE ... TO authenticated`. No schema breaks. Existing RLS policies and server gates keep working unchanged because they all already route through `couple_has_entitlement`.
-
-## Server
-
-`src/lib/coupleLevel.ts` (shared, pure):
-
-```ts
-export const UNLOCKS = {
-  quests_advanced: { level: 8,  sharedDays: 14 },
-  time_capsule:    { level: 11, sharedDays: 21 },
-  the_atlas:       { level: 15, sharedDays: 30 },
-} as const;
-export function isUnlocked(level: number, sharedDays: number, k: keyof typeof UNLOCKS) { ... }
-```
-
-`home.functions.ts` `getHome()` payload gains:
-
-```ts
-couple: {
-  totalXp, level, intoLevel, span, percent,
-  sharedDays,
-  unlocks: { time_capsule, the_atlas, quests_advanced },
-  nextUnlock: { feature, xpRemaining, daysRemaining } | null,  // null when all unlocked or paid
-}
-```
-
-Gates remain server-side. `timeCapsule.functions.ts` and `atlas.functions.ts` keep their `couple_has_entitlement` call. `quest.functions.ts` adds an `unlocked(quests_advanced)` check when a step belongs to an advanced chapter.
-
-## UI
-
-- **Home**: shared "Together — Level N" bar replaces the per-user bar. Below it, the *next unlock* chip shows whichever floor is further away: `"Time Capsule unlocks at Level 11 · 8 shared days to go"`.
-- **Profile**: small "Both of you" panel listing the three milestones with two tick marks each (level ✓, days ✓), so couples see why a feature is still locked.
-- **Paywall surfaces** (Time Capsule / Atlas locked state): two paths side by side — "Earn it together" (progress: level + days) and "Unlock now" (existing checkout). Honest, no pressure.
-- **Quests list**: advanced chapters show a quiet "Level 8 · 14 shared days" badge until unlocked.
-
-No new routes. No new colors. No confetti.
+Card-based layout matching the rest of the app, mobile-first, no neon, no glassmorphism, no confetti. Destructive actions (revoke) use the existing `AlertDialog` confirm.
 
 ## Out of scope
 
-- No change to per-user XP accrual.
-- No change to streaks, payments, or webhooks.
-- No analytics events this pass.
-- No retroactive notification when an existing couple already meets a milestone — they simply see the feature unlocked next time they open it.
+- No billing/Stripe changes — paid checkout still works untouched.
+- No "developer mode" toggle, no impersonation, no fake-XP buttons.
+- No public signup of admins; only existing admins can grant.
+- No analytics events for admin actions (can add later if you want an audit log).
 
 ## Verification
 
-- `tsgo --noEmit` after each step.
-- SQL: seed a couple with 30,000 XP but only 3 shared days → Atlas still locked. Seed a couple with 30 shared days but 1,000 XP → still locked. Both met → unlocked.
-- Vitest: `isUnlocked` truth table; `getHome` payload shape with mocked RPCs.
-- Manual: locked Time Capsule renders both paths; after enough XP + days, the composer renders without purchase.
+- `tsgo --noEmit` clean.
+- SQL: as your user, call `select couple_unlocked('<your couple id>', 'the_atlas')` → `true`. As a non-admin test user in a separate couple → `false` unless they hit the existing XP/days thresholds or have a paid entitlement.
+- Visit `/admin` signed in as you → loads. Sign out and visit → redirected.
+- Open Time Capsule, Atlas, and an advanced quest chapter from your account → no paywall.
