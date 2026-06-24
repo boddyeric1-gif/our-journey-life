@@ -159,8 +159,20 @@ export const leaveCouple = createServerFn({ method: "POST" })
     const { data: profile } = await supabase
       .from("profiles").select("current_couple_id").eq("id", userId).maybeSingle();
     if (!profile?.current_couple_id) return { ok: true };
-    await supabase.from("couple_members")
-      .delete().eq("couple_id", profile.current_couple_id).eq("user_id", userId);
+
+    // Verify the membership row is actually removed. If RLS silently blocks
+    // the delete (0 rows affected), the user would otherwise keep
+    // is_couple_member() === true and retain access to ex-partner data.
+    const { count, error: delError } = await supabase
+      .from("couple_members")
+      .delete({ count: "exact" })
+      .eq("couple_id", profile.current_couple_id)
+      .eq("user_id", userId);
+    if (delError) throw new Error(delError.message);
+    if (!count || count < 1) {
+      throw new Error("Could not leave couple — membership was not removed.");
+    }
+
     await supabase.from("profiles").update({ current_couple_id: null }).eq("id", userId);
     return { ok: true };
   });
