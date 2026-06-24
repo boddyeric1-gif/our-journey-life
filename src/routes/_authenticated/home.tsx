@@ -32,8 +32,8 @@ function HomePage() {
   const fetchHome = useServerFn(getHomeState);
   const fetchInsights = useServerFn(listInsights);
 
-  const home = useQuery({ queryKey: ["home-state"], queryFn: () => fetchHome() });
-  const insights = useQuery({ queryKey: ["insights"], queryFn: () => fetchInsights() });
+  const home = useQuery({ queryKey: ["home-state"], queryFn: () => fetchHome(), staleTime: 30_000 });
+  const insights = useQuery({ queryKey: ["insights"], queryFn: () => fetchInsights(), staleTime: 5 * 60_000 });
   const [lettersOpen, setLettersOpen] = useState(false);
 
   useEffect(() => {
@@ -53,6 +53,9 @@ function HomePage() {
     home.data && home.data.kind === "paired" ? home.data.couple?.id ?? null : null;
   useDailyRealtime(coupleIdForRealtime);
 
+  if (home.isError) {
+    return <RouteError error={home.error as Error} reset={() => home.refetch()} />;
+  }
   if (home.isLoading || !home.data) {
     return (
       <AppShell>

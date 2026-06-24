@@ -19,12 +19,12 @@ export const getHomeState = createServerFn({ method: "GET" })
     const userTz = (profile as any)?.timezone ?? "UTC";
     const userLocalToday = localToday(userTz);
 
-    // Parallel batch 1: streak, xp totals (own)
-    const [{ data: userStreak }, { data: xpRows }] = await Promise.all([
+    // Parallel batch 1: streak, xp total (own) via aggregate RPC
+    const [{ data: userStreak }, { data: xpTotalRpc }] = await Promise.all([
       supabase.from("user_streaks").select("*").eq("user_id", userId).maybeSingle(),
-      supabase.from("xp_events").select("amount").eq("user_id", userId),
+      supabase.rpc("user_total_xp", { _user_id: userId }),
     ]);
-    const totalXp = (xpRows ?? []).reduce((s, r) => s + (r.amount ?? 0), 0);
+    const totalXp = Number(xpTotalRpc ?? 0);
 
     if (!profile?.current_couple_id) {
       return {
@@ -95,8 +95,8 @@ export const getHomeState = createServerFn({ method: "GET" })
       supabase.from("solo_reflections").select("id, body")
         .eq("user_id", userId).eq("prompt_date", promptToday).maybeSingle(),
       partnerId
-        ? supabase.from("xp_events").select("amount").eq("user_id", partnerId)
-        : Promise.resolve({ data: [] }),
+        ? supabase.rpc("user_total_xp", { _user_id: partnerId })
+        : Promise.resolve({ data: 0 }),
       supabase.from("letters").select("*").eq("couple_id", coupleId)
         .order("created_at", { ascending: false }).limit(20),
       supabase.from("quest_step_completions").select("step_id").eq("user_id", userId),
@@ -139,7 +139,7 @@ export const getHomeState = createServerFn({ method: "GET" })
               ? { id: null as string | null, user_id: partnerId, body: null as string | null, sealed: false, missed: true }
               : null));
 
-    const partnerTotalXp = (partnerXpRes.data ?? []).reduce((s: number, r: any) => s + (r.amount ?? 0), 0);
+    const partnerTotalXp = Number((partnerXpRes as { data: number | null }).data ?? 0);
 
     // next quest step
     const completedSet = new Set((completionsRes.data ?? []).map((c: any) => c.step_id));

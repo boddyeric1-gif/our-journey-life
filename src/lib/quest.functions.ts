@@ -110,12 +110,16 @@ export const completeStep = createServerFn({ method: "POST" })
     if (existing) {
       alreadyCompleted = true;
     } else {
-      await supabase.from("quest_step_completions").insert({
+      const { error: completionError } = await supabase.from("quest_step_completions").insert({
         user_id: userId,
         couple_id: profile?.current_couple_id ?? null,
         step_id: data.stepId,
         body: data.body ?? null,
       });
+      if (completionError) {
+        console.error("[quest_step_completions] insert failed", completionError);
+        throw new Error(`Couldn't record step: ${completionError.message}`);
+      }
 
       const amount = step?.xp_reward ?? (step?.kind === "couple" ? XP_FOR.quest_step_couple : XP_FOR.quest_step_solo);
       const { error: xpError } = await supabaseAdmin.from("xp_events").upsert({
