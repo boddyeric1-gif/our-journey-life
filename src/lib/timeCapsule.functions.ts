@@ -9,7 +9,8 @@ async function getCoupleAndEntitlement(supabase: any, userId: string) {
     .from("profiles").select("current_couple_id").eq("id", userId).maybeSingle();
   const coupleId = profile?.current_couple_id as string | null | undefined;
   if (!coupleId) throw new Error("Pair with your partner first.");
-  const { data: ent } = await supabase.rpc("couple_has_entitlement", {
+  // Unlock = paid entitlement OR couple-level milestone reached.
+  const { data: ent } = await supabase.rpc("couple_unlocked", {
     _couple_id: coupleId, _product: "time_capsule",
   });
   if (!ent) throw new Error("The Time Capsule isn't unlocked for your couple yet.");

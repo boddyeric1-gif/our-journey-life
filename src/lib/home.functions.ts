@@ -103,7 +103,7 @@ export const getHomeState = createServerFn({ method: "GET" })
       supabase.from("letters").select("*").eq("couple_id", coupleId)
         .order("created_at", { ascending: false }).limit(20),
       supabase.from("quest_step_completions").select("step_id").eq("user_id", userId),
-      supabase.from("quest_chapters").select("id, slug, title, position").order("position"),
+      supabase.from("quest_chapters").select("id, slug, title, position, is_advanced").order("position"),
       // A1: load all steps once, sort in-memory by chapter then position.
       supabase.from("quest_steps").select("id, chapter_id, position, teaching, prompt, kind"),
       supabase.from("couple_goals").select("goal").eq("couple_id", coupleId),
@@ -120,6 +120,21 @@ export const getHomeState = createServerFn({ method: "GET" })
       supabase.from("solo_reflections").select("prompt_date")
         .eq("user_id", userId).gte("prompt_date", rhythmStartISO),
     ]);
+
+    // Couple-level progress (shared XP + shared days + unlock state).
+    const { computeCoupleProgress } = await import("@/lib/coupleLevel");
+    const [{ data: coupleXp }, { data: sharedDays }, { data: entRows }] = await Promise.all([
+      supabase.rpc("couple_total_xp", { _couple_id: coupleId }),
+      supabase.rpc("couple_shared_days", { _couple_id: coupleId }),
+      supabase.from("couple_entitlements")
+        .select("product, status").eq("couple_id", coupleId).eq("status", "active"),
+    ]);
+    const paidSet = new Set((entRows ?? []).map(r => r.product as string));
+    const coupleProgress = computeCoupleProgress(
+      Number(coupleXp ?? 0),
+      Number(sharedDays ?? 0),
+      { time_capsule: paidSet.has("time_capsule"), the_atlas: paidSet.has("the_atlas") },
+    );
 
     const partner = (partnerRes.data as any) ?? null;
     const pendingInvite = (pendingInviteRes.data as any) ?? null;
@@ -211,6 +226,7 @@ export const getHomeState = createServerFn({ method: "GET" })
       userLocalToday,
       daysTogether,
       rhythm,
+      coupleProgress,
     };
   });
 

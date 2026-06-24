@@ -42,7 +42,8 @@ async function resolveCoupleId(supabase: SupabaseClient, userId: string): Promis
 }
 
 async function assertAtlasEntitlement(supabase: SupabaseClient, coupleId: string): Promise<void> {
-  const { data: ent } = await supabase.rpc("couple_has_entitlement", {
+  // Unlock = paid entitlement OR couple-level milestone reached.
+  const { data: ent } = await supabase.rpc("couple_unlocked", {
     _couple_id: coupleId, _product: "the_atlas",
   });
   if (!ent) throw new Error("The Atlas isn't unlocked for your couple yet.");

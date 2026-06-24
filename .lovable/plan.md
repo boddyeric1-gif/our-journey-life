@@ -1,35 +1,119 @@
+# Couple Level Unlocks (v2 — anti-grind)
 
-# Polish + maintainability batch
+Turn XP into a shared progression that unlocks premium features. Paid entitlements keep working unchanged — reaching a milestone is an *alternative* way in, earned by ~a month of consistent shared use, not a 5-minute quest grind.
 
-Group A (medium-impact) already shipped. This batch closes the remaining six items in `.lovable/plan.md` — three polish fixes the user sees, three maintainability cleanups with zero behavior change. Small, independent, low risk.
+## Anti-grind: dual gate
 
-## Group B — Polish
+A single XP threshold is grindable because quest steps award up to 240 couple XP each, so a couple could blow past a level in one sitting. To prevent that, every unlock requires **two conditions simultaneously**:
 
-**B1. Goals click feedback** — In the onboarding/profile goals editor, clicking a 4th goal currently does nothing. Add a transient "Up to three" hint (small muted line under the chip grid) that appears on the rejected click and fades after ~1.6s. Local component state, no schema change.
+1. **Couple level ≥ milestone** (XP-based, can spike from quests)
+2. **Shared active days ≥ minimum** (calendar-bound, cannot be grinded — at most one per day, and only when **both partners** logged a daily response or solo reflection that day)
 
-**B2. Profile loading skeleton** — Replace the raw `<div>Loading…</div>` fallback in `src/routes/_authenticated/profile.tsx` with the existing `HeaderSkeleton` so loading state matches the rest of the app.
+Shared days come from counting dates where `couple_both_active_on(couple_id, date) = true` — that RPC already exists. One row of progress per real calendar day, per couple. No amount of quest-grinding moves this number.
 
-**B3. OG images for shareable routes** — Add `og:image` + `twitter:image` to:
-- `/` (`src/routes/index.tsx`) — site cover
-- `/join/$code` (`src/routes/join.$code.tsx`) — same cover (invite preview)
+## Milestones (raised by 5, with shared-day floors)
 
-Generate one warm, literary brand cover (1200×630) at `src/assets/og-cover.jpg` and import as a URL. Wire absolute URLs (`https://our-journey.life/...`) per head-meta rules. Note to user: existing link-preview caches won't refresh until each platform re-scrapes.
+```text
+Feature                Level   Couple XP    Shared Days
+Advanced quests          8       4,900          14
+Time Capsule            11      10,000          21
+The Atlas               15      19,600          30
+```
 
-## Group C — Maintainability (no behavior change)
+Why these survive a quest binge: even if a couple completes every quest step on day 1, the shared-days floor still forces ~2 weeks before the first unlock and a full month before The Atlas. The XP floor stops a couple who *only* opens the app at midnight to mark "active" from coasting in without doing the work.
 
-**C1. Deduplicate Atlas builder** — In `src/lib/atlas.functions.ts`, extract the shared query batch from `getAtlas` and `buildAtlasInline` into one private `loadAtlasData(supabase, coupleId)` helper. Both functions become thin wrappers.
+## Realistic pacing (sanity check)
 
-**C2. Replace `any` with generated DB types** — Sweep `src/lib/home.functions.ts`, `quest.functions.ts`, `atlas.functions.ts`, `timeCapsule.functions.ts` for `as any` casts on Supabase rows. Replace with `Database["public"]["Tables"][...]["Row"]` (or `Functions[...]["Returns"]` for RPCs) from `src/integrations/supabase/types.ts`.
+Sustainable daily couple XP without quests:
+- Daily prompt: 100 (50 each)
+- Solo reflections: ~60
+- Letters / insights: ~30 typical
+- **≈ 180–200 couple XP/day** baseline
 
-**C3. Delete dead file** — Re-grep for unreferenced files flagged in the original audit (the candidate was a stale helper under `src/lib/`). Confirm zero imports via `rg`, then delete. If nothing is actually dead, skip and note it.
+Cumulative (no quests):
+- Day 14 → ~2,700 XP (Level 6) + 14 shared days → still locked
+- Day 21 → ~4,100 XP (Level 7) + 21 shared days → still locked
+- Day 30 → ~5,800 XP (Level 8) + 30 shared days → Advanced quests unlocked, Time Capsule close
+- Quests, when done together, accelerate XP but cannot accelerate shared days, so they shorten the gap **only after** the floor is met
 
-## Verification
+A motivated couple completes everything in ~5–7 weeks. A grinder cannot shortcut it.
 
-- `tsgo --noEmit` after each group.
-- Manually click 4 goals to confirm the B1 hint.
-- View `/` and `/join/<test>` head tags to confirm absolute `og:image` URLs.
-- Atlas page still renders identical content after C1.
+## Model
+
+Re-use `levelFromXp()` so curve, UI, and tests don't change — only the input does.
+
+`couple_total_xp(_couple_id)` = `SUM(xp_events.amount)` joined to `couple_members` for that couple.
+
+`couple_shared_days(_couple_id)` = `COUNT(DISTINCT date)` from `daily_responses` ∪ `solo_reflections` where both partners are present on the same date (mirrors `couple_both_active_on` aggregated, executed in one query).
+
+Unlock check:
+```text
+unlocked(feature) ⇔
+  couple_total_xp >= XP_FLOOR[feature]
+  AND couple_shared_days >= DAYS_FLOOR[feature]
+  OR couple_has_entitlement(couple, product)  -- paid path
+```
+
+## Database
+
+```sql
+ALTER TABLE public.quest_chapters
+  ADD COLUMN IF NOT EXISTS is_advanced boolean NOT NULL DEFAULT false;
+
+CREATE OR REPLACE FUNCTION public.couple_total_xp(_couple_id uuid) RETURNS bigint ...;
+CREATE OR REPLACE FUNCTION public.couple_shared_days(_couple_id uuid) RETURNS integer ...;
+
+-- Extend existing entitlement check with the dual-gate fallback
+CREATE OR REPLACE FUNCTION public.couple_has_entitlement(_couple_id uuid, _product text) ...;
+```
+
+Both new functions: `SECURITY DEFINER`, `STABLE`, guarded by `is_couple_member`. `GRANT EXECUTE ... TO authenticated`. No schema breaks. Existing RLS policies and server gates keep working unchanged because they all already route through `couple_has_entitlement`.
+
+## Server
+
+`src/lib/coupleLevel.ts` (shared, pure):
+
+```ts
+export const UNLOCKS = {
+  quests_advanced: { level: 8,  sharedDays: 14 },
+  time_capsule:    { level: 11, sharedDays: 21 },
+  the_atlas:       { level: 15, sharedDays: 30 },
+} as const;
+export function isUnlocked(level: number, sharedDays: number, k: keyof typeof UNLOCKS) { ... }
+```
+
+`home.functions.ts` `getHome()` payload gains:
+
+```ts
+couple: {
+  totalXp, level, intoLevel, span, percent,
+  sharedDays,
+  unlocks: { time_capsule, the_atlas, quests_advanced },
+  nextUnlock: { feature, xpRemaining, daysRemaining } | null,  // null when all unlocked or paid
+}
+```
+
+Gates remain server-side. `timeCapsule.functions.ts` and `atlas.functions.ts` keep their `couple_has_entitlement` call. `quest.functions.ts` adds an `unlocked(quests_advanced)` check when a step belongs to an advanced chapter.
+
+## UI
+
+- **Home**: shared "Together — Level N" bar replaces the per-user bar. Below it, the *next unlock* chip shows whichever floor is further away: `"Time Capsule unlocks at Level 11 · 8 shared days to go"`.
+- **Profile**: small "Both of you" panel listing the three milestones with two tick marks each (level ✓, days ✓), so couples see why a feature is still locked.
+- **Paywall surfaces** (Time Capsule / Atlas locked state): two paths side by side — "Earn it together" (progress: level + days) and "Unlock now" (existing checkout). Honest, no pressure.
+- **Quests list**: advanced chapters show a quiet "Level 8 · 14 shared days" badge until unlocked.
+
+No new routes. No new colors. No confetti.
 
 ## Out of scope
 
-No new features, no DB migrations, no auth changes. Group A items remain as shipped.
+- No change to per-user XP accrual.
+- No change to streaks, payments, or webhooks.
+- No analytics events this pass.
+- No retroactive notification when an existing couple already meets a milestone — they simply see the feature unlocked next time they open it.
+
+## Verification
+
+- `tsgo --noEmit` after each step.
+- SQL: seed a couple with 30,000 XP but only 3 shared days → Atlas still locked. Seed a couple with 30 shared days but 1,000 XP → still locked. Both met → unlocked.
+- Vitest: `isUnlocked` truth table; `getHome` payload shape with mocked RPCs.
+- Manual: locked Time Capsule renders both paths; after enough XP + days, the composer renders without purchase.

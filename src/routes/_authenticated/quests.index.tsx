@@ -5,7 +5,8 @@ import { listQuests } from "@/lib/quest.functions";
 import { AppShell } from "@/components/app-shell";
 import { RouteError, RouteNotFound } from "@/components/route-boundaries";
 import { ListSkeleton } from "@/components/skeletons";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Lock } from "lucide-react";
+import { COUPLE_UNLOCKS } from "@/lib/coupleLevel";
 
 export const Route = createFileRoute("/_authenticated/quests/")({
   head: () => ({
@@ -48,21 +49,40 @@ function QuestsPage() {
               <div className="space-y-3">
                 {chapters.map(ch => {
                   const percent = ch.total > 0 ? ch.completed / ch.total : 0;
-                  return (
+                  const locked = (ch as { locked?: boolean }).locked === true;
+                  const t = COUPLE_UNLOCKS.quests_advanced;
+                  const inner = (
+                    <div className="flex items-start gap-4">
+                      <ProgressRing percent={locked ? 0 : percent} />
+                      <div className="flex-1">
+                        <p className="text-[11px] uppercase tracking-[0.16em] text-ink-mute">Chapter {ch.position}</p>
+                        <h3 className="mt-0.5 font-serif text-lg text-ink leading-snug">{ch.title}</h3>
+                        <p className="mt-1 text-sm text-ink-soft text-pretty">{ch.summary}</p>
+                        {locked ? (
+                          <p className="mt-2 text-[11px] text-ink-mute inline-flex items-center gap-1.5">
+                            <Lock className="h-3 w-3" /> Unlocks at Level {t.level} · {t.sharedDays} shared days
+                          </p>
+                        ) : (
+                          <p className="mt-2 text-[11px] text-ink-mute">{ch.completed}/{ch.total} steps</p>
+                        )}
+                      </div>
+                      {!locked && <ArrowRight className="h-4 w-4 text-ink-mute mt-1" />}
+                    </div>
+                  );
+                  return locked ? (
+                    <div
+                      key={ch.id}
+                      aria-disabled
+                      className="block surface-card p-5 opacity-60 cursor-not-allowed"
+                    >
+                      {inner}
+                    </div>
+                  ) : (
                     <Link
                       key={ch.id} to="/quests/$chapter" params={{ chapter: ch.slug }}
                       className="block surface-card p-5 hover:bg-card/80 transition"
                     >
-                      <div className="flex items-start gap-4">
-                        <ProgressRing percent={percent} />
-                        <div className="flex-1">
-                          <p className="text-[11px] uppercase tracking-[0.16em] text-ink-mute">Chapter {ch.position}</p>
-                          <h3 className="mt-0.5 font-serif text-lg text-ink leading-snug">{ch.title}</h3>
-                          <p className="mt-1 text-sm text-ink-soft text-pretty">{ch.summary}</p>
-                          <p className="mt-2 text-[11px] text-ink-mute">{ch.completed}/{ch.total} steps</p>
-                        </div>
-                        <ArrowRight className="h-4 w-4 text-ink-mute mt-1" />
-                      </div>
+                      {inner}
                     </Link>
                   );
                 })}

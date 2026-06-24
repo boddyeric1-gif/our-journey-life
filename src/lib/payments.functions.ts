@@ -117,21 +117,45 @@ export const getCoupleEntitlements = createServerFn({ method: 'GET' })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
+    const { computeCoupleProgress } = await import('@/lib/coupleLevel');
     const { data: profile } = await supabase
       .from('profiles').select('current_couple_id').eq('id', userId).maybeSingle();
     const coupleId = profile?.current_couple_id as string | null | undefined;
     if (!coupleId) {
-      return { coupleId: null, timeCapsule: false, atlas: false };
+      return {
+        coupleId: null,
+        timeCapsule: false,
+        atlas: false,
+        paid: { timeCapsule: false, atlas: false },
+        progress: null as ReturnType<typeof computeCoupleProgress> | null,
+      };
     }
-    const { data: rows } = await supabase
-      .from('couple_entitlements')
-      .select('product, status')
-      .eq('couple_id', coupleId)
-      .eq('status', 'active');
+
+    // Paid entitlements + couple-level progress, in parallel.
+    const [{ data: rows }, { data: xpVal }, { data: daysVal }] = await Promise.all([
+      supabase
+        .from('couple_entitlements')
+        .select('product, status')
+        .eq('couple_id', coupleId)
+        .eq('status', 'active'),
+      supabase.rpc('couple_total_xp', { _couple_id: coupleId }),
+      supabase.rpc('couple_shared_days', { _couple_id: coupleId }),
+    ]);
+
     const set = new Set((rows ?? []).map(r => r.product as string));
+    const paid = { timeCapsule: set.has('time_capsule'), atlas: set.has('the_atlas') };
+    const progress = computeCoupleProgress(Number(xpVal ?? 0), Number(daysVal ?? 0), {
+      time_capsule: paid.timeCapsule,
+      the_atlas: paid.atlas,
+    });
+
+    // "Unlocked" surfaces use OR of paid + earned, so existing pages keep
+    // working unchanged.
     return {
       coupleId,
-      timeCapsule: set.has('time_capsule'),
-      atlas: set.has('the_atlas'),
+      timeCapsule: progress.unlocks.time_capsule,
+      atlas: progress.unlocks.the_atlas,
+      paid,
+      progress,
     };
   });

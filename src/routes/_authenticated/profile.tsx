@@ -10,6 +10,7 @@ import { HeaderSkeleton } from "@/components/skeletons";
 import { supabase } from "@/integrations/supabase/client";
 import { Flame, LogOut, Snowflake, Heart, X, Compass, Pencil } from "lucide-react";
 import { levelFromXp } from "@/lib/xp";
+import { COUPLE_UNLOCKS } from "@/lib/coupleLevel";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 
@@ -97,6 +98,39 @@ function ProfilePage() {
           {d.daysTogether && (
             <p className="mt-1 text-sm text-ink-soft">Day <em className="serif-italic text-rust">{d.daysTogether}</em> together</p>
           )}
+        </section>
+      )}
+
+      {d.kind === "paired" && d.coupleProgress && (
+        <section className="mx-5 mt-4 surface-card p-5">
+          <div className="flex items-baseline justify-between">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-ink-mute">Both of you</p>
+            <p className="text-[12px] text-ink-mute">
+              Level <em className="serif-italic text-rust not-italic font-medium">{d.coupleProgress.level}</em>
+              <span className="mx-1.5">·</span>
+              {d.coupleProgress.sharedDays} shared days
+            </p>
+          </div>
+          <p className="mt-2 text-sm text-ink-soft">Premium features can be earned together, or unlocked any time.</p>
+          <ul className="mt-4 space-y-2.5">
+            {(["quests_advanced","time_capsule","the_atlas"] as const).map(key => {
+              const t = COUPLE_UNLOCKS[key];
+              const unlocked = d.coupleProgress!.unlocks[key];
+              const lvlOk = d.coupleProgress!.level >= t.level;
+              const daysOk = d.coupleProgress!.sharedDays >= t.sharedDays;
+              const label = key === "quests_advanced" ? "Advanced chapters"
+                : key === "time_capsule" ? "Time Capsule" : "The Atlas";
+              return (
+                <li key={key} className="flex items-center justify-between gap-3 text-sm">
+                  <span className={unlocked ? "text-ink" : "text-ink-soft"}>{label}</span>
+                  <span className="text-[11px] text-ink-mute inline-flex items-center gap-2">
+                    <span className={lvlOk ? "text-rust" : ""}>Lv {t.level} {lvlOk ? "✓" : ""}</span>
+                    <span className={daysOk ? "text-rust" : ""}>{t.sharedDays}d {daysOk ? "✓" : ""}</span>
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
         </section>
       )}
 

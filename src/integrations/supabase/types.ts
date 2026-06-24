@@ -522,6 +522,7 @@ export type Database = {
         Row: {
           category_id: string
           id: string
+          is_advanced: boolean
           position: number
           slug: string
           summary: string | null
@@ -530,6 +531,7 @@ export type Database = {
         Insert: {
           category_id: string
           id?: string
+          is_advanced?: boolean
           position: number
           slug: string
           summary?: string | null
@@ -538,6 +540,7 @@ export type Database = {
         Update: {
           category_id?: string
           id?: string
+          is_advanced?: boolean
           position?: number
           slug?: string
           summary?: string | null
@@ -820,6 +823,12 @@ export type Database = {
         Returns: boolean
       }
       couple_has_entitlement: {
+        Args: { _couple_id: string; _product: string }
+        Returns: boolean
+      }
+      couple_shared_days: { Args: { _couple_id: string }; Returns: number }
+      couple_total_xp: { Args: { _couple_id: string }; Returns: number }
+      couple_unlocked: {
         Args: { _couple_id: string; _product: string }
         Returns: boolean
       }
