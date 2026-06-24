@@ -6,11 +6,12 @@ import { leaveCouple } from "@/lib/couple.functions";
 import { updateCoupleGoals } from "@/lib/onboarding.functions";
 import { AppShell } from "@/components/app-shell";
 import { RouteError, RouteNotFound } from "@/components/route-boundaries";
+import { HeaderSkeleton } from "@/components/skeletons";
 import { supabase } from "@/integrations/supabase/client";
 import { Flame, LogOut, Snowflake, Heart, X, Compass, Pencil } from "lucide-react";
 import { levelFromXp } from "@/lib/xp";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const GOAL_OPTIONS = [
   "Communicate better",
@@ -60,7 +61,7 @@ function ProfilePage() {
   if (q.isError) {
     return <RouteError error={q.error as Error} reset={() => q.refetch()} />;
   }
-  if (!q.data) return (<AppShell><div className="p-10 text-ink-mute">Loading…</div></AppShell>);
+  if (!q.data) return (<AppShell><HeaderSkeleton /></AppShell>);
 
   const d = q.data;
   const lvl = levelFromXp(d.totalXp);
@@ -228,10 +229,19 @@ function GoalsEditor({ initial, busy, onClose, onSave }: {
   onSave: (goals: string[]) => void;
 }) {
   const [selected, setSelected] = useState<string[]>(initial);
+  const [limitHint, setLimitHint] = useState(false);
+  useEffect(() => {
+    if (!limitHint) return;
+    const t = setTimeout(() => setLimitHint(false), 1800);
+    return () => clearTimeout(t);
+  }, [limitHint]);
   const toggle = (g: string) => {
-    setSelected(prev =>
-      prev.includes(g) ? prev.filter(x => x !== g) : prev.length < 3 ? [...prev, g] : prev,
-    );
+    setSelected(prev => {
+      if (prev.includes(g)) return prev.filter(x => x !== g);
+      if (prev.length < 3) return [...prev, g];
+      setLimitHint(true);
+      return prev;
+    });
   };
   return (
     <div
@@ -266,6 +276,12 @@ function GoalsEditor({ initial, busy, onClose, onSave }: {
             );
           })}
         </div>
+        <p
+          className={`mt-3 text-xs text-ink-mute transition-opacity duration-300 ${limitHint ? "opacity-100" : "opacity-0"}`}
+          aria-live="polite"
+        >
+          Up to three — tap one to swap it out.
+        </p>
         <div className="mt-5 flex gap-2">
           <button
             onClick={onClose}

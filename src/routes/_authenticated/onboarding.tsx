@@ -213,9 +213,15 @@ function OnboardingPage() {
                 return (
                   <button
                     key={g}
-                    onClick={() => setGoals(prev =>
-                      prev.includes(g) ? prev.filter(x => x !== g) : prev.length < 3 ? [...prev, g] : prev
-                    )}
+                    onClick={() => {
+                      if (goals.includes(g)) {
+                        setGoals(prev => prev.filter(x => x !== g));
+                      } else if (goals.length < 3) {
+                        setGoals(prev => [...prev, g]);
+                      } else {
+                        setGoalsLimitHint(true);
+                      }
+                    }}
                     className={`text-sm px-4 py-2 rounded-full border transition ${on ? "border-rust bg-rust text-canvas" : "border-border bg-card text-ink hover:bg-canvas-deep"}`}
                   >
                     {g}
@@ -223,6 +229,12 @@ function OnboardingPage() {
                 );
               })}
             </div>
+            <p
+              className={`mt-3 text-xs text-ink-mute transition-opacity duration-300 ${goalsLimitHint ? "opacity-100" : "opacity-0"}`}
+              aria-live="polite"
+            >
+              Up to three — tap one to swap it out.
+            </p>
             <Continue disabled={goals.length === 0} onClick={next} />
           </StepBlock>
         )}
