@@ -49,6 +49,10 @@ const GOALS = [
   "Grow trust",
 ];
 
+// Eyebrow labels keyed by step index. Single source of truth so step renumber
+// doesn't require touching every block.
+const EYEBROWS = ["One", "Two", "Three", "Four", "Five", "Six · the magic moment", "Seven · sent"] as const;
+
 function OnboardingPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -56,6 +60,7 @@ function OnboardingPage() {
 
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");
+  const [intention, setIntention] = useState("");
   const [stage, setStage] = useState<Stage>("dating");
   const [anniversary, setAnniversary] = useState("");
   const [loveLang, setLoveLang] = useState<LL | null>(null);
@@ -85,11 +90,11 @@ function OnboardingPage() {
   useEffect(() => {
     if (isOnboardedSolo && homeData?.kind === "paired" && homeData.pendingInvite && step === 0) {
       setInviteCode(homeData.pendingInvite.code);
-      setStep(5);
+      setStep(6);
     }
   }, [isOnboardedSolo, homeData, step]);
 
-  const totalSteps = 6;
+  const totalSteps = 7;
   const next = () => setStep(s => Math.min(s + 1, totalSteps - 1));
   const back = () => setStep(s => Math.max(s - 1, 0));
 
@@ -101,30 +106,26 @@ function OnboardingPage() {
   const finalize = useMutation({
     mutationFn: async () => {
       const tz = detectTz();
+      const payload = {
+        displayName: name,
+        stage,
+        anniversary: anniversary || null,
+        loveLanguage: loveLang,
+        goals,
+        firstLetter: null,
+        timezone: tz,
+        journeyIntention: intention.trim() || null,
+      };
       if (isJoiningPartner && homeData?.kind === "paired" && homeData.couple) {
         const coupleId = homeData.couple.id;
-        await saveFn({ data: {
-          displayName: name, stage,
-          anniversary: anniversary || null,
-          loveLanguage: loveLang,
-          goals,
-          firstLetter: null,
-          timezone: tz,
-        }});
+        await saveFn({ data: payload });
         if (letter.trim()) await letterFn({ data: { coupleId, body: letter } });
         await qc.invalidateQueries();
         return { coupleId, inviteCode: null as string | null };
       }
       const cc = await createCoupleFn({ data: {} });
       setInviteCode(cc.inviteCode);
-      await saveFn({ data: {
-        displayName: name, stage,
-        anniversary: anniversary || null,
-        loveLanguage: loveLang,
-        goals,
-        firstLetter: null,
-        timezone: tz,
-      }});
+      await saveFn({ data: payload });
       if (letter.trim()) await letterFn({ data: { coupleId: cc.coupleId, body: letter } });
       await qc.invalidateQueries();
       return cc;
@@ -149,7 +150,7 @@ function OnboardingPage() {
 
       <div className="mt-8">
         {step === 0 && (
-          <StepBlock eyebrow="One" title={<><em className="serif-italic text-rust">Hi.</em> What should we call you?</>}>
+          <StepBlock eyebrow={EYEBROWS[0]} title={<><em className="serif-italic text-rust">Hi.</em> What should we call you?</>}>
             <input
               value={name} onChange={e => setName(e.target.value)}
               placeholder="Your name" autoFocus
@@ -160,7 +161,28 @@ function OnboardingPage() {
         )}
 
         {step === 1 && (
-          <StepBlock eyebrow="Two" title={<>Where are you <em className="serif-italic text-rust">together</em>?</>}>
+          <StepBlock eyebrow={EYEBROWS[1]} title={<>In one line — <em className="serif-italic text-rust">why are you here</em>?</>}>
+            <p className="text-[15px] leading-[1.55] text-ink-soft mt-3 text-pretty">
+              For your eyes only. We'll bring this back at 30, 60, and 90 days so you can see what shifted.
+            </p>
+            <textarea
+              value={intention}
+              onChange={e => setIntention(e.target.value.slice(0, 240))}
+              placeholder="I want us to remember how to listen…"
+              rows={4}
+              autoFocus
+              className="mt-5 w-full rounded-2xl border border-border bg-card px-4 py-4 text-[16px] leading-[1.55] text-ink placeholder:text-ink-mute outline-none focus:border-rust serif-italic"
+            />
+            <p className="mt-1 text-right text-[11px] text-ink-mute">{intention.length}/240</p>
+            <Continue onClick={next} />
+            <button onClick={next} className="mt-2 w-full text-sm text-ink-mute hover:text-ink">
+              I'd rather skip
+            </button>
+          </StepBlock>
+        )}
+
+        {step === 2 && (
+          <StepBlock eyebrow={EYEBROWS[2]} title={<>Where are you <em className="serif-italic text-rust">together</em>?</>}>
             <div className="mt-6 space-y-2">
               {STAGES.map(s => (
                 <button
@@ -182,8 +204,8 @@ function OnboardingPage() {
           </StepBlock>
         )}
 
-        {step === 2 && (
-          <StepBlock eyebrow="Three" title={<>What would you like <em className="serif-italic text-rust">to grow</em>?</>}>
+        {step === 3 && (
+          <StepBlock eyebrow={EYEBROWS[3]} title={<>What would you like <em className="serif-italic text-rust">to grow</em>?</>}>
             <p className="text-sm text-ink-soft mt-3">Pick up to three. We'll shape your quests around these.</p>
             <div className="mt-5 flex flex-wrap gap-2">
               {GOALS.map(g => {
@@ -205,8 +227,8 @@ function OnboardingPage() {
           </StepBlock>
         )}
 
-        {step === 3 && (
-          <StepBlock eyebrow="Four" title={<>Which one do you <em className="serif-italic text-rust">reach for first</em>?</>}>
+        {step === 4 && (
+          <StepBlock eyebrow={EYEBROWS[4]} title={<>Which one do you <em className="serif-italic text-rust">reach for first</em>?</>}>
             <p className="text-sm text-ink-soft mt-3">You'll likely move between these. This is just a starting point — you can revisit anytime.</p>
             <div className="mt-5 space-y-2">
               {LANGS.map(l => (
@@ -220,9 +242,9 @@ function OnboardingPage() {
           </StepBlock>
         )}
 
-        {step === 4 && (
+        {step === 5 && (
           <StepBlock
-            eyebrow={isJoiningPartner ? "Five · your reply" : "Five · the magic moment"}
+            eyebrow={isJoiningPartner ? "Six · your reply" : EYEBROWS[5]}
             title={
               isJoiningPartner
                 ? <>Write them back <em className="serif-italic text-rust">one line</em>.</>
@@ -238,7 +260,7 @@ function OnboardingPage() {
               value={letter} onChange={e => setLetter(e.target.value.slice(0, 280))}
               placeholder={"One thing I'm grateful you exist for is…"}
               rows={5}
-              className="mt-5 w-full rounded-2xl border border-border bg-card px-4 py-4 text-base text-ink placeholder:text-ink-mute outline-none focus:border-rust serif-italic"
+              className="mt-5 w-full rounded-2xl border border-border bg-card px-4 py-4 text-[16px] leading-[1.55] text-ink placeholder:text-ink-mute outline-none focus:border-rust serif-italic"
             />
             <p className="mt-1 text-right text-[11px] text-ink-mute">{letter.length}/280</p>
 
@@ -256,8 +278,8 @@ function OnboardingPage() {
           </StepBlock>
         )}
 
-        {step === 5 && inviteCode && !isJoiningPartner && (
-          <StepBlock eyebrow="Six · sent" title={<><em className="serif-italic text-rust">A small archive of you two.</em></>}>
+        {step === 6 && inviteCode && !isJoiningPartner && (
+          <StepBlock eyebrow={EYEBROWS[6]} title={<><em className="serif-italic text-rust">A small archive of you two.</em></>}>
             <div className="mt-5 surface-card p-6">
               <p className="text-[11px] uppercase tracking-[0.18em] text-ink-mute">Your bond</p>
               <p className="mt-2 font-serif text-2xl text-ink leading-tight">{name} &amp; <span className="serif-italic text-rust">your partner</span></p>
@@ -295,7 +317,7 @@ function OnboardingPage() {
         )}
       </div>
 
-      {step > 0 && step < 4 && (
+      {step > 0 && step < 5 && (
         <button onClick={back} className="mt-4 text-sm text-ink-mute hover:text-ink">← Back</button>
       )}
     </main>

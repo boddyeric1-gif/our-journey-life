@@ -6,7 +6,7 @@ import { AppShell } from "@/components/app-shell";
 import { RouteError, RouteNotFound } from "@/components/route-boundaries";
 import { HeaderSkeleton, HeroSkeleton } from "@/components/skeletons";
 import { useDailyRealtime } from "@/hooks/use-daily-realtime";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, Lock, Sparkles } from "lucide-react";
 
@@ -163,25 +163,15 @@ function DailyPage() {
       )}
 
       {revealed && (
-        <section className="mx-5 mt-5">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-rust">
-            {autoUnsealed && !partnerBody ? "Auto-opened" : "Revealed"}
-          </p>
-          {autoUnsealed && !partnerBody && (
-            <p className="mt-1 text-[12px] text-ink-soft">
-              {partnerName} didn't get to this one. Your reflection is kept.
-            </p>
-          )}
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <ResponseCard who="You" body={data.myResponse?.body ?? ""} />
-            {partnerBody
-              ? <ResponseCard who={partnerName} body={partnerBody} accent />
-              : <div className="rounded-2xl border border-dashed border-border bg-card/60 px-4 py-5 text-center text-sm text-ink-mute">
-                  No answer from {partnerName} this time.
-                </div>}
-          </div>
-          {day && <p className="mt-3 text-center text-[11px] text-ink-mute">Day {day} together</p>}
-        </section>
+        <RevealSection
+          coupleId={coupleId}
+          date={data.today}
+          autoUnsealed={autoUnsealed && !partnerBody}
+          partnerName={partnerName}
+          myBody={data.myResponse?.body ?? ""}
+          partnerBody={partnerBody}
+          day={day}
+        />
       )}
 
       <section className="mx-5 mt-8">
@@ -217,11 +207,85 @@ function DailyPage() {
   );
 }
 
-function ResponseCard({ who, body, accent }: { who: string; body: string; accent?: boolean }) {
+function ResponseCard({ who, body, accent, className }: {
+  who: string;
+  body: string;
+  accent?: boolean;
+  className?: string;
+}) {
   return (
-    <article className={`surface-card p-5 ${accent ? "border-l-4 border-rust" : ""}`}>
+    <article className={`surface-card p-5 ${accent ? "border-l-4 border-rust" : ""} ${className ?? ""}`}>
       <p className="text-[11px] uppercase tracking-[0.18em] text-ink-mute">{who}</p>
-      <p className="mt-2 text-ink leading-relaxed text-pretty">{body}</p>
+      <p className="mt-2 text-[16px] leading-[1.6] text-ink text-pretty">{body}</p>
     </article>
+  );
+}
+
+/**
+ * The emotional core of the product. On first view of a fully revealed daily,
+ * play a one-shot ~1.2s synchronized rise of prompt → mine → theirs. After
+ * the first view it stays as a static side-by-side. Single quiet haptic.
+ */
+function RevealSection({
+  coupleId,
+  date,
+  autoUnsealed,
+  partnerName,
+  myBody,
+  partnerBody,
+  day,
+}: {
+  coupleId: string | null;
+  date: string;
+  autoUnsealed: boolean;
+  partnerName: string;
+  myBody: string;
+  partnerBody: string | null;
+  day: number | null;
+}) {
+  const storageKey = `oj.reveal-seen:${coupleId ?? "x"}:${date}`;
+  const [animating, setAnimating] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      if (window.sessionStorage.getItem(storageKey)) return;
+      window.sessionStorage.setItem(storageKey, "1");
+    } catch { /* storage may be blocked — fall back to no animation */ return; }
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) return;
+    setAnimating(true);
+    // One quiet haptic on supported devices. ~12ms is barely-there.
+    try { (navigator as { vibrate?: (n: number) => void }).vibrate?.(12); } catch { /* ignore */ }
+    const t = window.setTimeout(() => setAnimating(false), 1400);
+    return () => window.clearTimeout(t);
+  }, [storageKey]);
+
+  return (
+    <section
+      className="mx-5 mt-5"
+      data-reveal={animating ? "enter" : "done"}
+      aria-live="polite"
+    >
+      <p className="reveal-seal-line text-[11px] uppercase tracking-[0.18em] text-rust">
+        {autoUnsealed ? "Auto-opened" : "Revealed · two seals broken"}
+      </p>
+      {autoUnsealed && (
+        <p className="reveal-prompt mt-1 text-[12px] text-ink-soft">
+          {partnerName} didn't get to this one. Your reflection is kept.
+        </p>
+      )}
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        <ResponseCard who="You" body={myBody} className="reveal-mine" />
+        {partnerBody
+          ? <ResponseCard who={partnerName} body={partnerBody} accent className="reveal-theirs" />
+          : (
+            <div className="reveal-theirs rounded-2xl border border-dashed border-border bg-card/60 px-4 py-5 text-center text-sm text-ink-mute">
+              No answer from {partnerName} this time.
+            </div>
+          )}
+      </div>
+      {day && <p className="reveal-prompt mt-3 text-center text-[11px] text-ink-mute">Day {day} together</p>}
+    </section>
   );
 }

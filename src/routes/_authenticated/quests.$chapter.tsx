@@ -231,6 +231,14 @@ function ActiveStep({ step, partnerName, onComplete }: {
   const waitingForPartner = step.requiresBoth && step.myDone && !step.partnerDone;
   const partnerLabel = partnerName ?? "your partner";
 
+  // Soft word-count floor. The submit button is enabled either when the
+  // reflection is empty (the step still allows complete-with-no-text) OR
+  // when it's substantive (~40+ words). Stops two-word reflections that
+  // erase the step without any thinking.
+  const wordCount = body.trim() === "" ? 0 : body.trim().split(/\s+/).length;
+  const SOFT_FLOOR = 40;
+  const tooShort = wordCount > 0 && wordCount < SOFT_FLOOR;
+
   return (
     <article className="surface-card p-5">
       <div className="flex items-center gap-2">
@@ -239,9 +247,9 @@ function ActiveStep({ step, partnerName, onComplete }: {
         </span>
         <KindLabel kind={step.kind} />
       </div>
-      <p className="mt-3 text-sm text-ink-soft leading-relaxed text-pretty">{step.teaching}</p>
+      <p className="mt-3 text-[15px] leading-[1.6] text-ink-soft text-pretty">{step.teaching}</p>
       <p className="mt-3 serif-italic text-rust" aria-hidden>"</p>
-      <p className="-mt-3 font-serif text-lg text-ink text-balance">{step.prompt}</p>
+      <p className="-mt-3 font-serif text-[20px] leading-snug text-ink text-balance">{step.prompt}</p>
       {step.ritual && (
         <p className="mt-3 text-[12px] uppercase tracking-[0.14em] text-ink-mute">
           Ritual · <span className="normal-case tracking-normal text-ink-soft">{step.ritual}</span>
@@ -268,19 +276,29 @@ function ActiveStep({ step, partnerName, onComplete }: {
           <textarea
             value={body}
             onChange={e => setBody(e.target.value.slice(0, 2000))}
-            rows={3}
-            placeholder="A few sentences (optional, kept private to you)."
-            className="mt-4 w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-ink outline-none focus:border-rust"
+            rows={4}
+            placeholder="A few sentences. Slow is fine — what you write here is only ever yours."
+            className="mt-4 w-full rounded-xl border border-border bg-card px-4 py-3 text-[16px] leading-[1.6] text-ink outline-none focus:border-rust"
             disabled={step.myDone}
           />
+          <div className="mt-1.5 flex items-center justify-between text-[11px] text-ink-mute">
+            <span aria-live="polite">
+              {wordCount === 0
+                ? "Optional — but most of the work happens here."
+                : tooShort
+                  ? `Take your time · ${wordCount}/${SOFT_FLOOR}+ words`
+                  : `${wordCount} words · ready when you are`}
+            </span>
+            <span>{body.length}/2000</span>
+          </div>
           <button
             onClick={async () => {
               setBusy(true);
               try { await onComplete(body || undefined); }
               finally { setBusy(false); }
             }}
-            disabled={busy || step.myDone}
-            className="mt-3 w-full rounded-full bg-ink px-5 py-3 text-sm font-medium text-canvas hover:opacity-90 disabled:opacity-60"
+            disabled={busy || step.myDone || tooShort}
+            className="mt-3 w-full rounded-full bg-ink px-5 py-3 text-sm font-medium text-canvas hover:opacity-90 disabled:opacity-50"
           >
             {busy
               ? "Saving…"

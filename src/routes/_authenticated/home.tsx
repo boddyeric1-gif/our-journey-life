@@ -10,15 +10,15 @@ import { LettersInbox } from "@/components/letters-inbox";
 import { HeaderSkeleton, HeroSkeleton } from "@/components/skeletons";
 import { RouteError, RouteNotFound } from "@/components/route-boundaries";
 import { ArrowRight, BookOpen, Compass } from "lucide-react";
-import { useEffect } from "react";
-import { levelFromXp } from "@/lib/xp";
+import { useEffect, useState } from "react";
 import { useDailyRealtime } from "@/hooks/use-daily-realtime";
+import type { RhythmDay } from "@/components/rhythm-ring";
 
 export const Route = createFileRoute("/_authenticated/home")({
   head: () => ({
     meta: [
       { title: "Your quest — Our Journey" },
-      { name: "description", content: "Today's Spark, your shared streak, and the small next step in your quest together." },
+      { name: "description", content: "Today's Spark, your shared rhythm, and the small next step in your quest together." },
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),
@@ -34,6 +34,7 @@ function HomePage() {
 
   const home = useQuery({ queryKey: ["home-state"], queryFn: () => fetchHome() });
   const insights = useQuery({ queryKey: ["insights"], queryFn: () => fetchInsights() });
+  const [lettersOpen, setLettersOpen] = useState(false);
 
   useEffect(() => {
     if (home.data && "profile" in home.data && home.data.profile && !home.data.profile.onboarded_at) {
@@ -73,14 +74,13 @@ function HomePage() {
     partnerSubmitted = !!data.partnerHasSubmitted;
     daysTogether = data.daysTogether ?? null;
     myPreview = data.myResponse?.body ?? null;
-    partnerPreview = (data.partnerResponse as any)?.body ?? null;
+    partnerPreview = (data.partnerResponse as { body?: string | null } | null)?.body ?? null;
     if (!data.partner) {
       heroState = "unpaired";
       inviteCode = data.pendingInvite?.code;
     } else if (!data.myResponse) {
       heroState = "no-prompt-answered";
     } else if (data.autoUnsealed) {
-      // Partner missed it — open the page anyway so the user isn't stuck.
       heroState = "both-done";
     } else if (data.myResponse && !partnerPreview) {
       heroState = "mine-done-partner-waiting";
@@ -89,13 +89,14 @@ function HomePage() {
     }
   }
 
-  const partnerXp = data.kind === "paired" ? data.partnerTotalXp : 0;
-  const myLevel = levelFromXp(data.totalXp).level;
-  const partnerLevel = data.kind === "paired" ? levelFromXp(partnerXp).level : null;
-  const bondLevel = partnerLevel !== null ? Math.min(myLevel, partnerLevel) : null;
-
+  const rhythm: RhythmDay[] | null =
+    data.kind === "paired" ? ((data.rhythm ?? null) as RhythmDay[] | null) : null;
   const goals = data.kind === "paired" ? (data.goals ?? []) : [];
   const showGoals = goals.length > 0 && (daysTogether ?? 0) <= 28;
+  const letters = data.kind === "paired" ? (data.letters ?? []) : [];
+  const unreadLetters = profile
+    ? letters.filter((l) => l.author_id !== profile.id && !l.seen_at).length
+    : 0;
 
   return (
     <AppShell>
@@ -105,7 +106,11 @@ function HomePage() {
         streak={data.userStreak?.current_streak ?? 0}
         freezes={data.userStreak?.freezes_available ?? 0}
         coupleStreak={data.kind === "paired" ? (data.coupleStreak?.current_streak ?? 0) : null}
-        bondLevel={bondLevel}
+        bondLevel={null}
+        rhythm={rhythm}
+        paired={data.kind === "paired" && !!data.partner}
+        unreadLetters={data.kind === "paired" && !!data.partner ? unreadLetters : 0}
+        onOpenLetters={data.kind === "paired" && !!data.partner ? () => setLettersOpen(true) : undefined}
       />
 
       {showGoals && (
@@ -115,6 +120,7 @@ function HomePage() {
         </p>
       )}
 
+      {/* Single hero card — the one next decision. */}
       <div className="mt-2">
         <TodayHero
           state={heroState}
@@ -132,7 +138,7 @@ function HomePage() {
       {data.kind === "paired" && data.nextStep && (
         <Link
           to="/quests/$chapter" params={{ chapter: data.nextStep.chapterSlug }}
-          className="mx-5 mt-4 block surface-card-quiet p-5 hover:bg-canvas-deep/60 transition"
+          className="mx-5 mt-4 block surface-card-quiet p-5 hover:bg-canvas-deep/60 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-rust/60"
         >
           <div className="flex items-start gap-3">
             <Compass className="h-5 w-5 text-rust mt-0.5" />
@@ -146,15 +152,8 @@ function HomePage() {
         </Link>
       )}
 
-      {data.kind === "paired" && data.partner && profile && (
-        <LettersInbox
-          letters={data.letters as any}
-          myId={profile.id}
-          partnerName={partnerName}
-        />
-      )}
-
-      <section className="px-5 mt-6">
+      {/* Field notes — secondary, below the fold of the next decision. */}
+      <section className="px-5 mt-8">
         <div className="flex items-end justify-between mb-3">
           <h2 className="font-serif text-xl text-ink">Field notes</h2>
           <span className="text-[11px] uppercase tracking-[0.16em] text-ink-mute">1–3 min reads</span>
@@ -165,14 +164,14 @@ function HomePage() {
               key={it.id}
               to="/insights/$slug"
               params={{ slug: it.slug }}
-              className="block surface-card-quiet p-4 hover:bg-canvas-deep/60 active:scale-[0.99] transition"
+              className="block surface-card-quiet p-4 hover:bg-canvas-deep/60 active:scale-[0.99] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-rust/60"
             >
               <article>
                 <div className="flex items-start gap-3">
                   <BookOpen className="h-4 w-4 text-rust mt-1" />
                   <div className="flex-1">
                     <h3 className="font-serif text-base text-ink leading-snug">{it.title}</h3>
-                    <p className="mt-1 text-sm text-ink-soft text-pretty">{it.subtitle}</p>
+                    <p className="mt-1 text-[15px] leading-[1.55] text-ink-soft text-pretty">{it.subtitle}</p>
                     <p className="mt-2 text-[11px] uppercase tracking-[0.16em] text-ink-mute">{it.read_minutes} min read</p>
                   </div>
                 </div>
@@ -181,6 +180,18 @@ function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* Letters as a sheet, opened from the header mail icon. */}
+      {data.kind === "paired" && data.partner && profile && (
+        <LettersInbox
+          letters={letters}
+          myId={profile.id}
+          partnerName={partnerName}
+          mode="sheet"
+          open={lettersOpen}
+          onClose={() => setLettersOpen(false)}
+        />
+      )}
     </AppShell>
   );
 }

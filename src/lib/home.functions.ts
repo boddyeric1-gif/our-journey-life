@@ -49,6 +49,11 @@ export const getHomeState = createServerFn({ method: "GET" })
 
     const position = couple ? promptPositionFor(couple.created_at as string, promptToday) : 1;
 
+    // 14-day rhythm window — oldest first (index 0) → newest (index 13 = today)
+    const rhythmStart = new Date();
+    rhythmStart.setUTCDate(rhythmStart.getUTCDate() - 13);
+    const rhythmStartISO = rhythmStart.toISOString().slice(0, 10);
+
     // Parallel batch 3
     const [
       partnerRes,
@@ -63,6 +68,10 @@ export const getHomeState = createServerFn({ method: "GET" })
       completionsRes,
       chaptersRes,
       goalsRes,
+      myRhythmRes,
+      partnerRhythmRes,
+      mySoloRhythmRes,
+      partnerSoloRhythmRes,
     ] = await Promise.all([
       partnerId
         ? supabase.from("profiles").select("id, display_name, avatar_url").eq("id", partnerId).maybeSingle()
@@ -94,6 +103,20 @@ export const getHomeState = createServerFn({ method: "GET" })
       supabase.from("quest_step_completions").select("step_id").eq("user_id", userId),
       supabase.from("quest_chapters").select("id, slug, title, summary, position, category_id").order("position"),
       supabase.from("couple_goals").select("goal").eq("couple_id", coupleId),
+      // Rhythm: who contributed each of the last 14 days. Service-role for the
+      // partner so we can read presence-only without leaking response bodies.
+      supabaseAdmin.from("daily_responses").select("prompt_date")
+        .eq("couple_id", coupleId).eq("user_id", userId).gte("prompt_date", rhythmStartISO),
+      partnerId
+        ? supabaseAdmin.from("daily_responses").select("prompt_date")
+            .eq("couple_id", coupleId).eq("user_id", partnerId).gte("prompt_date", rhythmStartISO)
+        : Promise.resolve({ data: [] }),
+      supabaseAdmin.from("solo_reflections").select("prompt_date")
+        .eq("user_id", userId).gte("prompt_date", rhythmStartISO),
+      partnerId
+        ? supabaseAdmin.from("solo_reflections").select("prompt_date")
+            .eq("user_id", partnerId).gte("prompt_date", rhythmStartISO)
+        : Promise.resolve({ data: [] }),
     ]);
 
     const partner = (partnerRes.data as any) ?? null;
@@ -144,6 +167,26 @@ export const getHomeState = createServerFn({ method: "GET" })
       ? daysSinceUTC((couple.paired_at as string).slice(0, 10), promptToday) + 1
       : (couple?.created_at ? daysSinceUTC((couple.created_at as string).slice(0, 10), promptToday) + 1 : 1);
 
+    // Build the 14-day rhythm. "Contributed" = either a daily response OR a
+    // solo reflection that day. Honest cadence, not a streak.
+    const mineDays = new Set([
+      ...((myRhythmRes.data ?? []) as { prompt_date: string }[]).map(r => r.prompt_date),
+      ...((mySoloRhythmRes.data ?? []) as { prompt_date: string }[]).map(r => r.prompt_date),
+    ]);
+    const theirsDays = new Set([
+      ...((partnerRhythmRes.data ?? []) as { prompt_date: string }[]).map(r => r.prompt_date),
+      ...((partnerSoloRhythmRes.data ?? []) as { prompt_date: string }[]).map(r => r.prompt_date),
+    ]);
+    const rhythm: ("both" | "mine" | "theirs" | "empty")[] = [];
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date();
+      d.setUTCDate(d.getUTCDate() - i);
+      const iso = d.toISOString().slice(0, 10);
+      const m = mineDays.has(iso);
+      const t = theirsDays.has(iso);
+      rhythm.push(m && t ? "both" : m ? "mine" : t ? "theirs" : "empty");
+    }
+
     return {
       kind: "paired" as const,
       profile, couple, partner, pendingInvite,
@@ -160,6 +203,7 @@ export const getHomeState = createServerFn({ method: "GET" })
       today: promptToday,
       userLocalToday,
       daysTogether,
+      rhythm,
     };
   });
 
