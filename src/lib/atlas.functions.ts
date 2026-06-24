@@ -71,7 +71,7 @@ export const getAtlas = createServerFn({ method: "GET" })
       supabase.from("xp_events").select("kind, created_at, amount").eq("couple_id", coupleId)
         .order("created_at", { ascending: true }),
       supabase.from("atlas_notes").select("body").eq("couple_id", coupleId).maybeSingle(),
-      supabase.from("quest_categories").select("id, label"),
+      supabase.from("quest_categories").select("id, title"),
     ]);
 
     const couple = (coupleRes.data ?? null) as { name: string | null; created_at: string; paired_at: string | null } | null;
@@ -486,7 +486,7 @@ async function buildAtlasInline(supabase: any, userId: string): Promise<AtlasDTO
     supabase.from("xp_events").select("kind, created_at, amount").eq("couple_id", coupleId)
       .order("created_at", { ascending: true }),
     supabase.from("atlas_notes").select("body").eq("couple_id", coupleId).maybeSingle(),
-    supabase.from("quest_categories").select("id, label"),
+    supabase.from("quest_categories").select("id, title"),
   ]);
 
   const couple = (coupleRes.data ?? null) as { name: string | null; created_at: string; paired_at: string | null } | null;
