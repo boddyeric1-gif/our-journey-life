@@ -101,7 +101,7 @@ export const completeStep = createServerFn({ method: "POST" })
 
     const { data: profile } = await supabase
       .from("profiles").select("current_couple_id, timezone").eq("id", userId).maybeSingle();
-    const userTz = (profile as any)?.timezone ?? "UTC";
+    const userTz = (profile as { timezone?: string | null } | null)?.timezone ?? "UTC";
 
     const { data: step } = await supabase
       .from("quest_steps").select("kind, xp_reward, chapter_id").eq("id", data.stepId).maybeSingle();
@@ -156,7 +156,7 @@ export const completeStep = createServerFn({ method: "POST" })
         supabase.from("quest_chapters").select("title").eq("id", step.chapter_id).maybeSingle(),
       ]);
       const mineSet = new Set((chDoneMine ?? []).map(c => c.step_id));
-      const partnerSet = new Set(((partnerCompsRes as any).data ?? []).map((c: any) => c.step_id));
+      const partnerSet = new Set(((partnerCompsRes.data ?? []) as { step_id: string }[]).map(c => c.step_id));
       chapterComplete = (chSteps ?? []).every(s =>
         s.kind === "couple" && partnerId
           ? (mineSet.has(s.id) && partnerSet.has(s.id))
