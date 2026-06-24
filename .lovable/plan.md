@@ -1,37 +1,35 @@
-# Remaining improvements
 
-Grouped by effort and risk. Items can be done independently — pick any subset.
+# Polish + maintainability batch
 
-## Group A — Medium-impact fixes (~60–90 min)
+Group A (medium-impact) already shipped. This batch closes the remaining six items in `.lovable/plan.md` — three polish fixes the user sees, three maintainability cleanups with zero behavior change. Small, independent, low risk.
 
-**A1. Quest chapter N+1 (B3)** — `home.functions.ts:150-161` loops chapters and queries `quest_steps` per chapter to find the next incomplete step. Replace with one query that fetches all steps ordered by `(chapter.position, step.position)` and finds the first not in the completed set.
+## Group B — Polish
 
-**A2. Couple-streak query collapse (B5)** — `home.functions.ts:319-336` runs 2 sequential queries per member (4 round-trips for 2 members). Replace with a single SQL function `couple_both_active_on(_couple_id uuid, _date date) returns boolean` checking both members in one query, then advance the streak row.
+**B1. Goals click feedback** — In the onboarding/profile goals editor, clicking a 4th goal currently does nothing. Add a transient "Up to three" hint (small muted line under the chip grid) that appears on the rejected click and fades after ~1.6s. Local component state, no schema change.
 
-**A3. Diverged streak logic (B4)** — `quest.functions.ts:132-147` and `home.functions.ts:289-317` re-implement the same streak math twice with subtle differences (quest path doesn't update `longest_streak` when `diff != 1 && diff != 2`). Extract one `advanceUserStreak(supabaseAdmin, userId, userTz)` helper used by both call sites.
+**B2. Profile loading skeleton** — Replace the raw `<div>Loading…</div>` fallback in `src/routes/_authenticated/profile.tsx` with the existing `HeaderSkeleton` so loading state matches the rest of the app.
 
-**A4. Atomic goals save (B6)** — `onboarding.functions.ts` `updateCoupleGoals` deletes then inserts; a failed insert leaves the couple with no goals. Wrap in a `replace_couple_goals(_couple_id uuid, _goals text[])` SQL function that runs DELETE + INSERT in one transaction.
+**B3. OG images for shareable routes** — Add `og:image` + `twitter:image` to:
+- `/` (`src/routes/index.tsx`) — site cover
+- `/join/$code` (`src/routes/join.$code.tsx`) — same cover (invite preview)
 
-**A5. Checkout-return entitlement check (U3)** — Verify the entitlement actually landed before showing success copy on the return page; if missing, show "We'll have it ready in a moment" and poll once.
+Generate one warm, literary brand cover (1200×630) at `src/assets/og-cover.jpg` and import as a URL. Wire absolute URLs (`https://our-journey.life/...`) per head-meta rules. Note to user: existing link-preview caches won't refresh until each platform re-scrapes.
 
-**A6. Reflection timezone (U4)** — `solo_reflections` uses `todayUTC()` for `prompt_date` while streaks use `localToday(userTz)`. Switch the insert to `localToday(userTz)` so a late-night reflection counts toward the local day. One-line change + verify uniqueness constraint still holds.
+## Group C — Maintainability (no behavior change)
 
-## Group B — Polish (~20 min)
+**C1. Deduplicate Atlas builder** — In `src/lib/atlas.functions.ts`, extract the shared query batch from `getAtlas` and `buildAtlasInline` into one private `loadAtlasData(supabase, coupleId)` helper. Both functions become thin wrappers.
 
-**B1. Goals click feedback (U1)** — In the goals editor, when the user clicks a 4th goal it silently does nothing. Add a small "Up to three" hint that flashes on the rejected click.
+**C2. Replace `any` with generated DB types** — Sweep `src/lib/home.functions.ts`, `quest.functions.ts`, `atlas.functions.ts`, `timeCapsule.functions.ts` for `as any` casts on Supabase rows. Replace with `Database["public"]["Tables"][...]["Row"]` (or `Functions[...]["Returns"]` for RPCs) from `src/integrations/supabase/types.ts`.
 
-**B2. Profile loading skeleton (U2)** — Replace `<div className="p-10 text-ink-mute">Loading…</div>` in `profile.tsx:60` with the existing `HeaderSkeleton` for visual consistency.
+**C3. Delete dead file** — Re-grep for unreferenced files flagged in the original audit (the candidate was a stale helper under `src/lib/`). Confirm zero imports via `rg`, then delete. If nothing is actually dead, skip and note it.
 
-**B3. OG images for shareable routes (E1/E2)** — Add `og:image` and `twitter:image` to `/` (`src/routes/index.tsx`) and `/join/$code` (`src/routes/join.$code.tsx`). Use an existing brand asset or generate one cover image.
+## Verification
 
-## Group C — Maintainability (~30 min, no behavior change)
+- `tsgo --noEmit` after each group.
+- Manually click 4 goals to confirm the B1 hint.
+- View `/` and `/join/<test>` head tags to confirm absolute `og:image` URLs.
+- Atlas page still renders identical content after C1.
 
-**C1. Deduplicate Atlas builder (P3)** — `atlas.functions.ts` has `getAtlas` and `buildAtlasInline` as near-duplicates. Extract the shared query batch into one private `loadAtlasData(supabase, coupleId)` and have both call it.
+## Out of scope
 
-**C2. Replace `any` with generated types (Q1/Q2)** — Several spots cast `as any` for Supabase rows (e.g. `partnerResponse` shape, `profile.timezone`). Use `Database["public"]["Tables"][...]` types from `src/integrations/supabase/types.ts`.
-
-**C3. Delete dead file (Q4)** — Remove the unused file flagged in the audit (will re-confirm path before deletion).
-
-## Recommendation
-
-Do **Group A** next in one batch — it removes the last real correctness and performance debt. Group B and C can ship whenever convenient. None of these require user input to start.
+No new features, no DB migrations, no auth changes. Group A items remain as shipped.
