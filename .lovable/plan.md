@@ -1,54 +1,73 @@
-## Goal
 
-Let you test every premium feature without paying, by promoting your account (`emb.creations.llc@gmail.com`) to an admin and giving any couple containing an admin full unlock access. Add a small hidden `/admin` page so you can manage roles and inspect couples going forward.
+# Advanced Chapters — new quest categories
 
-## How the bypass works
+## Placement decision
 
-All premium gates already flow through one database function: `public.couple_unlocked(couple_id, product)`. It's called from `quest.functions.ts`, `timeCapsule.functions.ts`, and `atlas.functions.ts`. Extending it is a one-line change that unlocks Time Capsule, The Atlas, and advanced quests everywhere at once — no scattering of bypass logic across the app.
+Keep everything in the existing Quests tab. The page already greys out locked chapters inline (the `is_advanced` flag + `couple_unlocked('quests_advanced')` are wired up). Adding a separate "Advanced Chapters" section at the bottom would duplicate the gating UI for no real gain — and inline placement keeps Communication / Trust as the on-ramp, with the advanced categories visible (but locked) underneath so users can see what they're working toward.
 
-Bypass rule: if **any member of the couple** has the `admin` role, every product returns `unlocked = true`. So when you pair with a test partner (or your real partner), that couple sees the full premium experience.
+No UI rewrite needed. The route already renders locked chapters with the lock icon and the "Unlocks at Level 8 · 14 shared days" line. We just seed new categories whose chapters are all `is_advanced = true`.
 
-## Migration (single file)
+## New categories (positions 3–7)
 
-1. Grant `admin` role to your user:
-   ```sql
-   INSERT INTO public.user_roles (user_id, role)
-   SELECT id, 'admin' FROM auth.users WHERE email = 'emb.creations.llc@gmail.com'
-   ON CONFLICT (user_id, role) DO NOTHING;
-   ```
-2. Add helper `public.couple_has_admin(_couple_id uuid)` — `SECURITY DEFINER`, `STABLE`, joins `couple_members` → `user_roles`, scoped via `is_couple_member` so it isn't a data leak. `REVOKE ... FROM anon`, `GRANT ... TO authenticated, service_role`.
-3. Patch `public.couple_unlocked` to short-circuit `RETURN TRUE` when `couple_has_admin(_couple_id)` — placed right after the existing paid-entitlement short-circuit so admin works for couples with no paid record.
-4. Add RLS to `user_roles`: admins can SELECT/INSERT/DELETE all rows (`USING (has_role(auth.uid(), 'admin'))`). Existing self-read policy stays.
+All chapters in these categories are `is_advanced = true`, so the whole category greys out until the couple hits the quests_advanced threshold (Level 8 + 14 shared days, or paid).
 
-## Hidden `/admin` page
+1. **Intimacy** — *The language of closeness*
+   - Touch, Without Errand — non-goal-oriented physical closeness
+   - The Eye-Contact Minute — two minutes, no words
+   - Naming What You Want — practicing the ask
+   - Pleasure As Information — what your body is telling you
+   - The Slow Return — re-finding each other after distance
 
-New protected route `src/routes/_authenticated/admin.tsx`. Guard with a `beforeLoad` that calls a new server fn `requireAdmin()` (uses `requireSupabaseAuth` + `has_role` RPC) and throws `redirect({ to: '/' })` for non-admins. Not linked from any nav — you reach it by typing the URL.
+2. **Aftercare: After Arguments** — *Returning to each other*
+   - The 20-Minute Cooldown — what to do with the gap
+   - The First Sentence Back — scripts for re-entry
+   - Repair Without Re-litigating — closing the loop without reopening it
+   - The Body Check-In — nervous systems before words
+   - What We Learned — turning a rupture into a small agreement
 
-Page contents (kept minimal, brand-aligned):
-- **You** card: your email, user id, admin badge, your couple id, current `couple_unlocked` status for each product (sanity check the bypass).
-- **Admins** list: rows of `{ email, user_id, granted_at }` with a "Revoke" button. A small input + "Grant admin" button (looks up user by email server-side).
-- **Lookup couple** input: paste a couple id → shows members, XP, shared days, entitlements, and unlock status per product.
+3. **Aftercare: Closeness & Reassurance** — *The quiet hour after*
+   - The Reassurance Ritual — the words that actually land
+   - Holding, Not Fixing — being a steady presence
+   - Tender Questions — what to ask when they're soft
+   - The Comfort Inventory — each partner's specific comforts
+   - A Hand on the Back — small physical anchors
 
-Server functions in `src/lib/admin.functions.ts` (all `requireSupabaseAuth` + admin check inside the handler):
-- `getAdminOverview()` — your row + admin list.
-- `grantAdminByEmail({ email })` — loads `supabaseAdmin` inside the handler (Auth Admin lookup by email), inserts into `user_roles`.
-- `revokeAdmin({ user_id })` — deletes role; refuses to revoke the last admin.
-- `inspectCouple({ couple_id })` — returns members, RPC results.
+4. **Conflict & Repair** — *The shape of a hard conversation*
+   - Naming the Pattern — your couple's recurring loop
+   - The Pause Word — a shared signal to slow down
+   - Owning Your 10% — finding your part without flattening theirs
+   - Apologies That Land — the four parts of a real apology
+   - The Weekly Clearing — a 20-minute housekeeping ritual
 
-## UI rules
+5. **Desire & Curiosity** — *Staying interested in each other*
+   - The Question You've Never Asked — one new thing this week
+   - Erotic Curiosity — desire as exploration, not performance
+   - The Future-Self Letter — who are you each becoming
+   - Small Mysteries — protecting some unknown in each other
+   - The Re-Meeting — meeting your partner as a stranger for an evening
 
-Card-based layout matching the rest of the app, mobile-first, no neon, no glassmorphism, no confetti. Destructive actions (revoke) use the existing `AlertDialog` confirm.
+## Implementation
+
+**One migration** (`add_advanced_quest_categories.sql`):
+- `INSERT INTO public.quest_categories` — five new rows at positions 3–7 with slugs `intimacy`, `aftercare-arguments`, `aftercare-closeness`, `conflict-repair`, `desire-curiosity`. Pick accents from the existing palette (`rust`, `clay`, plus we can reuse — accent is just a string).
+- `INSERT INTO public.quest_chapters` for each category, with `is_advanced = true` set explicitly on every row.
+- Seed `quest_steps` for each new chapter using the same 4-step (`solo`, `couple`, `solo`, `couple`) shape and the same DO block pattern already in the original seed, but with step content tuned per-chapter. Keeping the 4-step shape means no changes to step-completion logic, XP math, or chapter progress.
+
+No schema changes, no RLS changes, no route changes, no `coupleLevel.ts` changes. The advanced-unlock gate, the lock UI, and the "Unlocks at Level 8 · 14 shared days" copy already exist.
 
 ## Out of scope
 
-- No billing/Stripe changes — paid checkout still works untouched.
-- No "developer mode" toggle, no impersonation, no fake-XP buttons.
-- No public signup of admins; only existing admins can grant.
-- No analytics events for admin actions (can add later if you want an audit log).
+- No "Advanced Chapters" header/section at the bottom of the page.
+- No new unlock tier — these all sit under the existing `quests_advanced` product.
+- No changes to Communication / Trust content.
+- No content for premium-only future tiers (Atlas / Time Capsule are separate products and stay where they are).
 
 ## Verification
 
-- `tsgo --noEmit` clean.
-- SQL: as your user, call `select couple_unlocked('<your couple id>', 'the_atlas')` → `true`. As a non-admin test user in a separate couple → `false` unless they hit the existing XP/days thresholds or have a paid entitlement.
-- Visit `/admin` signed in as you → loads. Sign out and visit → redirected.
-- Open Time Capsule, Atlas, and an advanced quest chapter from your account → no paywall.
+- `tsgo --noEmit` (no TS changes expected — types regen after migration).
+- Load `/quests` as a non-unlocked couple: five new categories appear after Trust, all chapters greyed with the lock line.
+- Load `/quests` as the admin couple (admin bypass already covers `quests_advanced`): all five categories are interactive.
+
+## Open question before I build
+
+The chapter titles and step content above are a first pass in the app's existing voice (warm, quiet, literary — per workspace guidance). If you want to rewrite, reorder, or drop any category before I seed it into the database, say so and I'll adjust before the migration runs. Otherwise I'll proceed with exactly the list above.
