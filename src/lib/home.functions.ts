@@ -167,6 +167,26 @@ export const getHomeState = createServerFn({ method: "GET" })
       ? daysSinceUTC((couple.paired_at as string).slice(0, 10), promptToday) + 1
       : (couple?.created_at ? daysSinceUTC((couple.created_at as string).slice(0, 10), promptToday) + 1 : 1);
 
+    // Build the 14-day rhythm. "Contributed" = either a daily response OR a
+    // solo reflection that day. Honest cadence, not a streak.
+    const mineDays = new Set([
+      ...((myRhythmRes.data ?? []) as { prompt_date: string }[]).map(r => r.prompt_date),
+      ...((mySoloRhythmRes.data ?? []) as { prompt_date: string }[]).map(r => r.prompt_date),
+    ]);
+    const theirsDays = new Set([
+      ...((partnerRhythmRes.data ?? []) as { prompt_date: string }[]).map(r => r.prompt_date),
+      ...((partnerSoloRhythmRes.data ?? []) as { prompt_date: string }[]).map(r => r.prompt_date),
+    ]);
+    const rhythm: ("both" | "mine" | "theirs" | "empty")[] = [];
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date();
+      d.setUTCDate(d.getUTCDate() - i);
+      const iso = d.toISOString().slice(0, 10);
+      const m = mineDays.has(iso);
+      const t = theirsDays.has(iso);
+      rhythm.push(m && t ? "both" : m ? "mine" : t ? "theirs" : "empty");
+    }
+
     return {
       kind: "paired" as const,
       profile, couple, partner, pendingInvite,
@@ -183,6 +203,7 @@ export const getHomeState = createServerFn({ method: "GET" })
       today: promptToday,
       userLocalToday,
       daysTogether,
+      rhythm,
     };
   });
 
