@@ -1,6 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
+
+type SupabaseClient = import("@supabase/supabase-js").SupabaseClient<Database>;
+
+type CoupleStreakRow = Database["public"]["Tables"]["couple_streaks"]["Row"];
+type AtlasNoteRow = Database["public"]["Tables"]["atlas_notes"]["Row"];
+type CoupleRow = { name: string | null; created_at: string; paired_at: string | null };
 
 export type AtlasDTO = {
   coupleId: string;
@@ -26,15 +33,24 @@ export type AtlasDTO = {
   note: string;
 };
 
-async function getCoupleWithEntitlement(supabase: any, userId: string) {
+async function resolveCoupleId(supabase: SupabaseClient, userId: string): Promise<string> {
   const { data: profile } = await supabase
     .from("profiles").select("current_couple_id").eq("id", userId).maybeSingle();
-  const coupleId = profile?.current_couple_id as string | null | undefined;
+  const coupleId = profile?.current_couple_id ?? null;
   if (!coupleId) throw new Error("Pair with your partner first.");
+  return coupleId;
+}
+
+async function assertAtlasEntitlement(supabase: SupabaseClient, coupleId: string): Promise<void> {
   const { data: ent } = await supabase.rpc("couple_has_entitlement", {
     _couple_id: coupleId, _product: "the_atlas",
   });
   if (!ent) throw new Error("The Atlas isn't unlocked for your couple yet.");
+}
+
+async function getCoupleWithEntitlement(supabase: SupabaseClient, userId: string): Promise<string> {
+  const coupleId = await resolveCoupleId(supabase, userId);
+  await assertAtlasEntitlement(supabase, coupleId);
   return coupleId;
 }
 
@@ -44,158 +60,166 @@ function excerpt(s: string | null | undefined, n = 280) {
   return t.length <= n ? t : t.slice(0, n - 1) + "…";
 }
 
+// Single source of truth for the Atlas dataset. Used by both the public
+// getAtlas server fn and the inline composer in exportAtlasPdf so they
+// can never drift apart.
+async function loadAtlasData(supabase: SupabaseClient, coupleId: string): Promise<AtlasDTO> {
+  const heatStart = new Date();
+  heatStart.setUTCDate(heatStart.getUTCDate() - 83);
+  const heatStartISO = heatStart.toISOString().slice(0, 10);
+
+  const [
+    coupleRes, membersRes, streakRes, lettersRes, chaptersRes,
+    heatRes, milestonesRes, noteRes, categoriesRes,
+  ] = await Promise.all([
+    supabase.from("couples").select("name, created_at, paired_at").eq("id", coupleId).maybeSingle(),
+    supabase.from("couple_members").select("user_id").eq("couple_id", coupleId),
+    supabase.from("couple_streaks").select("*").eq("couple_id", coupleId).maybeSingle(),
+    supabase.from("letters").select("id, author_id, body, created_at, is_first_letter")
+      .eq("couple_id", coupleId).order("created_at", { ascending: true }),
+    supabase.from("quest_step_completions")
+      .select("step_id, created_at, quest_steps!inner(chapter_id, quest_chapters!inner(title, category_id))")
+      .eq("couple_id", coupleId).order("created_at", { ascending: true }),
+    supabase.from("daily_responses").select("prompt_date, user_id")
+      .eq("couple_id", coupleId).gte("prompt_date", heatStartISO),
+    supabase.from("xp_events").select("kind, created_at, amount").eq("couple_id", coupleId)
+      .order("created_at", { ascending: true }),
+    supabase.from("atlas_notes").select("body").eq("couple_id", coupleId).maybeSingle(),
+    supabase.from("quest_categories").select("id, title"),
+  ]);
+
+  const couple = (coupleRes.data ?? null) as CoupleRow | null;
+  const memberIds = (membersRes.data ?? []).map(m => m.user_id);
+  const { data: profiles } = await supabase
+    .from("profiles").select("id, display_name").in("id", memberIds.length ? memberIds : ["00000000-0000-0000-0000-000000000000"]);
+  const nameOf = new Map<string, string>(
+    (profiles ?? []).map(p => [p.id, p.display_name || "—"]),
+  );
+  const partnerNames = (memberIds.map(id => nameOf.get(id) || "—")) as [string] | [string, string];
+
+  const since = (couple?.paired_at ?? couple?.created_at ?? new Date().toISOString()).slice(0, 10);
+  const daysTogether = Math.max(
+    1,
+    Math.floor((Date.now() - new Date(since).getTime()) / (1000 * 60 * 60 * 24)) + 1,
+  );
+
+  // Heatmap: last 84 days, count = distinct member responses per day (0/1/2).
+  const heatMap = new Map<string, Set<string>>();
+  for (const r of (heatRes.data ?? []) as { prompt_date: string; user_id: string }[]) {
+    if (!heatMap.has(r.prompt_date)) heatMap.set(r.prompt_date, new Set());
+    heatMap.get(r.prompt_date)!.add(r.user_id);
+  }
+  const heatmap: { iso: string; count: number }[] = [];
+  let totalSharedDays = 0;
+  for (let i = 83; i >= 0; i--) {
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() - i);
+    const iso = d.toISOString().slice(0, 10);
+    const c = heatMap.get(iso)?.size ?? 0;
+    if (c >= 2) totalSharedDays += 1;
+    heatmap.push({ iso, count: c });
+  }
+
+  // Letters
+  const letters = (lettersRes.data ?? []) as Array<{
+    id: string; author_id: string; body: string; created_at: string; is_first_letter: boolean;
+  }>;
+  const first = letters.find(l => l.is_first_letter) ?? letters[0] ?? null;
+  const latest = letters.length ? letters[letters.length - 1] : null;
+  const longest = letters.length
+    ? letters.reduce((a, b) => (b.body?.length ?? 0) > (a.body?.length ?? 0) ? b : a)
+    : null;
+
+  // Chapters completed (one row per distinct chapter)
+  const chapterRows = (chaptersRes.data ?? []) as Array<{
+    created_at: string;
+    quest_steps: { chapter_id: string; quest_chapters: { title: string; category_id: string | null } };
+  }>;
+  const seenChapter = new Set<string>();
+  const chapters: { title: string; completedAt: string }[] = [];
+  for (const row of chapterRows) {
+    const id = row.quest_steps.chapter_id;
+    if (seenChapter.has(id)) continue;
+    seenChapter.add(id);
+    chapters.push({ title: row.quest_steps.quest_chapters.title, completedAt: row.created_at });
+  }
+
+  // Themes
+  const categoryLabel = new Map<string, string>();
+  for (const c of (categoriesRes.data ?? []) as { id: string; title: string }[]) {
+    categoryLabel.set(c.id, c.title);
+  }
+  const themeCounts = new Map<string, number>();
+  for (const row of chapterRows) {
+    const catId = row.quest_steps.quest_chapters.category_id;
+    const label = (catId && categoryLabel.get(catId)) || "Together";
+    themeCounts.set(label, (themeCounts.get(label) ?? 0) + 1);
+  }
+  const themes = [...themeCounts.entries()]
+    .map(([label, count]) => ({ label, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10);
+
+  // Milestones from XP events
+  const xp = (milestonesRes.data ?? []) as Array<{ kind: string; created_at: string }>;
+  const milestoneLabel: Record<string, string> = {
+    daily: "First daily reflection together",
+    letter: "First letter exchanged",
+    first_letter: "First letter exchanged",
+    quest_step: "Began your first quest step",
+    quest_chapter: "Completed a chapter",
+    solo_reflection: "First solo reflection",
+    onboarding: "Joined Our Journey",
+  };
+  const milestoneSeen = new Set<string>();
+  const milestones: { date: string; label: string }[] = [];
+  for (const e of xp) {
+    const label = milestoneLabel[e.kind];
+    if (!label || milestoneSeen.has(label)) continue;
+    milestoneSeen.add(label);
+    milestones.push({ date: e.created_at.slice(0, 10), label });
+  }
+  if (couple?.paired_at) {
+    milestones.unshift({ date: couple.paired_at.slice(0, 10), label: "Paired" });
+  }
+  milestones.sort((a, b) => a.date.localeCompare(b.date));
+
+  const streak = (streakRes.data ?? null) as Pick<CoupleStreakRow, "current_streak" | "longest_streak"> | null;
+  const note = (noteRes.data ?? null) as Pick<AtlasNoteRow, "body"> | null;
+
+  return {
+    coupleId,
+    coupleName: couple?.name ?? partnerNames.join(" & "),
+    partnerNames,
+    since,
+    daysTogether,
+    rhythm: {
+      currentStreak: streak?.current_streak ?? 0,
+      longestStreak: streak?.longest_streak ?? 0,
+      heatmap,
+      totalSharedDays,
+    },
+    letters: {
+      total: letters.length,
+      firstLetter: first ? { excerpt: excerpt(first.body), date: first.created_at.slice(0, 10) } : null,
+      longestLetter: longest ? { excerpt: excerpt(longest.body), date: longest.created_at.slice(0, 10) } : null,
+      latestLetter: latest && latest.id !== first?.id
+        ? { excerpt: excerpt(latest.body), date: latest.created_at.slice(0, 10) }
+        : null,
+    },
+    chapters,
+    themes,
+    milestones,
+    note: note?.body ?? "",
+  };
+}
+
 export const getAtlas = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<AtlasDTO> => {
     const { supabase, userId } = context;
-    const coupleId = await getCoupleWithEntitlement(supabase, userId);
-
-    const heatStart = new Date();
-    heatStart.setUTCDate(heatStart.getUTCDate() - 83);
-    const heatStartISO = heatStart.toISOString().slice(0, 10);
-
-    const [
-      coupleRes, membersRes, streakRes, lettersRes, chaptersRes,
-      heatRes, milestonesRes, noteRes, categoriesRes,
-    ] = await Promise.all([
-      supabase.from("couples").select("name, created_at, paired_at").eq("id", coupleId).maybeSingle(),
-      supabase.from("couple_members").select("user_id").eq("couple_id", coupleId),
-      supabase.from("couple_streaks").select("*").eq("couple_id", coupleId).maybeSingle(),
-      supabase.from("letters").select("id, author_id, body, created_at, is_first_letter")
-        .eq("couple_id", coupleId).order("created_at", { ascending: true }),
-      supabase.from("quest_step_completions")
-        .select("step_id, created_at, quest_steps!inner(chapter_id, quest_chapters!inner(title, category_id))")
-        .eq("couple_id", coupleId).order("created_at", { ascending: true }),
-      supabase.from("daily_responses").select("prompt_date, user_id")
-        .eq("couple_id", coupleId).gte("prompt_date", heatStartISO),
-      supabase.from("xp_events").select("kind, created_at, amount").eq("couple_id", coupleId)
-        .order("created_at", { ascending: true }),
-      supabase.from("atlas_notes").select("body").eq("couple_id", coupleId).maybeSingle(),
-      supabase.from("quest_categories").select("id, title"),
-    ]);
-
-    const couple = (coupleRes.data ?? null) as { name: string | null; created_at: string; paired_at: string | null } | null;
-    const memberIds = ((membersRes.data ?? []) as { user_id: string }[]).map(m => m.user_id);
-
-    const { data: profiles } = await supabase
-      .from("profiles").select("id, display_name").in("id", memberIds.length ? memberIds : ["00000000-0000-0000-0000-000000000000"]);
-    const nameOf = new Map<string, string>(
-      (profiles ?? []).map((p: any) => [p.id as string, (p.display_name as string) || "—"]),
-    );
-    const partnerNames = (memberIds.map(id => nameOf.get(id) || "—")) as [string] | [string, string];
-
-    const since = (couple?.paired_at ?? couple?.created_at ?? new Date().toISOString()).slice(0, 10);
-    const daysTogether = Math.max(
-      1,
-      Math.floor((Date.now() - new Date(since).getTime()) / (1000 * 60 * 60 * 24)) + 1,
-    );
-
-    // Heatmap: last 84 days, count = distinct member responses per day (0/1/2).
-    const heatMap = new Map<string, Set<string>>();
-    for (const r of (heatRes.data ?? []) as { prompt_date: string; user_id: string }[]) {
-      if (!heatMap.has(r.prompt_date)) heatMap.set(r.prompt_date, new Set());
-      heatMap.get(r.prompt_date)!.add(r.user_id);
-    }
-    const heatmap: { iso: string; count: number }[] = [];
-    let totalSharedDays = 0;
-    for (let i = 83; i >= 0; i--) {
-      const d = new Date();
-      d.setUTCDate(d.getUTCDate() - i);
-      const iso = d.toISOString().slice(0, 10);
-      const c = heatMap.get(iso)?.size ?? 0;
-      if (c >= 2) totalSharedDays += 1;
-      heatmap.push({ iso, count: c });
-    }
-
-    // Letters
-    const letters = (lettersRes.data ?? []) as Array<{
-      id: string; author_id: string; body: string; created_at: string; is_first_letter: boolean;
-    }>;
-    const first = letters.find(l => l.is_first_letter) ?? letters[0] ?? null;
-    const latest = letters.length ? letters[letters.length - 1] : null;
-    const longest = letters.length
-      ? letters.reduce((a, b) => (b.body?.length ?? 0) > (a.body?.length ?? 0) ? b : a)
-      : null;
-
-    // Chapters completed (one row per distinct chapter)
-    const chapterRows = (chaptersRes.data ?? []) as Array<{
-      created_at: string;
-      quest_steps: { chapter_id: string; quest_chapters: { title: string; category_id: string | null } };
-    }>;
-    const seenChapter = new Set<string>();
-    const chapters: { title: string; completedAt: string }[] = [];
-    for (const row of chapterRows) {
-      const id = row.quest_steps.chapter_id;
-      if (seenChapter.has(id)) continue;
-      seenChapter.add(id);
-      chapters.push({ title: row.quest_steps.quest_chapters.title, completedAt: row.created_at });
-    }
-
-    // Themes: count quest completions grouped by category label.
-    const categoryLabel = new Map<string, string>();
-    for (const c of (categoriesRes.data ?? []) as { id: string; title: string }[]) {
-      categoryLabel.set(c.id, c.title);
-    }
-    const themeCounts = new Map<string, number>();
-    for (const row of chapterRows) {
-      const catId = row.quest_steps.quest_chapters.category_id;
-      const label = (catId && categoryLabel.get(catId)) || "Together";
-      themeCounts.set(label, (themeCounts.get(label) ?? 0) + 1);
-    }
-    const themes = [...themeCounts.entries()]
-      .map(([label, count]) => ({ label, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 10);
-
-    // Milestones from XP events: first daily, first letter, chapters, streaks.
-    const xp = (milestonesRes.data ?? []) as Array<{ kind: string; created_at: string }>;
-    const milestoneLabel: Record<string, string> = {
-      daily: "First daily reflection together",
-      letter: "First letter exchanged",
-      first_letter: "First letter exchanged",
-      quest_step: "Began your first quest step",
-      quest_chapter: "Completed a chapter",
-      solo_reflection: "First solo reflection",
-      onboarding: "Joined Our Journey",
-    };
-    const milestoneSeen = new Set<string>();
-    const milestones: { date: string; label: string }[] = [];
-    for (const e of xp) {
-      const label = milestoneLabel[e.kind];
-      if (!label || milestoneSeen.has(label)) continue;
-      milestoneSeen.add(label);
-      milestones.push({ date: e.created_at.slice(0, 10), label });
-    }
-    if (couple?.paired_at) {
-      milestones.unshift({ date: couple.paired_at.slice(0, 10), label: "Paired" });
-    }
-    milestones.sort((a, b) => a.date.localeCompare(b.date));
-
-    return {
-      coupleId,
-      coupleName: couple?.name ?? partnerNames.join(" & "),
-      partnerNames,
-      since,
-      daysTogether,
-      rhythm: {
-        currentStreak: (streakRes.data as any)?.current_streak ?? 0,
-        longestStreak: (streakRes.data as any)?.longest_streak ?? 0,
-        heatmap,
-        totalSharedDays,
-      },
-      letters: {
-        total: letters.length,
-        firstLetter: first ? { excerpt: excerpt(first.body), date: first.created_at.slice(0, 10) } : null,
-        longestLetter: longest ? { excerpt: excerpt(longest.body), date: longest.created_at.slice(0, 10) } : null,
-        latestLetter: latest && latest.id !== first?.id
-          ? { excerpt: excerpt(latest.body), date: latest.created_at.slice(0, 10) }
-          : null,
-      },
-      chapters,
-      themes,
-      milestones,
-      note: (noteRes.data as any)?.body ?? "",
-    };
+    const coupleId = await getCoupleWithEntitlement(supabase as SupabaseClient, userId);
+    return loadAtlasData(supabase as SupabaseClient, coupleId);
   });
 
 export const saveAtlasNote = createServerFn({ method: "POST" })
@@ -203,7 +227,7 @@ export const saveAtlasNote = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ body: z.string().max(2000) }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const coupleId = await getCoupleWithEntitlement(supabase, userId);
+    const coupleId = await getCoupleWithEntitlement(supabase as SupabaseClient, userId);
     const { error } = await supabase.from("atlas_notes").upsert({
       couple_id: coupleId, body: data.body, updated_by: userId,
     }, { onConflict: "couple_id" });
@@ -215,11 +239,9 @@ export const exportAtlasPdf = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<{ pdfBase64: string }> => {
     const { supabase, userId } = context;
-    await getCoupleWithEntitlement(supabase, userId);
-    // Re-use getAtlas logic by calling the handler directly via a fresh call.
-    // We just compose inline to avoid double auth-fetch overhead.
+    const coupleId = await getCoupleWithEntitlement(supabase as SupabaseClient, userId);
     const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib");
-    const atlas = await buildAtlasInline(supabase, userId);
+    const atlas = await loadAtlasData(supabase as SupabaseClient, coupleId);
 
     const doc = await PDFDocument.create();
     const serif = await doc.embedFont(StandardFonts.TimesRoman);
@@ -235,12 +257,15 @@ export const exportAtlasPdf = createServerFn({ method: "POST" })
     const canvasC = rgb(0.985, 0.975, 0.96);
     const border = rgb(0.86, 0.83, 0.78);
 
-    function newPage() {
+    type PdfPage = ReturnType<typeof doc.addPage>;
+    type PdfFont = Awaited<ReturnType<typeof doc.embedFont>>;
+
+    function newPage(): PdfPage {
       const p = doc.addPage([W, H]);
       p.drawRectangle({ x: 0, y: 0, width: W, height: H, color: canvasC });
       return p;
     }
-    function wrap(text: string, font: any, size: number, maxWidth: number): string[] {
+    function wrap(text: string, font: PdfFont, size: number, maxWidth: number): string[] {
       const words = text.split(/\s+/);
       const lines: string[] = [];
       let cur = "";
@@ -254,14 +279,14 @@ export const exportAtlasPdf = createServerFn({ method: "POST" })
       if (cur) lines.push(cur);
       return lines;
     }
-    function drawHeader(p: any, label: string) {
+    function drawHeader(p: PdfPage, label: string) {
       p.drawText(label.toUpperCase(), { x: 60, y: H - 60, size: 9, font: sans, color: inkMute });
       p.drawLine({
         start: { x: 60, y: H - 70 }, end: { x: W - 60, y: H - 70 },
         thickness: 0.5, color: border,
       });
     }
-    function drawFooter(p: any, pageNum: number) {
+    function drawFooter(p: PdfPage, pageNum: number) {
       p.drawText(`Our Journey · Atlas · page ${pageNum}`, {
         x: 60, y: 40, size: 8, font: sans, color: inkMute,
       });
@@ -297,9 +322,7 @@ export const exportAtlasPdf = createServerFn({ method: "POST" })
       p.drawText(`${atlas.rhythm.totalSharedDays} shared days in the last 12 weeks`, {
         x: 60, y: H - 190, size: 12, font: sans, color: inkSoft,
       });
-      // 7×12 heatmap grid
       const cell = 22, gap = 4;
-      const cols = 12;
       const startX = 60, startY = H - 250;
       atlas.rhythm.heatmap.forEach((d, i) => {
         const col = Math.floor(i / 7);
@@ -450,7 +473,6 @@ export const exportAtlasPdf = createServerFn({ method: "POST" })
     }
 
     const bytes = await doc.save();
-    // Convert to base64 without spread to avoid stack overflow on large arrays
     let bin = "";
     const chunkSize = 0x8000;
     for (let i = 0; i < bytes.length; i += chunkSize) {
@@ -458,146 +480,3 @@ export const exportAtlasPdf = createServerFn({ method: "POST" })
     }
     return { pdfBase64: btoa(bin) };
   });
-
-// Internal aggregator used by exportAtlasPdf so we don't double-validate auth.
-async function buildAtlasInline(supabase: any, userId: string): Promise<AtlasDTO> {
-  const { data: profile } = await supabase
-    .from("profiles").select("current_couple_id").eq("id", userId).maybeSingle();
-  const coupleId = profile.current_couple_id as string;
-
-  const heatStart = new Date();
-  heatStart.setUTCDate(heatStart.getUTCDate() - 83);
-  const heatStartISO = heatStart.toISOString().slice(0, 10);
-
-  const [
-    coupleRes, membersRes, streakRes, lettersRes, chaptersRes,
-    heatRes, milestonesRes, noteRes, categoriesRes,
-  ] = await Promise.all([
-    supabase.from("couples").select("name, created_at, paired_at").eq("id", coupleId).maybeSingle(),
-    supabase.from("couple_members").select("user_id").eq("couple_id", coupleId),
-    supabase.from("couple_streaks").select("*").eq("couple_id", coupleId).maybeSingle(),
-    supabase.from("letters").select("id, author_id, body, created_at, is_first_letter")
-      .eq("couple_id", coupleId).order("created_at", { ascending: true }),
-    supabase.from("quest_step_completions")
-      .select("step_id, created_at, quest_steps!inner(chapter_id, quest_chapters!inner(title, category_id))")
-      .eq("couple_id", coupleId).order("created_at", { ascending: true }),
-    supabase.from("daily_responses").select("prompt_date, user_id")
-      .eq("couple_id", coupleId).gte("prompt_date", heatStartISO),
-    supabase.from("xp_events").select("kind, created_at, amount").eq("couple_id", coupleId)
-      .order("created_at", { ascending: true }),
-    supabase.from("atlas_notes").select("body").eq("couple_id", coupleId).maybeSingle(),
-    supabase.from("quest_categories").select("id, title"),
-  ]);
-
-  const couple = (coupleRes.data ?? null) as { name: string | null; created_at: string; paired_at: string | null } | null;
-  const memberIds = ((membersRes.data ?? []) as { user_id: string }[]).map(m => m.user_id);
-  const { data: profiles } = await supabase
-    .from("profiles").select("id, display_name").in("id", memberIds.length ? memberIds : ["00000000-0000-0000-0000-000000000000"]);
-  const nameOf = new Map<string, string>(
-    (profiles ?? []).map((p: any) => [p.id as string, (p.display_name as string) || "—"]),
-  );
-  const partnerNames = (memberIds.map(id => nameOf.get(id) || "—")) as [string] | [string, string];
-
-  const since = (couple?.paired_at ?? couple?.created_at ?? new Date().toISOString()).slice(0, 10);
-  const daysTogether = Math.max(1,
-    Math.floor((Date.now() - new Date(since).getTime()) / (1000 * 60 * 60 * 24)) + 1);
-
-  const heatMap = new Map<string, Set<string>>();
-  for (const r of (heatRes.data ?? []) as { prompt_date: string; user_id: string }[]) {
-    if (!heatMap.has(r.prompt_date)) heatMap.set(r.prompt_date, new Set());
-    heatMap.get(r.prompt_date)!.add(r.user_id);
-  }
-  const heatmap: { iso: string; count: number }[] = [];
-  let totalSharedDays = 0;
-  for (let i = 83; i >= 0; i--) {
-    const d = new Date(); d.setUTCDate(d.getUTCDate() - i);
-    const iso = d.toISOString().slice(0, 10);
-    const c = heatMap.get(iso)?.size ?? 0;
-    if (c >= 2) totalSharedDays += 1;
-    heatmap.push({ iso, count: c });
-  }
-
-  const letters = (lettersRes.data ?? []) as Array<{
-    id: string; author_id: string; body: string; created_at: string; is_first_letter: boolean;
-  }>;
-  const first = letters.find(l => l.is_first_letter) ?? letters[0] ?? null;
-  const latest = letters.length ? letters[letters.length - 1] : null;
-  const longest = letters.length
-    ? letters.reduce((a, b) => (b.body?.length ?? 0) > (a.body?.length ?? 0) ? b : a)
-    : null;
-
-  const chapterRows = (chaptersRes.data ?? []) as Array<{
-    created_at: string;
-    quest_steps: { chapter_id: string; quest_chapters: { title: string; category_id: string | null } };
-  }>;
-  const seenChapter = new Set<string>();
-  const chapters: { title: string; completedAt: string }[] = [];
-  for (const row of chapterRows) {
-    const id = row.quest_steps.chapter_id;
-    if (seenChapter.has(id)) continue;
-    seenChapter.add(id);
-    chapters.push({ title: row.quest_steps.quest_chapters.title, completedAt: row.created_at });
-  }
-
-  const categoryLabel = new Map<string, string>();
-  for (const c of (categoriesRes.data ?? []) as { id: string; title: string }[]) {
-    categoryLabel.set(c.id, c.title);
-  }
-  const themeCounts = new Map<string, number>();
-  for (const row of chapterRows) {
-    const catId = row.quest_steps.quest_chapters.category_id;
-    const label = (catId && categoryLabel.get(catId)) || "Together";
-    themeCounts.set(label, (themeCounts.get(label) ?? 0) + 1);
-  }
-  const themes = [...themeCounts.entries()]
-    .map(([label, count]) => ({ label, count }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 10);
-
-  const xp = (milestonesRes.data ?? []) as Array<{ kind: string; created_at: string }>;
-  const milestoneLabel: Record<string, string> = {
-    daily: "First daily reflection together",
-    letter: "First letter exchanged",
-    first_letter: "First letter exchanged",
-    quest_step: "Began your first quest step",
-    quest_chapter: "Completed a chapter",
-    solo_reflection: "First solo reflection",
-    onboarding: "Joined Our Journey",
-  };
-  const seen = new Set<string>();
-  const milestones: { date: string; label: string }[] = [];
-  for (const e of xp) {
-    const label = milestoneLabel[e.kind];
-    if (!label || seen.has(label)) continue;
-    seen.add(label);
-    milestones.push({ date: e.created_at.slice(0, 10), label });
-  }
-  if (couple?.paired_at) milestones.unshift({ date: couple.paired_at.slice(0, 10), label: "Paired" });
-  milestones.sort((a, b) => a.date.localeCompare(b.date));
-
-  return {
-    coupleId,
-    coupleName: couple?.name ?? partnerNames.join(" & "),
-    partnerNames,
-    since,
-    daysTogether,
-    rhythm: {
-      currentStreak: (streakRes.data as any)?.current_streak ?? 0,
-      longestStreak: (streakRes.data as any)?.longest_streak ?? 0,
-      heatmap,
-      totalSharedDays,
-    },
-    letters: {
-      total: letters.length,
-      firstLetter: first ? { excerpt: excerpt(first.body), date: first.created_at.slice(0, 10) } : null,
-      longestLetter: longest ? { excerpt: excerpt(longest.body), date: longest.created_at.slice(0, 10) } : null,
-      latestLetter: latest && latest.id !== first?.id
-        ? { excerpt: excerpt(latest.body), date: latest.created_at.slice(0, 10) }
-        : null,
-    },
-    chapters,
-    themes,
-    milestones,
-    note: (noteRes.data as any)?.body ?? "",
-  };
-}
