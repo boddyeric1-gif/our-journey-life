@@ -100,7 +100,9 @@ export const getHomeState = createServerFn({ method: "GET" })
       supabase.from("letters").select("*").eq("couple_id", coupleId)
         .order("created_at", { ascending: false }).limit(20),
       supabase.from("quest_step_completions").select("step_id").eq("user_id", userId),
-      supabase.from("quest_chapters").select("id, slug, title, summary, position, category_id").order("position"),
+      supabase.from("quest_chapters").select("id, slug, title, position").order("position"),
+      // A1: load all steps once, sort in-memory by chapter then position.
+      supabase.from("quest_steps").select("id, chapter_id, position, teaching, prompt, kind"),
       supabase.from("couple_goals").select("goal").eq("couple_id", coupleId),
       // Rhythm: who contributed each of the last 14 days. Service-role for the
       // partner so we can read daily-response presence-only without leaking
