@@ -66,6 +66,11 @@ function OnboardingPage() {
   const [loveLang, setLoveLang] = useState<LL | null>(null);
   const [goals, setGoals] = useState<string[]>([]);
   const [goalsLimitHint, setGoalsLimitHint] = useState(false);
+  useEffect(() => {
+    if (!goalsLimitHint) return;
+    const t = setTimeout(() => setGoalsLimitHint(false), 1800);
+    return () => clearTimeout(t);
+  }, [goalsLimitHint]);
   const [letter, setLetter] = useState("");
   const [inviteCode, setInviteCode] = useState<string | null>(null);
 
