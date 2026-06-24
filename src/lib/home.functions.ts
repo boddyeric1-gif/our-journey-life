@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { XP_FOR, promptPositionFor, todayUTC, localToday, daysBetween, daysSinceUTC } from "@/lib/xp";
+import { XP_FOR, promptPositionFor, todayUTC, localToday, daysSinceUTC } from "@/lib/xp";
 
 // One unified server fn returning everything Home needs.
 export const getHomeState = createServerFn({ method: "GET" })
