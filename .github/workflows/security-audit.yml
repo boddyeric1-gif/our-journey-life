@@ -1,0 +1,76 @@
+name: Security audit
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Daily at 06:00 UTC so new advisories are caught even without a push
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  audit:
+    name: bun audit (fail on high/critical)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # `bun audit` exits non-zero when any vuln is found. We post-process so
+      # only high + critical fail the build; moderate/low get logged for review.
+      - name: Audit dependencies
+        id: audit
+        run: |
+          set +e
+          bun audit --json > audit.json
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+          set -e
+
+          if [ ! -s audit.json ]; then
+            echo "No audit output produced."
+            exit 0
+          fi
+
+          # Count vulns per severity
+          HIGH=$(jq '[.vulnerabilities[]? | select(.severity=="high")] | length' audit.json)
+          CRIT=$(jq '[.vulnerabilities[]? | select(.severity=="critical")] | length' audit.json)
+          MOD=$(jq '[.vulnerabilities[]? | select(.severity=="moderate")] | length' audit.json)
+          LOW=$(jq '[.vulnerabilities[]? | select(.severity=="low")] | length' audit.json)
+
+          {
+            echo "## Dependency audit"
+            echo ""
+            echo "| Severity | Count |"
+            echo "|----------|-------|"
+            echo "| critical | $CRIT |"
+            echo "| high     | $HIGH |"
+            echo "| moderate | $MOD  |"
+            echo "| low      | $LOW  |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$CRIT" -gt 0 ] || [ "$HIGH" -gt 0 ]; then
+            echo ""
+            echo "❌ Failing build: $CRIT critical, $HIGH high severity advisories."
+            jq '.vulnerabilities[]? | select(.severity=="high" or .severity=="critical")' audit.json
+            exit 1
+          fi
+
+          echo "✅ No high or critical advisories. Moderate=$MOD Low=$LOW (logged, non-blocking)."
+
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-audit-${{ github.run_id }}
+          path: audit.json
+          retention-days: 30
