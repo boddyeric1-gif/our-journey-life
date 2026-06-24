@@ -137,12 +137,13 @@ export const updateCoupleGoals = createServerFn({ method: "POST" })
       .from("profiles").select("current_couple_id").eq("id", userId).maybeSingle();
     if (!profile?.current_couple_id) throw new Error("Not in a couple.");
     const coupleId = profile.current_couple_id;
-    await supabase.from("couple_goals").delete().eq("couple_id", coupleId);
-    if (data.goals.length) {
-      await supabase.from("couple_goals").insert(
-        data.goals.map(g => ({ couple_id: coupleId, goal: g })),
-      );
-    }
+    // A4: atomic DELETE + INSERT inside a single SQL function. A partial
+    // failure can no longer leave the couple with zero goals.
+    const { error } = await supabase.rpc("replace_couple_goals", {
+      _couple_id: coupleId,
+      _goals: data.goals,
+    });
+    if (error) throw new Error(error.message);
     return { ok: true };
   });
 
