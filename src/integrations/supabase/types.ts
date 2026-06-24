@@ -822,6 +822,7 @@ export type Database = {
         Args: { _couple_id: string; _date: string }
         Returns: boolean
       }
+      couple_has_admin: { Args: { _couple_id: string }; Returns: boolean }
       couple_has_entitlement: {
         Args: { _couple_id: string; _product: string }
         Returns: boolean
