@@ -49,6 +49,11 @@ export const getHomeState = createServerFn({ method: "GET" })
 
     const position = couple ? promptPositionFor(couple.created_at as string, promptToday) : 1;
 
+    // 14-day rhythm window — oldest first (index 0) → newest (index 13 = today)
+    const rhythmStart = new Date();
+    rhythmStart.setUTCDate(rhythmStart.getUTCDate() - 13);
+    const rhythmStartISO = rhythmStart.toISOString().slice(0, 10);
+
     // Parallel batch 3
     const [
       partnerRes,
@@ -63,6 +68,10 @@ export const getHomeState = createServerFn({ method: "GET" })
       completionsRes,
       chaptersRes,
       goalsRes,
+      myRhythmRes,
+      partnerRhythmRes,
+      mySoloRhythmRes,
+      partnerSoloRhythmRes,
     ] = await Promise.all([
       partnerId
         ? supabase.from("profiles").select("id, display_name, avatar_url").eq("id", partnerId).maybeSingle()
@@ -94,6 +103,20 @@ export const getHomeState = createServerFn({ method: "GET" })
       supabase.from("quest_step_completions").select("step_id").eq("user_id", userId),
       supabase.from("quest_chapters").select("id, slug, title, summary, position, category_id").order("position"),
       supabase.from("couple_goals").select("goal").eq("couple_id", coupleId),
+      // Rhythm: who contributed each of the last 14 days. Service-role for the
+      // partner so we can read presence-only without leaking response bodies.
+      supabaseAdmin.from("daily_responses").select("prompt_date")
+        .eq("couple_id", coupleId).eq("user_id", userId).gte("prompt_date", rhythmStartISO),
+      partnerId
+        ? supabaseAdmin.from("daily_responses").select("prompt_date")
+            .eq("couple_id", coupleId).eq("user_id", partnerId).gte("prompt_date", rhythmStartISO)
+        : Promise.resolve({ data: [] }),
+      supabaseAdmin.from("solo_reflections").select("prompt_date")
+        .eq("user_id", userId).gte("prompt_date", rhythmStartISO),
+      partnerId
+        ? supabaseAdmin.from("solo_reflections").select("prompt_date")
+            .eq("user_id", partnerId).gte("prompt_date", rhythmStartISO)
+        : Promise.resolve({ data: [] }),
     ]);
 
     const partner = (partnerRes.data as any) ?? null;
