@@ -226,6 +226,7 @@ export const getHomeState = createServerFn({ method: "GET" })
       userLocalToday,
       daysTogether,
       rhythm,
+      coupleProgress,
     };
   });
 
