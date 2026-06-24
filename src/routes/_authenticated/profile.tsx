@@ -46,7 +46,7 @@ function ProfilePage() {
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [editGoals, setEditGoals] = useState(false);
 
-  const q = useQuery({ queryKey: ["home-state"], queryFn: () => fetcher() });
+  const q = useQuery({ queryKey: ["home-state"], queryFn: () => fetcher(), staleTime: 30_000 });
   const unpair = useMutation({
     mutationFn: () => leave(),
     onSuccess: () => { qc.invalidateQueries(); setConfirmLeave(false); toast.success("Unpaired."); },
@@ -57,6 +57,9 @@ function ProfilePage() {
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Couldn't save"),
   });
 
+  if (q.isError) {
+    return <RouteError error={q.error as Error} reset={() => q.refetch()} />;
+  }
   if (!q.data) return (<AppShell><div className="p-10 text-ink-mute">Loading…</div></AppShell>);
 
   const d = q.data;

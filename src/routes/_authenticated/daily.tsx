@@ -30,7 +30,7 @@ function DailyPage() {
   const submit = useServerFn(submitDailyResponse);
   const submitSolo = useServerFn(submitSoloReflection);
 
-  const home = useQuery({ queryKey: ["home-state"], queryFn: () => fetchHome() });
+  const home = useQuery({ queryKey: ["home-state"], queryFn: () => fetchHome(), staleTime: 30_000 });
   const [response, setResponse] = useState("");
   const [solo, setSolo] = useState("");
 
@@ -56,6 +56,9 @@ function DailyPage() {
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Couldn't save"),
   });
 
+  if (home.isError) {
+    return <RouteError error={home.error as Error} reset={() => home.refetch()} />;
+  }
   if (!data || home.isLoading) {
     return (
       <AppShell>
@@ -99,7 +102,11 @@ function DailyPage() {
             {day ? `Day ${day} together · Today's Spark` : "Today's Spark"}
           </p>
           <p className="text-sm text-ink-soft">
-            {new Date(data.today).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
+            {(() => {
+              const [y, m, dd] = data.today.split("-").map(Number);
+              const local = new Date(y, (m ?? 1) - 1, dd ?? 1);
+              return local.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+            })()}
           </p>
         </div>
       </header>
