@@ -224,13 +224,14 @@ export const submitDailyResponse = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { advanceUserStreak, maybeAdvanceCoupleStreak } = await import("@/lib/streak.server");
     const promptDate = todayUTC();
 
     const { data: profile } = await supabase
       .from("profiles").select("current_couple_id, timezone").eq("id", userId).maybeSingle();
     if (!profile?.current_couple_id) throw new Error("You're not in a couple yet.");
     const coupleId = profile.current_couple_id;
-    const userTz = (profile as any).timezone ?? "UTC";
+    const userTz = (profile as { timezone?: string | null }).timezone ?? "UTC";
 
     const { error } = await supabase.from("daily_responses").upsert({
       couple_id: coupleId, user_id: userId,
@@ -264,11 +265,13 @@ export const submitSoloReflection = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const promptDate = todayUTC();
+    const { advanceUserStreak, maybeAdvanceCoupleStreak } = await import("@/lib/streak.server");
 
     const { data: profile } = await supabase
       .from("profiles").select("current_couple_id, timezone").eq("id", userId).maybeSingle();
-    const userTz = (profile as any)?.timezone ?? "UTC";
+    const userTz = (profile as { timezone?: string | null } | null)?.timezone ?? "UTC";
+    // A6: date reflections by the author's local day so streaks line up.
+    const promptDate = localToday(userTz);
 
     const { data: existing } = await supabase
       .from("solo_reflections").select("id")
@@ -297,69 +300,5 @@ export const submitSoloReflection = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-async function advanceUserStreak(supabase: any, userId: string, userTz: string) {
-  const today = localToday(userTz);
-  const { data: s } = await supabase
-    .from("user_streaks").select("*").eq("user_id", userId).maybeSingle();
-  if (!s) {
-    await supabase.from("user_streaks").insert({
-      user_id: userId, current_streak: 1, longest_streak: 1, last_active_date: today,
-    });
-    return;
-  }
-  if (s.last_active_date === today) return;
-  const diff = s.last_active_date ? daysBetween(s.last_active_date, today) : null;
-
-  let newStreak = 1;
-  let freezes = s.freezes_available ?? 0;
-  if (diff === 1) newStreak = (s.current_streak ?? 0) + 1;
-  else if (diff === 2 && freezes > 0) {
-    newStreak = (s.current_streak ?? 0) + 1;
-    freezes -= 1;
-  } else newStreak = 1;
-
-  const longest = Math.max(s.longest_streak ?? 0, newStreak);
-  await supabase.from("user_streaks").update({
-    current_streak: newStreak,
-    longest_streak: longest,
-    last_active_date: today,
-    freezes_available: freezes,
-  }).eq("user_id", userId);
-}
-
-async function maybeAdvanceCoupleStreak(supabase: any, coupleId: string, promptDate: string) {
-  const { data: members } = await supabase
-    .from("couple_members").select("user_id").eq("couple_id", coupleId);
-  if (!members || members.length < 2) return;
-
-  let bothActive = true;
-  for (const m of members) {
-    const { count: rCount } = await supabase
-      .from("daily_responses").select("id", { count: "exact", head: true })
-      .eq("user_id", m.user_id).eq("couple_id", coupleId).eq("prompt_date", promptDate);
-    if (rCount && rCount > 0) continue;
-    const { count: sCount } = await supabase
-      .from("solo_reflections").select("id", { count: "exact", head: true })
-      .eq("user_id", m.user_id).eq("prompt_date", promptDate);
-    if (sCount && sCount > 0) continue;
-    bothActive = false;
-    break;
-  }
-  if (!bothActive) return;
-
-  const { data: cs } = await supabase
-    .from("couple_streaks").select("*").eq("couple_id", coupleId).maybeSingle();
-  if (!cs) {
-    await supabase.from("couple_streaks").insert({
-      couple_id: coupleId, current_streak: 1, longest_streak: 1, last_both_active_date: promptDate,
-    });
-    return;
-  }
-  if (cs.last_both_active_date === promptDate) return;
-  const diff = cs.last_both_active_date ? daysBetween(cs.last_both_active_date, promptDate) : null;
-  const newStreak = diff === 1 ? (cs.current_streak ?? 0) + 1 : 1;
-  const longest = Math.max(cs.longest_streak ?? 0, newStreak);
-  await supabase.from("couple_streaks").update({
-    current_streak: newStreak, longest_streak: longest, last_both_active_date: promptDate,
-  }).eq("couple_id", coupleId);
-}
+// Streak helpers live in @/lib/streak.server and are imported lazily by
+// the handlers above to avoid leaking server-only code into the client bundle.
