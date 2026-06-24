@@ -130,6 +130,20 @@ function HomePage() {
         </p>
       )}
 
+      {data.kind === "paired" && data.coupleProgress?.nextUnlock && (
+        <Link
+          to="/profile"
+          className="mx-5 mt-1 mb-3 block text-[12px] text-ink-mute hover:text-ink"
+        >
+          <span className="text-ink-soft">Together, Level {data.coupleProgress.level}</span>
+          <span className="mx-1.5">·</span>
+          {data.coupleProgress.nextUnlock.label} unlocks at Lv {data.coupleProgress.nextUnlock.levelTarget}
+          {data.coupleProgress.nextUnlock.daysRemaining > 0 && (
+            <> · {data.coupleProgress.nextUnlock.daysRemaining} shared day{data.coupleProgress.nextUnlock.daysRemaining === 1 ? "" : "s"} to go</>
+          )}
+        </Link>
+      )}
+
       {/* Single hero card — the one next decision. */}
       <div className="mt-2">
         <TodayHero
