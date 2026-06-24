@@ -49,6 +49,68 @@ export type Database = {
           },
         ]
       }
+      couple_entitlements: {
+        Row: {
+          amount_cents: number | null
+          couple_id: string
+          created_at: string
+          currency: string | null
+          granted_at: string
+          id: string
+          price_id: string | null
+          product: string
+          purchased_by: string | null
+          revoke_reason: string | null
+          revoked_at: string | null
+          status: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_cents?: number | null
+          couple_id: string
+          created_at?: string
+          currency?: string | null
+          granted_at?: string
+          id?: string
+          price_id?: string | null
+          product: string
+          purchased_by?: string | null
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number | null
+          couple_id?: string
+          created_at?: string
+          currency?: string | null
+          granted_at?: string
+          id?: string
+          price_id?: string | null
+          product?: string
+          purchased_by?: string | null
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "couple_entitlements_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       couple_goals: {
         Row: {
           couple_id: string
@@ -665,6 +727,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      couple_has_entitlement: {
+        Args: { _couple_id: string; _product: string }
+        Returns: boolean
+      }
       daily_both_submitted: {
         Args: { _couple_id: string; _prompt_date: string }
         Returns: boolean
