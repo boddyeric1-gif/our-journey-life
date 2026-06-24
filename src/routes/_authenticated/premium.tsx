@@ -39,8 +39,8 @@ const PRODUCTS: Array<{
     id: 'the_atlas_onetime',
     name: 'The Atlas',
     price: '$9.99',
-    tagline: 'A printable map of you two.',
-    body: 'Your rhythm, themes, and breakthroughs gathered into one quiet keepsake you can hold.',
+    tagline: 'A living scrapbook of you two.',
+    body: 'Your rhythm, letters, chapters, and themes gathered into a scrapbook you can page through inside the app — and export to your device whenever you want a copy to keep.',
     owns: (e) => e.atlas,
   },
   {
