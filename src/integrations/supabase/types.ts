@@ -815,6 +815,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      couple_both_active_on: {
+        Args: { _couple_id: string; _date: string }
+        Returns: boolean
+      }
       couple_has_entitlement: {
         Args: { _couple_id: string; _product: string }
         Returns: boolean
@@ -831,6 +835,10 @@ export type Database = {
         Returns: boolean
       }
       is_couple_member: { Args: { _couple_id: string }; Returns: boolean }
+      replace_couple_goals: {
+        Args: { _couple_id: string; _goals: string[] }
+        Returns: undefined
+      }
       shares_couple_with: { Args: { _other: string }; Returns: boolean }
       user_total_xp: { Args: { _user_id: string }; Returns: number }
     }

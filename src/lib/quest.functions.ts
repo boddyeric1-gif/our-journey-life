@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { XP_FOR, localToday, daysBetween } from "@/lib/xp";
+import { XP_FOR } from "@/lib/xp";
 
 export const listQuests = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -133,22 +133,9 @@ export const completeStep = createServerFn({ method: "POST" })
         throw new Error(`XP write failed: ${xpError.message}`);
       }
 
-      const today = localToday(userTz);
-      const { data: us } = await supabaseAdmin
-        .from("user_streaks").select("*").eq("user_id", userId).maybeSingle();
-      if (us && us.last_active_date !== today) {
-        const diff = us.last_active_date ? daysBetween(us.last_active_date, today) : null;
-        let freezes = us.freezes_available ?? 0;
-        let newStreak = 1;
-        if (diff === 1) newStreak = (us.current_streak ?? 0) + 1;
-        else if (diff === 2 && freezes > 0) { newStreak = (us.current_streak ?? 0) + 1; freezes -= 1; }
-        await supabaseAdmin.from("user_streaks").update({
-          current_streak: newStreak,
-          longest_streak: Math.max(us.longest_streak ?? 0, newStreak),
-          last_active_date: today,
-          freezes_available: freezes,
-        }).eq("user_id", userId);
-      }
+      // A3: shared streak helper — same logic as the daily/solo paths.
+      const { advanceUserStreak } = await import("@/lib/streak.server");
+      await advanceUserStreak(supabaseAdmin, userId, userTz);
     }
 
     let chapterComplete = false;
