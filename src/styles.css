@@ -75,6 +75,23 @@
 
   --ease-quiet: cubic-bezier(0.22, 0.61, 0.36, 1);
   --duration-soft: 280ms;
+  --duration-quick: 160ms;
+
+  /* Elevation tuned for the plum canvas — deep, narrow, faintly rose-tinted. */
+  --shadow-soft:
+    0 1px 0 0 oklch(1 0 0 / 0.05) inset,
+    0 1px 2px -1px oklch(0 0 0 / 0.5),
+    0 8px 24px -16px oklch(0 0 0 / 0.55);
+  --shadow-lifted:
+    0 1px 0 0 oklch(1 0 0 / 0.06) inset,
+    0 2px 4px -2px oklch(0 0 0 / 0.55),
+    0 18px 40px -22px oklch(0 0 0 / 0.6),
+    0 30px 80px -40px oklch(0.71 0.075 32 / 0.18);
+  --shadow-floating:
+    0 1px 0 0 oklch(1 0 0 / 0.07) inset,
+    0 4px 10px -4px oklch(0 0 0 / 0.55),
+    0 30px 80px -32px oklch(0 0 0 / 0.7),
+    0 40px 120px -50px oklch(0.71 0.075 32 / 0.22);
 }
 
 :root {
