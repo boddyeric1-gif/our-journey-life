@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { completeStep, getChapter } from "@/lib/quest.functions";
 import { AppShell } from "@/components/app-shell";
 import { RouteError, RouteNotFound } from "@/components/route-boundaries";
-import { ArrowLeft, ArrowRight, Check, Users, User as UserIcon, Sparkles, X, Lock, Clock } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Users, User as UserIcon, Sparkles, X, Lock, Clock, ChevronDown } from "lucide-react";
 import { HeaderSkeleton, ListSkeleton } from "@/components/skeletons";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -191,14 +191,63 @@ function KindLabel({ kind }: { kind: string }) {
 }
 
 function DoneRow({ step }: { step: Step }) {
+  const [open, setOpen] = useState(false);
+  const panelId = `done-step-${step.id}`;
+  const completedAt = step.completion?.created_at
+    ? new Date(step.completion.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+    : null;
+
   return (
-    <div className="rounded-2xl border border-border bg-canvas-deep/40 px-4 py-3 flex items-center gap-3 opacity-80">
-      <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-rust text-canvas">
-        <Check className="h-3.5 w-3.5" aria-hidden />
-      </span>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm text-ink truncate">Step {step.position} · {step.kind === "couple" ? "Together" : "Solo"}</p>
-      </div>
+    <div className="rounded-2xl border border-border bg-canvas-deep/40">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+        aria-controls={panelId}
+        className="w-full px-4 py-3 flex items-center gap-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-rust/60 rounded-2xl"
+      >
+        <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-rust text-canvas shrink-0">
+          <Check className="h-3.5 w-3.5" aria-hidden />
+        </span>
+        <span className="flex-1 min-w-0 text-sm text-ink truncate opacity-80">
+          Step {step.position} · {step.kind === "couple" ? "Together" : "Solo"}
+        </span>
+        <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.16em] text-ink-mute shrink-0">
+          {open ? "Hide" : "Re-read"}
+          <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden />
+        </span>
+      </button>
+
+      {open && (
+        <div id={panelId} className="px-4 pb-4 pt-1 opacity-90">
+          <div className="rounded-xl bg-card/50 p-4">
+            <KindLabel kind={step.kind} />
+            <p className="mt-2 text-[15px] leading-[1.6] text-ink-soft text-pretty">{step.teaching}</p>
+            <p className="mt-3 serif-italic text-rust" aria-hidden>"</p>
+            <p className="-mt-3 font-serif text-[18px] leading-snug text-ink text-balance">{step.prompt}</p>
+            {step.ritual && (
+              <p className="mt-3 text-[12px] uppercase tracking-[0.14em] text-ink-mute">
+                Ritual · <span className="normal-case tracking-normal text-ink-soft">{step.ritual}</span>
+              </p>
+            )}
+            <div className="mt-4 pt-4 border-t border-border">
+              <p className="text-[11px] uppercase tracking-[0.18em] text-ink-mute">Your reflection</p>
+              {step.completion?.body ? (
+                <p className="mt-2 whitespace-pre-wrap text-[15px] leading-[1.6] text-ink-soft text-pretty">
+                  {step.completion.body}
+                </p>
+              ) : (
+                <p className="mt-2 text-sm text-ink-mute italic">No note saved.</p>
+              )}
+              {completedAt && (
+                <p className="mt-3 text-[11px] uppercase tracking-[0.16em] text-ink-mute">
+                  Marked done · {completedAt}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
