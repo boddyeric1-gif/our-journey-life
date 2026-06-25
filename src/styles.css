@@ -174,6 +174,9 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "kern", "liga", "calt";
+    font-synthesis: none;
   }
   body {
     /* safe-area for native shells */
@@ -184,8 +187,20 @@
     font-family: var(--font-serif);
     font-weight: 400;
     letter-spacing: -0.005em;
+    font-feature-settings: "kern", "liga", "dlig", "calt";
   }
-  /* Candlelit grain — a faint warm bloom from below */
+  h1 { letter-spacing: -0.012em; }
+  h2 { letter-spacing: -0.008em; }
+  /* Sharper, more deliberate focus ring across every interactive surface. */
+  :where(a, button, input, textarea, select, summary, [role="button"], [tabindex]):focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--canvas),
+      0 0 0 4px oklch(0.71 0.075 32 / 0.55),
+      0 0 18px -2px oklch(0.71 0.075 32 / 0.4);
+    border-radius: inherit;
+  }
+  /* Candlelit grain — a faint warm bloom from below, with a subtle bottom vignette. */
   body::before {
     content: "";
     position: fixed;
@@ -193,8 +208,9 @@
     pointer-events: none;
     z-index: 0;
     background:
-      radial-gradient(60% 50% at 50% 110%, oklch(0.71 0.075 32 / 0.16), transparent 70%),
-      radial-gradient(80% 60% at 50% -10%, oklch(0.62 0.045 295 / 0.12), transparent 70%);
+      radial-gradient(60% 50% at 50% 110%, oklch(0.71 0.075 32 / 0.18), transparent 70%),
+      radial-gradient(80% 60% at 50% -10%, oklch(0.62 0.045 295 / 0.13), transparent 70%),
+      linear-gradient(180deg, transparent 70%, oklch(0.15 0.035 312 / 0.35) 100%);
   }
   body::after {
     content: "";
@@ -203,9 +219,9 @@
     pointer-events: none;
     z-index: 0;
     background-image:
-      radial-gradient(oklch(0.92 0.045 75 / 0.03) 1px, transparent 1px);
+      radial-gradient(oklch(0.92 0.045 75 / 0.035) 1px, transparent 1px);
     background-size: 3px 3px;
-    opacity: 0.5;
+    opacity: 0.6;
   }
 }
 
@@ -215,6 +231,44 @@
   .serif-italic { font-family: var(--font-serif); font-style: italic; }
   .hairline { border-color: oklch(1 0 0 / 0.06); }
   .ease-quiet { transition-timing-function: var(--ease-quiet); }
+
+  /* Tactile press feedback — quiet, restrained, App-Store native feel. */
+  .tap {
+    transition: transform var(--duration-quick) var(--ease-quiet),
+                box-shadow var(--duration-quick) var(--ease-quiet),
+                background-color var(--duration-quick) var(--ease-quiet),
+                opacity var(--duration-quick) var(--ease-quiet);
+  }
+  .tap:active { transform: scale(0.985); }
+  @media (prefers-reduced-motion: reduce) {
+    .tap:active { transform: none; }
+  }
+
+  /* Fluid type scale tokens — used opt-in via utility classes below. */
+  .t-display {
+    font-family: var(--font-serif);
+    font-size: clamp(1.75rem, 1.45rem + 1.5vw, 2.25rem);
+    line-height: 1.08;
+    letter-spacing: -0.018em;
+  }
+  .t-h1 {
+    font-family: var(--font-serif);
+    font-size: clamp(1.5rem, 1.3rem + 1vw, 1.875rem);
+    line-height: 1.15;
+    letter-spacing: -0.012em;
+  }
+  .t-h2 {
+    font-family: var(--font-serif);
+    font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
+    line-height: 1.2;
+    letter-spacing: -0.008em;
+  }
+  .t-eyebrow {
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--ink-mute);
+  }
 
   /* Daily reveal: a one-time, ~1.2s synchronized fade-in for both responses.
      Used by [data-reveal="enter"] on the reveal region. Respects reduced motion. */
@@ -242,10 +296,22 @@
 @utility surface-card {
   background-color: var(--color-card);
   border-radius: var(--radius-2xl);
-  border: 1px solid oklch(1 0 0 / 0.06);
-  box-shadow:
-    0 1px 0 0 oklch(1 0 0 / 0.04) inset,
-    0 24px 60px -28px oklch(0 0 0 / 0.55);
+  border: 1px solid oklch(1 0 0 / 0.07);
+  box-shadow: var(--shadow-soft);
+}
+
+@utility surface-card-lifted {
+  background-color: var(--color-card);
+  border-radius: var(--radius-2xl);
+  border: 1px solid oklch(1 0 0 / 0.08);
+  box-shadow: var(--shadow-lifted);
+}
+
+@utility surface-card-floating {
+  background-color: var(--color-card);
+  border-radius: var(--radius-2xl);
+  border: 1px solid oklch(1 0 0 / 0.09);
+  box-shadow: var(--shadow-floating);
 }
 
 @utility surface-card-quiet {
@@ -254,8 +320,77 @@
   border: 1px solid oklch(1 0 0 / 0.05);
 }
 
+/* Wax-seal top edge for hero/premium surfaces. Apply on the card itself. */
+@utility seal-top {
+  position: relative;
+  overflow: hidden;
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1.5px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      oklch(0.71 0.075 32 / 0.9) 20%,
+      oklch(0.66 0.085 25 / 0.95) 50%,
+      oklch(0.71 0.075 32 / 0.9) 80%,
+      transparent 100%
+    );
+    pointer-events: none;
+  }
+}
+
 @utility candle-glow {
   box-shadow:
     0 0 0 1px oklch(0.71 0.075 32 / 0.25),
     0 12px 40px -12px oklch(0.71 0.075 32 / 0.35);
 }
+
+/* Primary CTA — properly cushioned pill with elevation and inner highlight. */
+@utility btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  background-color: var(--ink);
+  color: var(--canvas);
+  font-weight: 500;
+  font-size: 0.9375rem;
+  padding: 0.875rem 1.5rem;
+  box-shadow:
+    0 1px 0 0 oklch(1 0 0 / 0.4) inset,
+    0 1px 2px 0 oklch(0 0 0 / 0.4),
+    0 12px 28px -14px oklch(0 0 0 / 0.6);
+  transition: transform var(--duration-quick) var(--ease-quiet),
+              box-shadow var(--duration-quick) var(--ease-quiet),
+              opacity var(--duration-quick) var(--ease-quiet);
+  &:hover { opacity: 0.94; }
+  &:active { transform: scale(0.985); box-shadow:
+    0 1px 0 0 oklch(1 0 0 / 0.3) inset,
+    0 1px 2px 0 oklch(0 0 0 / 0.35),
+    0 4px 12px -6px oklch(0 0 0 / 0.5);
+  }
+}
+
+/* Ghost CTA — hairline border, sits on canvas-deep. */
+@utility btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  background-color: var(--canvas-deep);
+  color: var(--ink);
+  font-weight: 500;
+  font-size: 0.9375rem;
+  padding: 0.875rem 1.5rem;
+  border: 1px solid oklch(1 0 0 / 0.08);
+  box-shadow: 0 1px 0 0 oklch(1 0 0 / 0.04) inset;
+  transition: transform var(--duration-quick) var(--ease-quiet),
+              background-color var(--duration-quick) var(--ease-quiet);
+  &:hover { background-color: oklch(0.31 0.055 312 / 0.8); }
+  &:active { transform: scale(0.985); }
+}
+
