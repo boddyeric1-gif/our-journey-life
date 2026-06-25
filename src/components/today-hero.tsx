@@ -95,7 +95,7 @@ export function TodayHero(props: Props) {
         )}
         <Link
           to="/daily"
-          className="mt-6 w-full inline-flex items-center justify-center gap-2 rounded-full bg-ink px-5 py-3.5 text-sm font-medium text-canvas hover:opacity-90"
+          className="btn-primary mt-6 w-full"
         >
           Write your answer <ArrowRight className="h-4 w-4" />
         </Link>
