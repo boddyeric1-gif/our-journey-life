@@ -190,10 +190,12 @@ function HeroFrame({
   eyebrow, tone, children,
 }: { eyebrow: string; tone: "rust" | "quiet"; children: React.ReactNode }) {
   return (
-    <section className="mx-5 surface-card p-6 relative overflow-hidden">
-      <div className={`absolute top-0 left-0 right-0 h-1 ${tone === "rust" ? "bg-rust/80" : "bg-clay/60"}`} />
-      <p className="text-[11px] uppercase tracking-[0.2em] text-ink-mute mb-3">{eyebrow}</p>
+    <section
+      className={`mx-5 ${tone === "rust" ? "surface-card-lifted seal-top" : "surface-card"} p-6 relative`}
+    >
+      <p className="t-eyebrow mb-3">{eyebrow}</p>
       {children}
     </section>
   );
 }
+
