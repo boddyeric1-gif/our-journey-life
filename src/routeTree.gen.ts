@@ -17,6 +17,7 @@ import { Route as CheckoutReturnRouteImport } from './routes/checkout-return'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ResourcesWouldYouRatherRouteImport } from './routes/resources.would-you-rather'
 import { Route as ResourcesCheckInQuestionsRouteImport } from './routes/resources.check-in-questions'
 import { Route as Resources36QuestionsRouteImport } from './routes/resources.36-questions'
 import { Route as JoinCodeRouteImport } from './routes/join.$code'
@@ -74,6 +75,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResourcesWouldYouRatherRoute = ResourcesWouldYouRatherRouteImport.update({
+  id: '/resources/would-you-rather',
+  path: '/resources/would-you-rather',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResourcesCheckInQuestionsRoute =
@@ -197,6 +203,7 @@ export interface FileRoutesByFullPath {
   '/join/$code': typeof JoinCodeRoute
   '/resources/36-questions': typeof Resources36QuestionsRoute
   '/resources/check-in-questions': typeof ResourcesCheckInQuestionsRoute
+  '/resources/would-you-rather': typeof ResourcesWouldYouRatherRoute
   '/capsule/$id': typeof AuthenticatedCapsuleIdRoute
   '/capsule/new': typeof AuthenticatedCapsuleNewRoute
   '/insights/$slug': typeof AuthenticatedInsightsSlugRoute
@@ -225,6 +232,7 @@ export interface FileRoutesByTo {
   '/join/$code': typeof JoinCodeRoute
   '/resources/36-questions': typeof Resources36QuestionsRoute
   '/resources/check-in-questions': typeof ResourcesCheckInQuestionsRoute
+  '/resources/would-you-rather': typeof ResourcesWouldYouRatherRoute
   '/capsule/$id': typeof AuthenticatedCapsuleIdRoute
   '/capsule/new': typeof AuthenticatedCapsuleNewRoute
   '/insights/$slug': typeof AuthenticatedInsightsSlugRoute
@@ -255,6 +263,7 @@ export interface FileRoutesById {
   '/join/$code': typeof JoinCodeRoute
   '/resources/36-questions': typeof Resources36QuestionsRoute
   '/resources/check-in-questions': typeof ResourcesCheckInQuestionsRoute
+  '/resources/would-you-rather': typeof ResourcesWouldYouRatherRoute
   '/_authenticated/capsule/$id': typeof AuthenticatedCapsuleIdRoute
   '/_authenticated/capsule/new': typeof AuthenticatedCapsuleNewRoute
   '/_authenticated/insights/$slug': typeof AuthenticatedInsightsSlugRoute
@@ -285,6 +294,7 @@ export interface FileRouteTypes {
     | '/join/$code'
     | '/resources/36-questions'
     | '/resources/check-in-questions'
+    | '/resources/would-you-rather'
     | '/capsule/$id'
     | '/capsule/new'
     | '/insights/$slug'
@@ -313,6 +323,7 @@ export interface FileRouteTypes {
     | '/join/$code'
     | '/resources/36-questions'
     | '/resources/check-in-questions'
+    | '/resources/would-you-rather'
     | '/capsule/$id'
     | '/capsule/new'
     | '/insights/$slug'
@@ -342,6 +353,7 @@ export interface FileRouteTypes {
     | '/join/$code'
     | '/resources/36-questions'
     | '/resources/check-in-questions'
+    | '/resources/would-you-rather'
     | '/_authenticated/capsule/$id'
     | '/_authenticated/capsule/new'
     | '/_authenticated/insights/$slug'
@@ -364,6 +376,7 @@ export interface RootRouteChildren {
   JoinCodeRoute: typeof JoinCodeRoute
   Resources36QuestionsRoute: typeof Resources36QuestionsRoute
   ResourcesCheckInQuestionsRoute: typeof ResourcesCheckInQuestionsRoute
+  ResourcesWouldYouRatherRoute: typeof ResourcesWouldYouRatherRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
@@ -424,6 +437,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resources/would-you-rather': {
+      id: '/resources/would-you-rather'
+      path: '/resources/would-you-rather'
+      fullPath: '/resources/would-you-rather'
+      preLoaderRoute: typeof ResourcesWouldYouRatherRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/resources/check-in-questions': {
@@ -619,6 +639,7 @@ const rootRouteChildren: RootRouteChildren = {
   JoinCodeRoute: JoinCodeRoute,
   Resources36QuestionsRoute: Resources36QuestionsRoute,
   ResourcesCheckInQuestionsRoute: ResourcesCheckInQuestionsRoute,
+  ResourcesWouldYouRatherRoute: ResourcesWouldYouRatherRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
