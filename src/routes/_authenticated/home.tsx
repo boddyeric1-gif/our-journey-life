@@ -233,3 +233,28 @@ function HomePage() {
     </AppShell>
   );
 }
+
+function InviteCodeCard({ code }: { code: string }) {
+  return (
+    <div className="mx-5 mt-4 surface-card-quiet p-5">
+      <p className="text-[11px] uppercase tracking-[0.18em] text-ink-mute">Invite your partner</p>
+      <p className="mt-1 text-sm text-ink-soft text-pretty">
+        Their view fills in once they join. Until then, today is yours.
+      </p>
+      <button
+        onClick={async () => {
+          try {
+            await navigator.clipboard.writeText(code);
+            toast.success("Code copied. Send it to your partner.");
+          } catch { /* ignore */ }
+        }}
+        aria-label="Copy invite code"
+        className="mt-3 w-full inline-flex items-center justify-between gap-3 rounded-2xl bg-canvas-deep px-4 py-3 hover:bg-canvas-deep/80 transition"
+      >
+        <span className="shrink-0 text-[11px] uppercase tracking-[0.2em] text-ink-mute">Code</span>
+        <span className="min-w-0 font-serif text-xl tracking-[0.22em] text-ink truncate">{code}</span>
+        <Copy className="h-4 w-4 text-ink-mute shrink-0" aria-hidden />
+      </button>
+    </div>
+  );
+}
