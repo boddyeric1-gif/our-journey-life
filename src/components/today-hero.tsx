@@ -40,7 +40,7 @@ export function TodayHero(props: Props) {
                 await navigator.clipboard.writeText(props.inviteCode!);
                 toast.success("Code copied. Send it to your partner.");
               } catch { /* ignore */ }
-            }}
+            aria-label="Copy invite code"
             className="mt-5 w-full inline-flex items-center justify-between gap-3 rounded-2xl bg-canvas-deep px-5 py-4 hover:bg-canvas-deep/80 transition"
           >
             <span className="shrink-0 text-[11px] uppercase tracking-[0.2em] text-ink-mute">Invite code</span>
