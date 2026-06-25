@@ -11,7 +11,9 @@ export const Route = createFileRoute("/terms")({
       },
       { property: "og:title", content: "Terms — Our Journey" },
       { property: "og:description", content: "The short version of using Our Journey." },
+      { property: "og:url", content: "https://our-journey.life/terms" },
     ],
+    links: [{ rel: "canonical", href: "https://our-journey.life/terms" }],
   }),
   component: TermsPage,
 });

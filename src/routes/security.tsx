@@ -14,7 +14,9 @@ export const Route = createFileRoute("/security")({
         property: "og:description",
         content: "Controls we enforce and recent dependency updates.",
       },
+      { property: "og:url", content: "https://our-journey.life/security" },
     ],
+    links: [{ rel: "canonical", href: "https://our-journey.life/security" }],
   }),
   component: SecurityPage,
 });

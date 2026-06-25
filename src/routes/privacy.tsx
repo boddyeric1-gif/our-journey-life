@@ -11,7 +11,9 @@ export const Route = createFileRoute("/privacy")({
       },
       { property: "og:title", content: "Privacy — Our Journey" },
       { property: "og:description", content: "How we hold your data with care." },
+      { property: "og:url", content: "https://our-journey.life/privacy" },
     ],
+    links: [{ rel: "canonical", href: "https://our-journey.life/privacy" }],
   }),
   component: PrivacyPage,
 });
