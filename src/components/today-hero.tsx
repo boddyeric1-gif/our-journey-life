@@ -125,7 +125,8 @@ export function TodayHero(props: Props) {
         </div>
         <Link
           to="/daily"
-          className="mt-5 w-full inline-flex items-center justify-center gap-2 rounded-full bg-ink px-5 py-3 text-sm font-medium text-canvas hover:opacity-90"
+          className="btn-primary mt-5 w-full"
+
         >
           <Sparkles className="h-4 w-4" aria-hidden /> {sealedBoth ? "Open today" : "Write a solo reflection"}
         </Link>
