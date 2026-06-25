@@ -164,7 +164,7 @@ function AuthPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-3 inline-flex items-center justify-center rounded-full bg-ink px-5 py-3.5 text-sm font-medium text-canvas hover:opacity-90 transition disabled:opacity-60"
+            className="w-full mt-3 btn-primary disabled:opacity-60"
           >
             {loading ? "One moment…" : mode === "signup" ? "Begin your quest" : "Sign in"}
           </button>

@@ -107,7 +107,7 @@ function JoinPage() {
       <button
         onClick={() => accepting.mutate()}
         disabled={accepting.isPending}
-        className="mt-8 w-full inline-flex items-center justify-center gap-2 rounded-full bg-ink px-5 py-3.5 text-sm font-medium text-canvas hover:opacity-90 disabled:opacity-60"
+        className="mt-8 w-full btn-primary disabled:opacity-60"
       >
         {accepting.isPending ? "Accepting…" : "Accept and begin"} <ArrowRight className="h-4 w-4" />
       </button>

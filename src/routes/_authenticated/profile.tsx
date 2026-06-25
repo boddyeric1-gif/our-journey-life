@@ -235,7 +235,7 @@ function ProfilePage() {
               <button
                 onClick={() => unpair.mutate()}
                 disabled={unpair.isPending}
-                className="flex-1 rounded-full bg-ink px-5 py-3 text-sm font-medium text-canvas hover:opacity-90 disabled:opacity-60"
+                className="flex-1 btn-primary disabled:opacity-60"
               >
                 {unpair.isPending ? "Leaving…" : "Leave"}
               </button>
@@ -327,7 +327,7 @@ function GoalsEditor({ initial, busy, onClose, onSave }: {
           <button
             onClick={() => onSave(selected)}
             disabled={busy}
-            className="flex-1 rounded-full bg-ink px-5 py-3 text-sm font-medium text-canvas hover:opacity-90 disabled:opacity-60"
+            className="flex-1 btn-primary disabled:opacity-60"
           >
             {busy ? "Saving…" : "Save"}
           </button>

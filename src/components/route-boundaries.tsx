@@ -16,7 +16,7 @@ export function RouteError({ error, reset }: { error: Error; reset: () => void }
         <div className="mt-6 flex justify-center gap-2">
           <button
             onClick={() => { router.invalidate(); reset(); }}
-            className="rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-canvas hover:opacity-90"
+            className="btn-primary"
           >
             Try again
           </button>
@@ -41,7 +41,7 @@ export function RouteNotFound() {
         <p className="mt-2 text-sm text-ink-mute">The page slipped between us.</p>
         <Link
           to="/home"
-          className="mt-6 inline-block rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-canvas hover:opacity-90"
+          className="mt-6 inline-block btn-primary"
         >
           Back home
         </Link>

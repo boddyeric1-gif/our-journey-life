@@ -136,7 +136,7 @@ function DailyPage() {
           </div>
           <button
             onClick={() => mutate.mutate()} disabled={!response.trim() || mutate.isPending}
-            className="mt-3 w-full rounded-full bg-ink px-5 py-3.5 text-sm font-medium text-canvas hover:opacity-90 disabled:opacity-60"
+            className="mt-3 w-full btn-primary disabled:opacity-60"
           >
             {mutate.isPending ? "Sealing…" : "Seal my answer"}
           </button>

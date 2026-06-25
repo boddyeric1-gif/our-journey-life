@@ -80,7 +80,7 @@ function Landing() {
           <Link
             to="/auth"
             search={{ mode: "signup" }}
-            className="inline-flex items-center justify-center rounded-full bg-ink px-6 py-4 text-base font-medium text-canvas hover:opacity-90 transition"
+            className="btn-primary"
           >
             Begin your quest
           </Link>
