@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 
 const TITLE = "36 Questions to Fall in Love — A Guide to Arthur Aron's Study";
 const DESCRIPTION =
-  "The full list of the 36 Questions to Fall in Love from Arthur Aron's study, organized into the original three sets — with notes on how mutual vulnerability builds closeness.";
+  "The full 36 Questions to Fall in Love from Arthur Aron's study, in their original three sets — with notes on how mutual vulnerability builds closeness.";
 const URL = "https://our-journey.life/resources/36-questions";
 
 export const Route = createFileRoute("/resources/36-questions")({
