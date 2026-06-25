@@ -75,14 +75,18 @@ function AuthPage() {
     rememberCode(trimmedCode || join);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email, password,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: `${window.location.origin}/auth/confirm`,
             data: { display_name: name || email.split("@")[0] },
           },
         });
         if (error) throw error;
+        if (!signUpData.session) {
+          setEmailPending(true);
+          return;
+        }
         toast.success("Welcome. Let's begin your quest.");
         goAfterAuth();
       } else {
