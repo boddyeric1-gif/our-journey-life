@@ -107,5 +107,12 @@
     "typescript-eslint": "^8.56.1",
     "vite": "^8.0.16",
     "vitest": "^4.1.9"
+  },
+  "overrides": {
+    "js-yaml": "^4.2.0"
+  },
+  "resolutions": {
+    "js-yaml": "^4.2.0"
   }
 }
+
