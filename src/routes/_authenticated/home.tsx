@@ -9,8 +9,9 @@ import { TodayHero } from "@/components/today-hero";
 import { LettersInbox } from "@/components/letters-inbox";
 import { HeaderSkeleton, HeroSkeleton } from "@/components/skeletons";
 import { RouteError, RouteNotFound } from "@/components/route-boundaries";
-import { ArrowRight, BookOpen, Compass } from "lucide-react";
+import { ArrowRight, BookOpen, Compass, Copy } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { useDailyRealtime } from "@/hooks/use-daily-realtime";
 import type { RhythmDay } from "@/components/rhythm-ring";
 
@@ -85,19 +86,28 @@ function HomePage() {
     daysTogether = data.daysTogether ?? null;
     myPreview = data.myResponse?.body ?? null;
     partnerPreview = (data.partnerResponse as { body?: string | null } | null)?.body ?? null;
-    if (!data.partner) {
+    const soloAndNew = !data.partner && (daysTogether ?? 0) < 7;
+    if (soloAndNew) {
       heroState = "unpaired";
       inviteCode = data.pendingInvite?.code;
-    } else if (!data.myResponse) {
-      heroState = "no-prompt-answered";
-    } else if (data.autoUnsealed) {
-      heroState = "both-done";
-    } else if (data.myResponse && !partnerPreview) {
-      heroState = "mine-done-partner-waiting";
     } else {
-      heroState = "both-done";
+      // Paired OR solo-but-settled-in: promote the daily prompt to hero.
+      // For soloists the invite code drops to a smaller card below.
+      if (!data.partner) inviteCode = data.pendingInvite?.code;
+      if (!data.myResponse) {
+        heroState = "no-prompt-answered";
+      } else if (data.autoUnsealed) {
+        heroState = "both-done";
+      } else if (data.myResponse && !partnerPreview) {
+        heroState = "mine-done-partner-waiting";
+      } else {
+        heroState = "both-done";
+      }
     }
   }
+
+  const showSecondaryInvite =
+    data.kind === "paired" && !data.partner && heroState !== "unpaired" && !!inviteCode;
 
   const rhythm: RhythmDay[] | null =
     data.kind === "paired" ? ((data.rhythm ?? null) as RhythmDay[] | null) : null;
@@ -158,6 +168,10 @@ function HomePage() {
           autoUnsealed={data.kind === "paired" ? !!data.autoUnsealed : false}
         />
       </div>
+
+      {showSecondaryInvite && inviteCode && (
+        <InviteCodeCard code={inviteCode} />
+      )}
 
       {data.kind === "paired" && data.nextStep && (
         <Link
