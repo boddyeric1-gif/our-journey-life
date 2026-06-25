@@ -13,6 +13,8 @@ import { ArrowRight, BookOpen, Compass, Copy } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useDailyRealtime } from "@/hooks/use-daily-realtime";
+import { usePartnerPresence } from "@/hooks/use-partner-presence";
+import { PartnerPresencePill } from "@/components/partner-presence-pill";
 import type { RhythmDay } from "@/components/rhythm-ring";
 
 export const Route = createFileRoute("/_authenticated/home")({
