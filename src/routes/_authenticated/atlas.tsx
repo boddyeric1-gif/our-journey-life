@@ -13,6 +13,7 @@ export const Route = createFileRoute("/_authenticated/atlas")({
   head: () => ({
     meta: [
       { title: "The Atlas — Our Journey" },
+      { name: "description", content: "Your shared atlas: chapters, check-ins, and the quiet rituals you've kept together over time." },
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),
