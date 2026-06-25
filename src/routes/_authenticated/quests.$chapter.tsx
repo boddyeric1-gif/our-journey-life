@@ -322,20 +322,33 @@ function ActiveStep({ step, partnerName, onComplete }: {
               {partnerLabel} already marked this done · your turn
             </p>
           )}
-          <textarea
-            value={body}
-            onChange={e => setBody(e.target.value.slice(0, 2000))}
-            rows={4}
-            placeholder="A few sentences. Slow is fine — what you write here is only ever yours."
-            className="mt-4 w-full rounded-xl border border-border bg-card px-4 py-3 text-[16px] leading-[1.6] text-ink outline-none focus:border-rust"
-            disabled={step.myDone}
-          />
+          <div className="mt-5">
+            <label
+              htmlFor={`reflection-${step.id}`}
+              className="block text-[11px] uppercase tracking-[0.18em] text-ink-mute"
+            >
+              Your reflection
+            </label>
+            <p className="mt-1 text-[13px] leading-[1.55] text-ink-soft text-pretty">
+              After you've done the exercise above, write a few sentences about how it landed — what
+              you noticed, what surprised you, what you want to remember.
+            </p>
+            <textarea
+              id={`reflection-${step.id}`}
+              value={body}
+              onChange={e => setBody(e.target.value.slice(0, 2000))}
+              rows={4}
+              placeholder="What came up for you?"
+              className="mt-3 w-full rounded-xl border border-border bg-card px-4 py-3 text-[16px] leading-[1.6] text-ink outline-none focus:border-rust"
+              disabled={step.myDone}
+            />
+          </div>
           <div className="mt-1.5 flex items-center justify-between text-[11px] text-ink-mute">
             <span aria-live="polite">
               {wordCount === 0
-                ? "Optional — but most of the work happens here."
+                ? "Optional — but the reflection is where it lands."
                 : tooShort
-                  ? `Take your time · ${wordCount}/${SOFT_FLOOR}+ words`
+                  ? `A bit more if you can · ${wordCount}/${SOFT_FLOOR} words`
                   : `${wordCount} words · ready when you are`}
             </span>
             <span>{body.length}/2000</span>
