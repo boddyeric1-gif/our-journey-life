@@ -103,8 +103,8 @@
 
   /* ink family — warm candlelight */
   --ink: oklch(0.92 0.045 75);              /* #E8C9B0 candlelight */
-  --ink-soft: oklch(0.76 0.038 60);
-  --ink-mute: oklch(0.58 0.028 50);
+  --ink-soft: oklch(0.80 0.040 60);
+  --ink-mute: oklch(0.72 0.032 55);
 
   /* accents */
   --rust: oklch(0.71 0.075 32);             /* #C98A7D dusk rose — primary */
@@ -139,8 +139,8 @@
   --canvas: oklch(0.21 0.045 312);
   --canvas-deep: oklch(0.31 0.055 312);
   --ink: oklch(0.92 0.045 75);
-  --ink-soft: oklch(0.76 0.038 60);
-  --ink-mute: oklch(0.58 0.028 50);
+  --ink-soft: oklch(0.80 0.040 60);
+  --ink-mute: oklch(0.72 0.032 55);
   --rust: oklch(0.71 0.075 32);
   --clay: oklch(0.66 0.085 25);
   --ochre: oklch(0.82 0.09 80);
