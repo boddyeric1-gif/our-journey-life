@@ -36,6 +36,8 @@ function AuthPage() {
   const [name, setName] = useState("");
   const [code, setCode] = useState(join ?? "");
   const [loading, setLoading] = useState(false);
+  const [emailPending, setEmailPending] = useState(false);
+
 
   const trimmedCode = code.trim().toUpperCase();
 
