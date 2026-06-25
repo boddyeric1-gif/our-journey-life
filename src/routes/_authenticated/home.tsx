@@ -13,6 +13,8 @@ import { ArrowRight, BookOpen, Compass, Copy } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useDailyRealtime } from "@/hooks/use-daily-realtime";
+import { usePartnerPresence } from "@/hooks/use-partner-presence";
+import { PartnerPresencePill } from "@/components/partner-presence-pill";
 import type { RhythmDay } from "@/components/rhythm-ring";
 
 export const Route = createFileRoute("/_authenticated/home")({
@@ -53,6 +55,17 @@ function HomePage() {
   const coupleIdForRealtime =
     home.data && home.data.kind === "paired" ? home.data.couple?.id ?? null : null;
   useDailyRealtime(coupleIdForRealtime);
+
+  const myIdForPresence =
+    home.data && "profile" in home.data && home.data.profile ? home.data.profile.id : null;
+  const partnerForPresence =
+    home.data && home.data.kind === "paired" ? home.data.partner ?? null : null;
+  const partnerPresence = usePartnerPresence({
+    userId: myIdForPresence,
+    partnerId: partnerForPresence?.id ?? null,
+    initialPartnerLastActiveAt:
+      (partnerForPresence as { last_active_at?: string | null } | null)?.last_active_at ?? null,
+  });
 
   if (home.isError) {
     return <RouteError error={home.error as Error} reset={() => home.refetch()} />;
@@ -132,6 +145,15 @@ function HomePage() {
         unreadLetters={data.kind === "paired" && !!data.partner ? unreadLetters : 0}
         onOpenLetters={data.kind === "paired" && !!data.partner ? () => setLettersOpen(true) : undefined}
       />
+
+      {data.kind === "paired" && data.partner && partnerPresence.statusLabel && (
+        <PartnerPresencePill
+          name={partnerName}
+          status={partnerPresence.status}
+          statusLabel={partnerPresence.statusLabel}
+        />
+      )}
+
 
       {showGoals && (
         <p className="px-5 -mt-1 mb-3 text-[12px] text-ink-mute text-pretty">

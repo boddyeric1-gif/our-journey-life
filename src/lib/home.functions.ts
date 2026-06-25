@@ -74,7 +74,7 @@ export const getHomeState = createServerFn({ method: "GET" })
       mySoloRhythmRes,
     ] = await Promise.all([
       partnerId
-        ? supabase.from("profiles").select("id, display_name, avatar_url").eq("id", partnerId).maybeSingle()
+        ? supabase.from("profiles").select("id, display_name, avatar_url, last_active_at").eq("id", partnerId).maybeSingle()
         : Promise.resolve({ data: null }),
       !partnerId
         ? supabase.from("invites").select("code").eq("couple_id", coupleId).is("used_by", null)

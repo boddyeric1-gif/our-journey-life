@@ -438,6 +438,7 @@ export type Database = {
           display_name: string | null
           id: string
           journey_intention: string | null
+          last_active_at: string | null
           love_language: Database["public"]["Enums"]["love_language"] | null
           onboarded_at: string | null
           relationship_stage:
@@ -455,6 +456,7 @@ export type Database = {
           display_name?: string | null
           id: string
           journey_intention?: string | null
+          last_active_at?: string | null
           love_language?: Database["public"]["Enums"]["love_language"] | null
           onboarded_at?: string | null
           relationship_stage?:
@@ -472,6 +474,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           journey_intention?: string | null
+          last_active_at?: string | null
           love_language?: Database["public"]["Enums"]["love_language"] | null
           onboarded_at?: string | null
           relationship_stage?:

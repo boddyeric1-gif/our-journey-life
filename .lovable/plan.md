@@ -1,108 +1,59 @@
-# Quests revisit + reflection clarity + solo-user progression
+# Partner "active" presence indicator
 
-Four coordinated changes, grouped by file. No new tables; one DB function replacement.
-
----
-
-## 1. Re-read completed quest steps (and completed chapters)
-
-**File:** `src/routes/_authenticated/quests.$chapter.tsx` (presentation only).
-
-Today, once a step is done it collapses to `DoneRow` ("Step 4 · Together") and the teaching, prompt, ritual, and the user's saved reflection are no longer visible. Once a whole chapter is finished the page is just a stack of those one-liners.
-
-Make `DoneRow` an expandable card:
-
-- Collapsed state matches today — compact, low-emphasis.
-- Add a small right-aligned "Re-read" affordance (chevron + label).
-- Expanded state renders, in the same visual language as `ActiveStep` but read-only and dimmed:
-  - the teaching paragraph
-  - the prompt (serif quote)
-  - the ritual line, if any
-  - **Your reflection** — `step.completion.body` if present; otherwise a quiet "No note saved." line
-  - a completion timestamp ("Marked done · Jun 24")
-- Plain `<button>` toggling local `useState`, `aria-expanded` + `aria-controls`. Multiple done steps can be open independently.
-
-No server changes — `getChapter` already returns `completion: { body, created_at } | null` for the current user. Revisiting a finished chapter already works at the route level (navigating from `/quests` loads regardless of progress); this just makes the content readable.
-
-Out of scope: showing the partner's reflection (RLS hides partner bodies — separate product call) and editing a saved reflection.
+Four coordinated changes. Capacitor is already installed (`@capacitor/app` 8.1).
 
 ---
 
-## 2. Clarify the reflection box in the active step
+## 1. Migration — `profiles.last_active_at` + realtime
 
-**File:** same route file, inside `ActiveStep`.
+- Add `last_active_at timestamptz` (nullable) to `public.profiles`.
+- Add `public.profiles` to `supabase_realtime` publication so partner UPDATEs broadcast.
+- `REPLICA IDENTITY FULL` on `profiles` so the realtime payload carries the changed `last_active_at`.
 
-Right now `ActiveStep` shows teaching + prompt + ritual and drops straight into a textarea with placeholder "A few sentences. Slow is fine…" and helper "Optional — but most of the work happens here." Users (you and your partner included) read the prompt as the *task* and don't realise the textarea is for their own reflection — the 40-word floor then feels arbitrary.
+Existing RLS already allows `auth.uid() = id OR shares_couple_with(id)` for SELECT and self-only for UPDATE — no policy changes needed. Partners can read each other's `last_active_at` exactly as they read `display_name` today.
 
-Above the textarea, add a labelled reflection header:
+## 2. `src/hooks/use-partner-presence.ts`
 
-- Small uppercase eyebrow `YOUR REFLECTION` (matches the existing `RITUAL ·` style).
-- One-line guidance: *"After you've done the exercise above, write a few sentences about how it landed — what you noticed, what surprised you, what you want to remember."*
-- Wire `<label htmlFor>` + textarea `id` so the eyebrow is the accessible label.
-- Tighten the placeholder to a short hint: *"What came up for you?"*
+Signature: `usePartnerPresence({ userId, partnerId }: { userId: string | null; partnerId: string | null; initialPartnerLastActiveAt?: string | null }) => { partnerLastActiveAt: string | null; status: "active-now" | "active-today" | null; statusLabel: string | null }`.
 
-Reframe the helper line beneath the textarea so the 40-word floor reads as guidance, not a gate:
+- **Heartbeat:** on mount and every 60s while the tab is visible, `supabase.from("profiles").update({ last_active_at: new Date().toISOString() }).eq("id", userId)`. Skip when `userId` is null. Throttled so a refresh storm doesn't write per render. Errors swallowed (presence is best-effort).
+- **Foreground re-heartbeat:** dynamic-import `@capacitor/app`, call `App.addListener("appStateChange", ({ isActive }) => { if (isActive) heartbeat(); })`. Dynamic import + try/catch so SSR and web builds (where the native plugin is unavailable) don't break. Also listen to `document.visibilitychange` for browser users — same handler. Clean up both listeners on unmount.
+- **Subscribe to partner row:** when `partnerId` is set, `supabase.channel(\`partner-presence:\${partnerId}\`).on("postgres_changes", { event: "UPDATE", schema: "public", table: "profiles", filter: \`id=eq.\${partnerId}\` }, ({ new: row }) => setPartnerLastActiveAt(row.last_active_at)).subscribe()`. Teardown with `supabase.removeChannel(channel)` in the cleanup. Re-create the channel if `partnerId` changes.
+- **Initial value:** seed `partnerLastActiveAt` state from `initialPartnerLastActiveAt` so the indicator shows on first render without waiting for an UPDATE.
+- **Derived status:** recompute every minute via a `setInterval` tick so "Active now" → "Active today" → null transition without a realtime event.
+  - within 5 min → `{ status: "active-now", statusLabel: "Active now" }`
+  - within 24 h → `{ status: "active-today", statusLabel: "Active today" }`
+  - otherwise → `{ status: null, statusLabel: null }`
 
-- 0 words → "Optional — but the reflection is where it lands."
-- 1–39 words → "A bit more if you can · {n}/40 words"
-- ≥ 40 → "{n} words · ready when you are" (unchanged)
+## 3. `getHomeState` / `src/lib/home.functions.ts`
 
-Keep the existing `tooShort` submit-disable logic — the floor is fine, it just wasn't explained.
+In the partner profile read (line 77), extend the column list to `"id, display_name, avatar_url, last_active_at"`. No type changes elsewhere — the partner shape is consumed as `any` in the route. Re-export through whichever return type is used; `last_active_at` is `string | null`.
 
----
+## 4. UI — small dot + label on home
 
-## 3. Database: scale "shared day" threshold to couple size
+New presentational component `src/components/partner-presence-pill.tsx`: renders nothing when `statusLabel` is null; otherwise a small inline chip with a 6px dot and the label, using existing tokens — dot color `bg-emerald-500` for `active-now`, `bg-ink-mute` for `active-today` (no neon, matches the muted palette). Sized as the existing `text-[11px] uppercase tracking-[0.16em]` chips.
 
-**Migration:** replace `public.couple_shared_days(_couple_id uuid)` with the same signature, return type, `STABLE SECURITY DEFINER`, and `search_path = public`. Only the `HAVING` clause changes:
+In `src/routes/_authenticated/home.tsx`:
 
-```sql
-HAVING COUNT(DISTINCT user_id) >= LEAST(
-  2,
-  (SELECT COUNT(*) FROM public.couple_members WHERE couple_id = _couple_id)
-)
-```
-
-Effect: a 1-member couple needs 1 active user per day to count that day; a 2-member couple still needs both. `is_couple_member` guard and the outer `CASE` are preserved. No grants change — same function name and callers (`couple_unlocked`, home "shared days to go" copy) automatically pick up the new value.
-
-**Flag before shipping:** this unlocks advanced quests, Time Capsule, and The Atlas for fully solo users. Advanced quests and Atlas are fine solo, but Time Capsule is built around sending a message to a partner. If you'd rather keep Time Capsule paired-only, add one clause at the top of `couple_unlocked`: `IF _product = 'time_capsule' AND (SELECT COUNT(*) FROM couple_members WHERE couple_id = _couple_id) < 2 THEN RETURN FALSE; END IF;`. Default in this plan is **not** to add it, matching what you described — say the word and I'll fold it into the same migration.
-
----
-
-## 4. Home hero: invite is hero for the first week, daily prompt after
-
-**File:** `src/routes/_authenticated/home.tsx` (and a small co-located `InviteCodeCard`).
-
-Current behaviour: the `data.kind === "paired"` branch (which fires for both unpaired-with-couple-row and truly paired users) sets `heroState = "unpaired"` whenever `!data.partner`, permanently locking solo users out of the daily prompt.
-
-Replace the `if (!data.partner) { heroState = "unpaired"; … }` branch with:
-
-- `!data.partner && (data.daysTogether ?? 0) < 7` → `heroState = "unpaired"` (unchanged for new accounts).
-- `!data.partner && daysTogether >= 7` → fall through to the same prompt-state logic the paired branch uses (`no-prompt-answered`, `mine-done-partner-waiting`, `both-done`). `partnerPreview` is always null here, so `mine-done-partner-waiting` is the natural post-submit state. Still set `inviteCode = data.pendingInvite?.code` so we can render it as a secondary card.
-
-Below `<TodayHero>` (around line 160, before the "Quest in progress" card), render a secondary invite card when `data.kind === "paired" && !data.partner && heroState !== "unpaired" && inviteCode`:
-
-- `surface-card-quiet` to match neighbouring secondary cards.
-- Small uppercase eyebrow "Invite your partner", one-line context ("Their view fills in once they join"), invite code in mono, "Copy code" button.
-- Reuse `TodayHero`'s existing copy interaction by extracting a small `InviteCodeCard` (co-located in the route file). If `TodayHero` already has a reusable invite block, lift it — pick the smaller diff after a quick look at `today-hero.tsx`.
-- Keep `LevelHeader`'s `paired={... && !!data.partner}` and `unreadLetters` gating unchanged — those features genuinely require a partner.
-
-"Quest in progress", "Field notes", and goals already render for solo couples (they live under `data.kind === "paired"`), so no other conditional changes.
+- Call `usePartnerPresence({ userId: profile?.id ?? null, partnerId: data.kind === "paired" ? data.partner?.id ?? null : null, initialPartnerLastActiveAt: data.kind === "paired" ? data.partner?.last_active_at ?? null : null })`.
+- Render `<PartnerPresencePill name={partnerName} statusLabel={statusLabel} status={status} />` immediately below `LevelHeader` (above the "Working on" / coupleProgress strip) when `data.partner && statusLabel`. Layout: `px-5 -mt-1 mb-2 flex items-center gap-2 text-[12px] text-ink-mute` — "{partnerName} · <dot> Active now".
+- Keep it out of `LevelHeader` itself so the existing component stays presentational and partner-agnostic.
 
 ---
 
 ## Verification
 
-- `bunx vitest run` (covers existing `src/lib/coupleLevel.test.ts` and any streak/XP tests) to confirm the unlock math still holds.
-- Manual walk of a solo account:
-  - day 0 → invite hero, no daily prompt.
-  - day 7+ → daily prompt as hero, invite card secondary; submit → `mine-done-partner-waiting`.
-- Manual walk of a completed quest chapter: expand each done step, confirm teaching/prompt/ritual/saved reflection render correctly and read-only.
-- Manual walk of an active step: confirm the reflection header reads as a label and the helper copy progresses through 0 → <40 → ≥40 word states.
+- Sign in as one half of a paired couple in two browsers. Confirm:
+  - The partner-side pill flips to "Active now" within seconds of the other browser opening home.
+  - Closing the partner tab → after ~5 min the pill becomes "Active today" without a refresh (interval tick).
+  - Background → foreground on iOS (Capacitor) bumps `last_active_at` and the other side sees the change.
+- Solo (no partner) account: hook returns null, no pill rendered, no realtime subscription created (verify in network panel).
+- Confirm no RLS errors in the console on the self-UPDATE.
 
 ## Out of scope
 
-- An archive view of all completed chapters across categories.
-- Editing a saved reflection after submit.
-- Showing the partner's reflection on completed together-steps.
-- Renaming `couple_shared_days` / `couple_unlocked` or reworking the "shared days to go" copy for soloists.
-- Any change to Time Capsule / Atlas product gating (see flag in §3).
+- Typing indicators or any "is composing" signal.
+- Last-seen exact timestamps ("Active 12 min ago") — three buckets only.
+- Push notifications when the partner comes online.
+- Surfacing `last_active_at` anywhere outside the home route.
+- Storing presence in a separate table — `profiles.last_active_at` is enough and keeps the read on the existing partner fetch.
