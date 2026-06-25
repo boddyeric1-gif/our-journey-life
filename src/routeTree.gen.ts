@@ -20,6 +20,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ResourcesCheckInQuestionsRouteImport } from './routes/resources.check-in-questions'
 import { Route as Resources36QuestionsRouteImport } from './routes/resources.36-questions'
 import { Route as JoinCodeRouteImport } from './routes/join.$code'
+import { Route as AuthConfirmRouteImport } from './routes/auth.confirm'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedPremiumRouteImport } from './routes/_authenticated/premium'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
@@ -90,6 +91,11 @@ const JoinCodeRoute = JoinCodeRouteImport.update({
   id: '/join/$code',
   path: '/join/$code',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthConfirmRoute = AuthConfirmRouteImport.update({
+  id: '/confirm',
+  path: '/confirm',
+  getParentRoute: () => AuthRoute,
 } as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
@@ -174,7 +180,7 @@ const ApiPublicPaymentsWebhookRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/checkout-return': typeof CheckoutReturnRoute
   '/privacy': typeof PrivacyRoute
   '/security': typeof SecurityRoute
@@ -187,6 +193,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/premium': typeof AuthenticatedPremiumRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/auth/confirm': typeof AuthConfirmRoute
   '/join/$code': typeof JoinCodeRoute
   '/resources/36-questions': typeof Resources36QuestionsRoute
   '/resources/check-in-questions': typeof ResourcesCheckInQuestionsRoute
@@ -201,7 +208,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/checkout-return': typeof CheckoutReturnRoute
   '/privacy': typeof PrivacyRoute
   '/security': typeof SecurityRoute
@@ -214,6 +221,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/premium': typeof AuthenticatedPremiumRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/auth/confirm': typeof AuthConfirmRoute
   '/join/$code': typeof JoinCodeRoute
   '/resources/36-questions': typeof Resources36QuestionsRoute
   '/resources/check-in-questions': typeof ResourcesCheckInQuestionsRoute
@@ -230,7 +238,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/checkout-return': typeof CheckoutReturnRoute
   '/privacy': typeof PrivacyRoute
   '/security': typeof SecurityRoute
@@ -243,6 +251,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/premium': typeof AuthenticatedPremiumRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/auth/confirm': typeof AuthConfirmRoute
   '/join/$code': typeof JoinCodeRoute
   '/resources/36-questions': typeof Resources36QuestionsRoute
   '/resources/check-in-questions': typeof ResourcesCheckInQuestionsRoute
@@ -272,6 +281,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/premium'
     | '/profile'
+    | '/auth/confirm'
     | '/join/$code'
     | '/resources/36-questions'
     | '/resources/check-in-questions'
@@ -299,6 +309,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/premium'
     | '/profile'
+    | '/auth/confirm'
     | '/join/$code'
     | '/resources/36-questions'
     | '/resources/check-in-questions'
@@ -327,6 +338,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/_authenticated/premium'
     | '/_authenticated/profile'
+    | '/auth/confirm'
     | '/join/$code'
     | '/resources/36-questions'
     | '/resources/check-in-questions'
@@ -343,7 +355,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
-  AuthRoute: typeof AuthRoute
+  AuthRoute: typeof AuthRouteWithChildren
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   PrivacyRoute: typeof PrivacyRoute
   SecurityRoute: typeof SecurityRoute
@@ -434,6 +446,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/join/$code'
       preLoaderRoute: typeof JoinCodeRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/auth/confirm': {
+      id: '/auth/confirm'
+      path: '/confirm'
+      fullPath: '/auth/confirm'
+      preLoaderRoute: typeof AuthConfirmRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
@@ -578,10 +597,20 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface AuthRouteChildren {
+  AuthConfirmRoute: typeof AuthConfirmRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthConfirmRoute: AuthConfirmRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
-  AuthRoute: AuthRoute,
+  AuthRoute: AuthRouteWithChildren,
   CheckoutReturnRoute: CheckoutReturnRoute,
   PrivacyRoute: PrivacyRoute,
   SecurityRoute: SecurityRoute,
