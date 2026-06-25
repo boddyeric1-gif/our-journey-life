@@ -18,6 +18,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ResourcesCheckInQuestionsRouteImport } from './routes/resources.check-in-questions'
+import { Route as Resources36QuestionsRouteImport } from './routes/resources.36-questions'
 import { Route as JoinCodeRouteImport } from './routes/join.$code'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedPremiumRouteImport } from './routes/_authenticated/premium'
@@ -80,6 +81,11 @@ const ResourcesCheckInQuestionsRoute =
     path: '/resources/check-in-questions',
     getParentRoute: () => rootRouteImport,
   } as any)
+const Resources36QuestionsRoute = Resources36QuestionsRouteImport.update({
+  id: '/resources/36-questions',
+  path: '/resources/36-questions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const JoinCodeRoute = JoinCodeRouteImport.update({
   id: '/join/$code',
   path: '/join/$code',
@@ -182,6 +188,7 @@ export interface FileRoutesByFullPath {
   '/premium': typeof AuthenticatedPremiumRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/join/$code': typeof JoinCodeRoute
+  '/resources/36-questions': typeof Resources36QuestionsRoute
   '/resources/check-in-questions': typeof ResourcesCheckInQuestionsRoute
   '/capsule/$id': typeof AuthenticatedCapsuleIdRoute
   '/capsule/new': typeof AuthenticatedCapsuleNewRoute
@@ -208,6 +215,7 @@ export interface FileRoutesByTo {
   '/premium': typeof AuthenticatedPremiumRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/join/$code': typeof JoinCodeRoute
+  '/resources/36-questions': typeof Resources36QuestionsRoute
   '/resources/check-in-questions': typeof ResourcesCheckInQuestionsRoute
   '/capsule/$id': typeof AuthenticatedCapsuleIdRoute
   '/capsule/new': typeof AuthenticatedCapsuleNewRoute
@@ -236,6 +244,7 @@ export interface FileRoutesById {
   '/_authenticated/premium': typeof AuthenticatedPremiumRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/join/$code': typeof JoinCodeRoute
+  '/resources/36-questions': typeof Resources36QuestionsRoute
   '/resources/check-in-questions': typeof ResourcesCheckInQuestionsRoute
   '/_authenticated/capsule/$id': typeof AuthenticatedCapsuleIdRoute
   '/_authenticated/capsule/new': typeof AuthenticatedCapsuleNewRoute
@@ -264,6 +273,7 @@ export interface FileRouteTypes {
     | '/premium'
     | '/profile'
     | '/join/$code'
+    | '/resources/36-questions'
     | '/resources/check-in-questions'
     | '/capsule/$id'
     | '/capsule/new'
@@ -290,6 +300,7 @@ export interface FileRouteTypes {
     | '/premium'
     | '/profile'
     | '/join/$code'
+    | '/resources/36-questions'
     | '/resources/check-in-questions'
     | '/capsule/$id'
     | '/capsule/new'
@@ -317,6 +328,7 @@ export interface FileRouteTypes {
     | '/_authenticated/premium'
     | '/_authenticated/profile'
     | '/join/$code'
+    | '/resources/36-questions'
     | '/resources/check-in-questions'
     | '/_authenticated/capsule/$id'
     | '/_authenticated/capsule/new'
@@ -338,6 +350,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   JoinCodeRoute: typeof JoinCodeRoute
+  Resources36QuestionsRoute: typeof Resources36QuestionsRoute
   ResourcesCheckInQuestionsRoute: typeof ResourcesCheckInQuestionsRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -406,6 +419,13 @@ declare module '@tanstack/react-router' {
       path: '/resources/check-in-questions'
       fullPath: '/resources/check-in-questions'
       preLoaderRoute: typeof ResourcesCheckInQuestionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resources/36-questions': {
+      id: '/resources/36-questions'
+      path: '/resources/36-questions'
+      fullPath: '/resources/36-questions'
+      preLoaderRoute: typeof Resources36QuestionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/join/$code': {
@@ -568,6 +588,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   JoinCodeRoute: JoinCodeRoute,
+  Resources36QuestionsRoute: Resources36QuestionsRoute,
   ResourcesCheckInQuestionsRoute: ResourcesCheckInQuestionsRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
