@@ -121,11 +121,45 @@ function AuthPage() {
     }
   }
 
+  if (emailPending) {
+    return (
+      <main className="relative z-10 min-h-[100svh] flex flex-col">
+        <header className="px-6 pt-8">
+          <Link to="/" className="serif-italic text-rust text-xl">Our Journey</Link>
+        </header>
+        <section className="flex-1 px-6 pt-16 pb-12 max-w-md mx-auto w-full flex flex-col items-center text-center">
+          <div className="w-14 h-14 rounded-full bg-card border border-border flex items-center justify-center">
+            <Mail className="w-6 h-6 text-rust" aria-hidden />
+          </div>
+          <p className="mt-8 text-xs uppercase tracking-[0.18em] text-ink-mute">Almost there</p>
+          <h1 className="mt-4 font-serif text-4xl text-ink leading-tight">
+            Check your <em className="serif-italic text-rust">inbox</em>.
+          </h1>
+          <p className="mt-5 text-ink-soft">
+            We sent a confirmation link to
+          </p>
+          <p className="mt-1 text-ink font-medium break-all">{email}</p>
+          <p className="mt-5 text-sm text-ink-soft leading-relaxed">
+            Open it to finish creating your account. The link expires soon, and it sometimes lands in spam.
+          </p>
+          <button
+            type="button"
+            onClick={() => { setEmailPending(false); setPassword(""); }}
+            className="mt-10 text-sm text-rust underline-offset-4 hover:underline"
+          >
+            Use a different email
+          </button>
+        </section>
+      </main>
+    );
+  }
+
   return (
     <main className="relative z-10 min-h-[100svh] flex flex-col">
       <header className="px-6 pt-8">
         <Link to="/" className="serif-italic text-rust text-xl">Our Journey</Link>
       </header>
+
 
       <section className="flex-1 px-6 pt-12 pb-12 max-w-md mx-auto w-full">
         <p className="text-xs uppercase tracking-[0.18em] text-ink-mute">{mode === "signup" ? "Begin" : "Return"}</p>
