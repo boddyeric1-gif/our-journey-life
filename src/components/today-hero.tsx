@@ -180,7 +180,7 @@ export function TodayHero(props: Props) {
       </h2>
       <Link
         to="/quests"
-        className="mt-5 w-full inline-flex items-center justify-center gap-2 rounded-full bg-ink px-5 py-3 text-sm font-medium text-canvas hover:opacity-90"
+        className="btn-primary mt-5 w-full"
       >
         Continue a quest <ArrowRight className="h-4 w-4" />
       </Link>
