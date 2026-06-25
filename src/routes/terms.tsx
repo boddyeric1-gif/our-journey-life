@@ -10,7 +10,7 @@ export const Route = createFileRoute("/terms")({
           "The short version of using Our Journey. Be kind to your partner, write only what you'd want to read, and we'll do our part to keep the space safe.",
       },
       { property: "og:title", content: "Terms — Our Journey" },
-      { property: "og:description", content: "The short version of using Our Journey." },
+      { property: "og:description", content: "The short version of using Our Journey. Be kind to your partner, write only what you'd want to read, and we'll do our part to keep the space safe." },
       { property: "og:url", content: "https://our-journey.life/terms" },
     ],
     links: [{ rel: "canonical", href: "https://our-journey.life/terms" }],

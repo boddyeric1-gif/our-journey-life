@@ -10,7 +10,7 @@ export const Route = createFileRoute("/privacy")({
           "How Our Journey handles your data. We hold the bare minimum, treat your writing as private to your couple, and never sell or share it.",
       },
       { property: "og:title", content: "Privacy — Our Journey" },
-      { property: "og:description", content: "How we hold your data with care." },
+      { property: "og:description", content: "How Our Journey handles your data. We hold the bare minimum, treat your writing as private to your couple, and never sell or share it." },
       { property: "og:url", content: "https://our-journey.life/privacy" },
     ],
     links: [{ rel: "canonical", href: "https://our-journey.life/privacy" }],
