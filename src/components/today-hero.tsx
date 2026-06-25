@@ -69,10 +69,11 @@ export function TodayHero(props: Props) {
             />
             <button
               type="submit"
-              className="rounded-full bg-ink px-5 py-3 text-sm font-medium text-canvas hover:opacity-90"
+              className="btn-primary"
             >
               Redeem
             </button>
+
           </form>
         </div>
       </HeroFrame>
