@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
     meta: [
       { title: "You — Our Journey" },
-      { name: "description", content: "Your profile, streak, and settings." },
+      { name: "description", content: "Your profile on Our Journey: streak, shared goals, couple settings, and the small details that keep your space yours." },
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),
