@@ -165,7 +165,7 @@ export function TodayHero(props: Props) {
         )}
         <Link
           to="/daily"
-          className="mt-5 w-full inline-flex items-center justify-center gap-2 rounded-full bg-canvas-deep px-5 py-3 text-sm font-medium text-ink hover:bg-canvas-deep/80"
+          className="btn-ghost mt-5 w-full"
         >
           {auto ? "Open today" : "Read together"} <ArrowRight className="h-4 w-4" />
         </Link>
