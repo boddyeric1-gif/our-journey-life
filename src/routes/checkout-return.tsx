@@ -13,7 +13,24 @@ export const Route = createFileRoute('/checkout-return')({
   component: CheckoutReturn,
   errorComponent: RouteError,
   notFoundComponent: RouteNotFound,
-  head: () => ({ meta: [{ title: "Thank you · Our Journey" }] }),
+  head: () => ({
+    meta: [
+      { title: "Thank you · Our Journey" },
+      {
+        name: "description",
+        content:
+          "Your Our Journey purchase is being confirmed. We'll unlock your premium features as soon as the payment lands — usually within a few seconds.",
+      },
+      { property: "og:title", content: "Thank you · Our Journey" },
+      {
+        property: "og:description",
+        content: "Confirming your Our Journey purchase and unlocking your premium features.",
+      },
+      { property: "og:url", content: "https://our-journey.life/checkout-return" },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+    links: [{ rel: "canonical", href: "https://our-journey.life/checkout-return" }],
+  }),
 });
 
 function CheckoutReturn() {
