@@ -75,6 +75,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { name: "apple-mobile-web-app-title", content: "Our Journey" },
+      { name: "google-site-verification", content: "mcbc7Z9vZUAqCQDelNV2IyUS_0OmuFpaBBLn0R7v7PA" },
       { title: "Our Journey — a private space for two" },
       { name: "description", content: "A quiet, beautifully made couples app. Daily prompts, gentle quests, and the small rituals that keep love tended-to." },
       { property: "og:site_name", content: "Our Journey" },
