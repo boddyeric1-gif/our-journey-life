@@ -107,7 +107,7 @@ export function LettersInbox({
           </p>
           <button
             onClick={() => setComposing(true)}
-            className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-canvas hover:opacity-90"
+            className="mt-4 inline-flex items-center justify-center gap-2 btn-primary"
           >
             <PenLine className="h-4 w-4" /> Write the first letter
           </button>
@@ -240,7 +240,7 @@ function Composer({
         <button
           onClick={onSend}
           disabled={!body.trim() || pending}
-          className="mt-2 w-full rounded-full bg-ink px-5 py-3 text-sm font-medium text-canvas hover:opacity-90 disabled:opacity-60"
+          className="mt-2 w-full btn-primary disabled:opacity-60"
         >
           {pending ? "Sending…" : "Send letter"}
         </button>

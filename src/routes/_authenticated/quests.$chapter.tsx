@@ -164,7 +164,7 @@ function ChapterPage() {
             </p>
             <button
               onClick={() => { setCelebration(null); navigate({ to: "/quests" }); }}
-              className="mt-6 w-full inline-flex items-center justify-center gap-2 rounded-full bg-ink px-5 py-3 text-sm font-medium text-canvas hover:opacity-90"
+              className="mt-6 w-full btn-primary"
             >
               Back to quests <ArrowRight className="h-4 w-4" aria-hidden />
             </button>
@@ -298,7 +298,7 @@ function ActiveStep({ step, partnerName, onComplete }: {
               finally { setBusy(false); }
             }}
             disabled={busy || step.myDone || tooShort}
-            className="mt-3 w-full rounded-full bg-ink px-5 py-3 text-sm font-medium text-canvas hover:opacity-90 disabled:opacity-50"
+            className="mt-3 w-full btn-primary disabled:opacity-50"
           >
             {busy
               ? "Saving…"

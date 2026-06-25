@@ -69,10 +69,11 @@ export function TodayHero(props: Props) {
             />
             <button
               type="submit"
-              className="rounded-full bg-ink px-5 py-3 text-sm font-medium text-canvas hover:opacity-90"
+              className="btn-primary"
             >
               Redeem
             </button>
+
           </form>
         </div>
       </HeroFrame>
@@ -94,7 +95,7 @@ export function TodayHero(props: Props) {
         )}
         <Link
           to="/daily"
-          className="mt-6 w-full inline-flex items-center justify-center gap-2 rounded-full bg-ink px-5 py-3.5 text-sm font-medium text-canvas hover:opacity-90"
+          className="btn-primary mt-6 w-full"
         >
           Write your answer <ArrowRight className="h-4 w-4" />
         </Link>
@@ -124,7 +125,8 @@ export function TodayHero(props: Props) {
         </div>
         <Link
           to="/daily"
-          className="mt-5 w-full inline-flex items-center justify-center gap-2 rounded-full bg-ink px-5 py-3 text-sm font-medium text-canvas hover:opacity-90"
+          className="btn-primary mt-5 w-full"
+
         >
           <Sparkles className="h-4 w-4" aria-hidden /> {sealedBoth ? "Open today" : "Write a solo reflection"}
         </Link>
@@ -163,7 +165,7 @@ export function TodayHero(props: Props) {
         )}
         <Link
           to="/daily"
-          className="mt-5 w-full inline-flex items-center justify-center gap-2 rounded-full bg-canvas-deep px-5 py-3 text-sm font-medium text-ink hover:bg-canvas-deep/80"
+          className="btn-ghost mt-5 w-full"
         >
           {auto ? "Open today" : "Read together"} <ArrowRight className="h-4 w-4" />
         </Link>
@@ -178,7 +180,7 @@ export function TodayHero(props: Props) {
       </h2>
       <Link
         to="/quests"
-        className="mt-5 w-full inline-flex items-center justify-center gap-2 rounded-full bg-ink px-5 py-3 text-sm font-medium text-canvas hover:opacity-90"
+        className="btn-primary mt-5 w-full"
       >
         Continue a quest <ArrowRight className="h-4 w-4" />
       </Link>
@@ -190,10 +192,12 @@ function HeroFrame({
   eyebrow, tone, children,
 }: { eyebrow: string; tone: "rust" | "quiet"; children: React.ReactNode }) {
   return (
-    <section className="mx-5 surface-card p-6 relative overflow-hidden">
-      <div className={`absolute top-0 left-0 right-0 h-1 ${tone === "rust" ? "bg-rust/80" : "bg-clay/60"}`} />
-      <p className="text-[11px] uppercase tracking-[0.2em] text-ink-mute mb-3">{eyebrow}</p>
+    <section
+      className={`mx-5 ${tone === "rust" ? "surface-card-lifted seal-top" : "surface-card"} p-6 relative`}
+    >
+      <p className="t-eyebrow mb-3">{eyebrow}</p>
       {children}
     </section>
   );
 }
+

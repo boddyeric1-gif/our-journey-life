@@ -288,7 +288,7 @@ function OnboardingPage() {
               <button
                 onClick={() => { if (!finalize.isPending) finalize.mutate(); }}
                 disabled={finalize.isPending}
-                className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-ink px-5 py-3 text-sm font-medium text-canvas hover:opacity-90 disabled:opacity-60"
+                className="flex-1 btn-primary disabled:opacity-60"
               >
                 {finalize.isPending ? "Sealing…" : (isJoiningPartner ? "Send" : "Reveal")} <ArrowRight className="h-4 w-4" />
               </button>
@@ -327,7 +327,7 @@ function OnboardingPage() {
 
             <button
               onClick={() => navigate({ to: "/home" })}
-              className="mt-5 w-full inline-flex items-center justify-center gap-2 rounded-full bg-ink px-5 py-3.5 text-sm font-medium text-canvas hover:opacity-90"
+              className="mt-5 w-full btn-primary"
             >
               Enter Our Journey <ArrowRight className="h-4 w-4" />
             </button>
@@ -356,7 +356,7 @@ function Continue({ onClick, disabled }: { onClick: () => void; disabled?: boole
   return (
     <button
       onClick={onClick} disabled={disabled}
-      className="mt-8 w-full inline-flex items-center justify-center gap-2 rounded-full bg-ink px-5 py-3.5 text-sm font-medium text-canvas hover:opacity-90 disabled:opacity-50"
+      className="mt-8 w-full btn-primary disabled:opacity-50"
     >
       Continue <ArrowRight className="h-4 w-4" />
     </button>
