@@ -2,14 +2,14 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getHomeState } from "@/lib/home.functions";
-import { listInsights } from "@/lib/quest.functions";
+
 import { AppShell } from "@/components/app-shell";
 import { LevelHeader } from "@/components/level-header";
 import { TodayHero } from "@/components/today-hero";
 import { LettersInbox } from "@/components/letters-inbox";
 import { HeaderSkeleton, HeroSkeleton } from "@/components/skeletons";
 import { RouteError, RouteNotFound } from "@/components/route-boundaries";
-import { ArrowRight, BookOpen, Compass, Copy } from "lucide-react";
+import { ArrowRight, Compass, Copy } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useDailyRealtime } from "@/hooks/use-daily-realtime";
@@ -33,10 +33,8 @@ export const Route = createFileRoute("/_authenticated/home")({
 function HomePage() {
   const navigate = useNavigate();
   const fetchHome = useServerFn(getHomeState);
-  const fetchInsights = useServerFn(listInsights);
 
   const home = useQuery({ queryKey: ["home-state"], queryFn: () => fetchHome(), staleTime: 30_000 });
-  const insights = useQuery({ queryKey: ["insights"], queryFn: () => fetchInsights(), staleTime: 5 * 60_000 });
   const [lettersOpen, setLettersOpen] = useState(false);
 
   useEffect(() => {
@@ -212,32 +210,31 @@ function HomePage() {
         </Link>
       )}
 
-      {/* Field notes — secondary, below the fold of the next decision. */}
+      {/* Rituals — three guided prompt sets, given proper room. */}
       <section className="px-5 mt-8">
         <div className="flex items-end justify-between mb-3">
-          <h2 className="font-serif text-xl text-ink">Field notes</h2>
-          <span className="text-[11px] uppercase tracking-[0.16em] text-ink-mute">1–3 min reads</span>
+          <h2 className="font-serif text-xl text-ink">Rituals</h2>
+          <span className="text-[11px] uppercase tracking-[0.16em] text-ink-mute">Ask one tonight</span>
         </div>
         <div className="space-y-3">
-          {(insights.data?.insights ?? []).slice(0, 4).map(it => (
-            <Link
-              key={it.id}
-              to="/insights/$slug"
-              params={{ slug: it.slug }}
-              className="block surface-card-quiet p-4 hover:bg-canvas-deep/60 active:scale-[0.99] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-rust/60"
-            >
-              <article>
-                <div className="flex items-start gap-3">
-                  <BookOpen className="h-4 w-4 text-rust mt-1" />
-                  <div className="flex-1">
-                    <h3 className="font-serif text-base text-ink leading-snug">{it.title}</h3>
-                    <p className="mt-1 text-[15px] leading-[1.55] text-ink-soft text-pretty">{it.subtitle}</p>
-                    <p className="mt-2 text-[11px] uppercase tracking-[0.16em] text-ink-mute">{it.read_minutes} min read</p>
-                  </div>
-                </div>
-              </article>
-            </Link>
-          ))}
+          <RitualCard
+            to="/resources/check-in-questions"
+            eyebrow="Nightly · 5 min"
+            title="Daily check-in questions"
+            body="Short, honest prompts for a five-minute check-in — categorized by mood and moment."
+          />
+          <RitualCard
+            to="/resources/would-you-rather"
+            eyebrow="Low-pressure · anytime"
+            title="Would you rather"
+            body="Fun, deep, and relationship-focused. A small ritual you can do in the car or before sleep."
+          />
+          <RitualCard
+            to="/resources/36-questions"
+            eyebrow="Slow evening · 45 min"
+            title="The 36 questions"
+            body="Aron's classic sequence. Three sets that build closeness on purpose."
+          />
         </div>
       </section>
 
@@ -278,5 +275,33 @@ function InviteCodeCard({ code }: { code: string }) {
         <Copy className="h-4 w-4 text-ink-mute shrink-0" aria-hidden />
       </button>
     </div>
+  );
+}
+
+function RitualCard({
+  to,
+  eyebrow,
+  title,
+  body,
+}: {
+  to: "/resources/check-in-questions" | "/resources/would-you-rather" | "/resources/36-questions";
+  eyebrow: string;
+  title: string;
+  body: string;
+}) {
+  return (
+    <Link
+      to={to}
+      className="block surface-card-quiet p-5 hover:bg-canvas-deep/60 active:scale-[0.99] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-rust/60"
+    >
+      <article className="flex items-start gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="text-[11px] uppercase tracking-[0.16em] text-ink-mute">{eyebrow}</p>
+          <h3 className="mt-1 font-serif text-lg text-ink leading-snug">{title}</h3>
+          <p className="mt-1.5 text-[15px] leading-[1.55] text-ink-soft text-pretty">{body}</p>
+        </div>
+        <ArrowRight className="h-4 w-4 text-ink-mute mt-1 shrink-0" />
+      </article>
+    </Link>
   );
 }
