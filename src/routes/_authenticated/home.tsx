@@ -211,12 +211,12 @@ function HomePage() {
       )}
 
       {/* Rituals — three guided prompt sets, given proper room. */}
-      <section className="px-5 mt-8">
-        <div className="flex items-end justify-between mb-3">
-          <h2 className="font-serif text-xl text-ink">Rituals</h2>
-          <span className="text-[11px] uppercase tracking-[0.16em] text-ink-mute">Ask one tonight</span>
+      <section className="px-5 mt-10 sm:mt-14 sm:px-8">
+        <div className="flex items-baseline justify-between gap-4 mb-4 sm:mb-6">
+          <h2 className="font-serif text-xl sm:text-2xl text-ink leading-tight">Rituals</h2>
+          <span className="text-[11px] uppercase tracking-[0.16em] text-ink-mute shrink-0">Ask one tonight</span>
         </div>
-        <div className="space-y-3">
+        <div className="grid gap-3 sm:gap-4 md:grid-cols-3 md:items-stretch">
           <RitualCard
             to="/resources/check-in-questions"
             eyebrow="Nightly · 5 min"
