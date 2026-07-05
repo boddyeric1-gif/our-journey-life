@@ -277,3 +277,31 @@ function InviteCodeCard({ code }: { code: string }) {
     </div>
   );
 }
+
+function RitualCard({
+  to,
+  eyebrow,
+  title,
+  body,
+}: {
+  to: "/resources/check-in-questions" | "/resources/would-you-rather" | "/resources/36-questions";
+  eyebrow: string;
+  title: string;
+  body: string;
+}) {
+  return (
+    <Link
+      to={to}
+      className="block surface-card-quiet p-5 hover:bg-canvas-deep/60 active:scale-[0.99] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-rust/60"
+    >
+      <article className="flex items-start gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="text-[11px] uppercase tracking-[0.16em] text-ink-mute">{eyebrow}</p>
+          <h3 className="mt-1 font-serif text-lg text-ink leading-snug">{title}</h3>
+          <p className="mt-1.5 text-[15px] leading-[1.55] text-ink-soft text-pretty">{body}</p>
+        </div>
+        <ArrowRight className="h-4 w-4 text-ink-mute mt-1 shrink-0" />
+      </article>
+    </Link>
+  );
+}
