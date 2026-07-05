@@ -2,14 +2,14 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getHomeState } from "@/lib/home.functions";
-import { listInsights } from "@/lib/quest.functions";
+
 import { AppShell } from "@/components/app-shell";
 import { LevelHeader } from "@/components/level-header";
 import { TodayHero } from "@/components/today-hero";
 import { LettersInbox } from "@/components/letters-inbox";
 import { HeaderSkeleton, HeroSkeleton } from "@/components/skeletons";
 import { RouteError, RouteNotFound } from "@/components/route-boundaries";
-import { ArrowRight, BookOpen, Compass, Copy } from "lucide-react";
+import { ArrowRight, Compass, Copy } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useDailyRealtime } from "@/hooks/use-daily-realtime";
@@ -33,10 +33,8 @@ export const Route = createFileRoute("/_authenticated/home")({
 function HomePage() {
   const navigate = useNavigate();
   const fetchHome = useServerFn(getHomeState);
-  const fetchInsights = useServerFn(listInsights);
 
   const home = useQuery({ queryKey: ["home-state"], queryFn: () => fetchHome(), staleTime: 30_000 });
-  const insights = useQuery({ queryKey: ["insights"], queryFn: () => fetchInsights(), staleTime: 5 * 60_000 });
   const [lettersOpen, setLettersOpen] = useState(false);
 
   useEffect(() => {
