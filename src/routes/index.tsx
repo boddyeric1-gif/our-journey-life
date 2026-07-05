@@ -101,7 +101,7 @@ function Landing() {
             Multi-day chapters on listening, trust, and repair.
           </FeatureRow>
           <FeatureRow num="03" title="Meaningful alone, too">
-            Solo reflections, private letters, and insights when your partner is offline.
+            Solo reflections and private letters when your partner is offline.
           </FeatureRow>
         </div>
       </section>

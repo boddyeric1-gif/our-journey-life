@@ -33,7 +33,6 @@ import { Route as AuthenticatedQuestsIndexRouteImport } from './routes/_authenti
 import { Route as AuthenticatedCapsuleIndexRouteImport } from './routes/_authenticated/capsule.index'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as AuthenticatedQuestsChapterRouteImport } from './routes/_authenticated/quests.$chapter'
-import { Route as AuthenticatedInsightsSlugRouteImport } from './routes/_authenticated/insights.$slug'
 import { Route as AuthenticatedCapsuleNewRouteImport } from './routes/_authenticated/capsule.new'
 import { Route as AuthenticatedCapsuleIdRouteImport } from './routes/_authenticated/capsule.$id'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
@@ -161,12 +160,6 @@ const AuthenticatedQuestsChapterRoute =
     path: '/quests/$chapter',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedInsightsSlugRoute =
-  AuthenticatedInsightsSlugRouteImport.update({
-    id: '/insights/$slug',
-    path: '/insights/$slug',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedCapsuleNewRoute = AuthenticatedCapsuleNewRouteImport.update({
   id: '/capsule/new',
   path: '/capsule/new',
@@ -206,7 +199,6 @@ export interface FileRoutesByFullPath {
   '/resources/would-you-rather': typeof ResourcesWouldYouRatherRoute
   '/capsule/$id': typeof AuthenticatedCapsuleIdRoute
   '/capsule/new': typeof AuthenticatedCapsuleNewRoute
-  '/insights/$slug': typeof AuthenticatedInsightsSlugRoute
   '/quests/$chapter': typeof AuthenticatedQuestsChapterRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/capsule/': typeof AuthenticatedCapsuleIndexRoute
@@ -235,7 +227,6 @@ export interface FileRoutesByTo {
   '/resources/would-you-rather': typeof ResourcesWouldYouRatherRoute
   '/capsule/$id': typeof AuthenticatedCapsuleIdRoute
   '/capsule/new': typeof AuthenticatedCapsuleNewRoute
-  '/insights/$slug': typeof AuthenticatedInsightsSlugRoute
   '/quests/$chapter': typeof AuthenticatedQuestsChapterRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/capsule': typeof AuthenticatedCapsuleIndexRoute
@@ -266,7 +257,6 @@ export interface FileRoutesById {
   '/resources/would-you-rather': typeof ResourcesWouldYouRatherRoute
   '/_authenticated/capsule/$id': typeof AuthenticatedCapsuleIdRoute
   '/_authenticated/capsule/new': typeof AuthenticatedCapsuleNewRoute
-  '/_authenticated/insights/$slug': typeof AuthenticatedInsightsSlugRoute
   '/_authenticated/quests/$chapter': typeof AuthenticatedQuestsChapterRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/_authenticated/capsule/': typeof AuthenticatedCapsuleIndexRoute
@@ -297,7 +287,6 @@ export interface FileRouteTypes {
     | '/resources/would-you-rather'
     | '/capsule/$id'
     | '/capsule/new'
-    | '/insights/$slug'
     | '/quests/$chapter'
     | '/api/public/health'
     | '/capsule/'
@@ -326,7 +315,6 @@ export interface FileRouteTypes {
     | '/resources/would-you-rather'
     | '/capsule/$id'
     | '/capsule/new'
-    | '/insights/$slug'
     | '/quests/$chapter'
     | '/api/public/health'
     | '/capsule'
@@ -356,7 +344,6 @@ export interface FileRouteTypes {
     | '/resources/would-you-rather'
     | '/_authenticated/capsule/$id'
     | '/_authenticated/capsule/new'
-    | '/_authenticated/insights/$slug'
     | '/_authenticated/quests/$chapter'
     | '/api/public/health'
     | '/_authenticated/capsule/'
@@ -551,13 +538,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedQuestsChapterRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/insights/$slug': {
-      id: '/_authenticated/insights/$slug'
-      path: '/insights/$slug'
-      fullPath: '/insights/$slug'
-      preLoaderRoute: typeof AuthenticatedInsightsSlugRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/capsule/new': {
       id: '/_authenticated/capsule/new'
       path: '/capsule/new'
@@ -592,7 +572,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedCapsuleIdRoute: typeof AuthenticatedCapsuleIdRoute
   AuthenticatedCapsuleNewRoute: typeof AuthenticatedCapsuleNewRoute
-  AuthenticatedInsightsSlugRoute: typeof AuthenticatedInsightsSlugRoute
   AuthenticatedQuestsChapterRoute: typeof AuthenticatedQuestsChapterRoute
   AuthenticatedCapsuleIndexRoute: typeof AuthenticatedCapsuleIndexRoute
   AuthenticatedQuestsIndexRoute: typeof AuthenticatedQuestsIndexRoute
@@ -608,7 +587,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedCapsuleIdRoute: AuthenticatedCapsuleIdRoute,
   AuthenticatedCapsuleNewRoute: AuthenticatedCapsuleNewRoute,
-  AuthenticatedInsightsSlugRoute: AuthenticatedInsightsSlugRoute,
   AuthenticatedQuestsChapterRoute: AuthenticatedQuestsChapterRoute,
   AuthenticatedCapsuleIndexRoute: AuthenticatedCapsuleIndexRoute,
   AuthenticatedQuestsIndexRoute: AuthenticatedQuestsIndexRoute,

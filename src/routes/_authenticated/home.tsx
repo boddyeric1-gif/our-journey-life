@@ -211,12 +211,12 @@ function HomePage() {
       )}
 
       {/* Rituals — three guided prompt sets, given proper room. */}
-      <section className="px-5 mt-8">
-        <div className="flex items-end justify-between mb-3">
-          <h2 className="font-serif text-xl text-ink">Rituals</h2>
-          <span className="text-[11px] uppercase tracking-[0.16em] text-ink-mute">Ask one tonight</span>
+      <section className="px-5 mt-10 sm:mt-14 sm:px-8">
+        <div className="flex items-baseline justify-between gap-4 mb-4 sm:mb-6">
+          <h2 className="font-serif text-xl sm:text-2xl text-ink leading-tight">Rituals</h2>
+          <span className="text-[11px] uppercase tracking-[0.16em] text-ink-mute shrink-0">Ask one tonight</span>
         </div>
-        <div className="space-y-3">
+        <div className="grid gap-3 sm:gap-4 md:grid-cols-3 md:items-stretch">
           <RitualCard
             to="/resources/check-in-questions"
             eyebrow="Nightly · 5 min"
@@ -292,15 +292,15 @@ function RitualCard({
   return (
     <Link
       to={to}
-      className="block surface-card-quiet p-5 hover:bg-canvas-deep/60 active:scale-[0.99] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-rust/60"
+      className="group block h-full surface-card-quiet p-5 sm:p-6 hover:bg-canvas-deep/60 active:scale-[0.99] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-rust/60"
     >
-      <article className="flex items-start gap-3">
-        <div className="flex-1 min-w-0">
+      <article className="flex h-full items-start gap-3">
+        <div className="flex-1 min-w-0 flex flex-col">
           <p className="text-[11px] uppercase tracking-[0.16em] text-ink-mute">{eyebrow}</p>
-          <h3 className="mt-1 font-serif text-lg text-ink leading-snug">{title}</h3>
-          <p className="mt-1.5 text-[15px] leading-[1.55] text-ink-soft text-pretty">{body}</p>
+          <h3 className="mt-2 font-serif text-lg sm:text-xl text-ink leading-snug text-balance">{title}</h3>
+          <p className="mt-2 text-[15px] leading-[1.55] text-ink-soft text-pretty">{body}</p>
         </div>
-        <ArrowRight className="h-4 w-4 text-ink-mute mt-1 shrink-0" />
+        <ArrowRight className="h-4 w-4 text-ink-mute mt-1 shrink-0 transition-transform group-hover:translate-x-0.5" />
       </article>
     </Link>
   );
