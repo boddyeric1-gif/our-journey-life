@@ -23,13 +23,14 @@ export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>) => ({
     mode: (s.mode === "signup" ? "signup" : "signin") as Mode,
     join: typeof s.join === "string" ? (s.join as string) : undefined,
+    next: typeof s.next === "string" && s.next.startsWith("/") && !s.next.startsWith("//") ? (s.next as string) : undefined,
   }),
   component: AuthPage,
 });
 
 function AuthPage() {
   const navigate = useNavigate();
-  const { mode: initialMode, join } = Route.useSearch();
+  const { mode: initialMode, join, next } = Route.useSearch();
   const [mode, setMode] = useState<Mode>(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -51,11 +52,12 @@ function AuthPage() {
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       if (!data.user) return;
+      if (next) { window.location.assign(next); return; }
       const pending = (typeof window !== "undefined" && window.localStorage.getItem(PENDING_INVITE_KEY)) || join;
       if (pending) navigate({ to: "/join/$code", params: { code: pending } });
       else navigate({ to: "/home" });
     });
-  }, [navigate, join]);
+  }, [navigate, join, next]);
 
   function rememberCode(c: string | undefined) {
     if (typeof window === "undefined") return;
@@ -63,6 +65,7 @@ function AuthPage() {
   }
 
   function goAfterAuth() {
+    if (next) { window.location.assign(next); return; }
     const c = trimmedCode || join;
     if (c) navigate({ to: "/join/$code", params: { code: c } });
     else navigate({ to: mode === "signup" ? "/onboarding" : "/home" });
@@ -78,7 +81,9 @@ function AuthPage() {
         const { data: signUpData, error } = await supabase.auth.signUp({
           email, password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/confirm`,
+            emailRedirectTo: next
+              ? `${window.location.origin}/auth/confirm?next=${encodeURIComponent(next)}`
+              : `${window.location.origin}/auth/confirm`,
             data: { display_name: name || email.split("@")[0] },
           },
         });
@@ -106,7 +111,8 @@ function AuthPage() {
     setLoading(true);
     rememberCode(trimmedCode || join);
     try {
-      const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+      const redirectUri = next ? `${window.location.origin}${next}` : window.location.origin;
+      const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: redirectUri });
       if (result.error) {
         toast.error(result.error.message || "Couldn't sign in with Google.");
         setLoading(false);
