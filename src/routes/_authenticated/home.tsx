@@ -212,32 +212,31 @@ function HomePage() {
         </Link>
       )}
 
-      {/* Field notes — secondary, below the fold of the next decision. */}
+      {/* Rituals — three guided prompt sets, given proper room. */}
       <section className="px-5 mt-8">
         <div className="flex items-end justify-between mb-3">
-          <h2 className="font-serif text-xl text-ink">Field notes</h2>
-          <span className="text-[11px] uppercase tracking-[0.16em] text-ink-mute">1–3 min reads</span>
+          <h2 className="font-serif text-xl text-ink">Rituals</h2>
+          <span className="text-[11px] uppercase tracking-[0.16em] text-ink-mute">Ask one tonight</span>
         </div>
         <div className="space-y-3">
-          {(insights.data?.insights ?? []).slice(0, 4).map(it => (
-            <Link
-              key={it.id}
-              to="/insights/$slug"
-              params={{ slug: it.slug }}
-              className="block surface-card-quiet p-4 hover:bg-canvas-deep/60 active:scale-[0.99] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-rust/60"
-            >
-              <article>
-                <div className="flex items-start gap-3">
-                  <BookOpen className="h-4 w-4 text-rust mt-1" />
-                  <div className="flex-1">
-                    <h3 className="font-serif text-base text-ink leading-snug">{it.title}</h3>
-                    <p className="mt-1 text-[15px] leading-[1.55] text-ink-soft text-pretty">{it.subtitle}</p>
-                    <p className="mt-2 text-[11px] uppercase tracking-[0.16em] text-ink-mute">{it.read_minutes} min read</p>
-                  </div>
-                </div>
-              </article>
-            </Link>
-          ))}
+          <RitualCard
+            to="/resources/check-in-questions"
+            eyebrow="Nightly · 5 min"
+            title="Daily check-in questions"
+            body="Short, honest prompts for a five-minute check-in — categorized by mood and moment."
+          />
+          <RitualCard
+            to="/resources/would-you-rather"
+            eyebrow="Low-pressure · anytime"
+            title="Would you rather"
+            body="Fun, deep, and relationship-focused. A small ritual you can do in the car or before sleep."
+          />
+          <RitualCard
+            to="/resources/36-questions"
+            eyebrow="Slow evening · 45 min"
+            title="The 36 questions"
+            body="Aron's classic sequence. Three sets that build closeness on purpose."
+          />
         </div>
       </section>
 
