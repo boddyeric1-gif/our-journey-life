@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "sdk_version": "0.20.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://fhcmgwarbjjxblxbeukr.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "our-journey-mcp",
+      "version": "0.1.0",
+      "title": "Our Journey"
+    },
+    "tools": [
+      {
+        "name": "get_journey_snapshot",
+        "title": "Get journey snapshot",
+        "description": "Return a compact summary of the signed-in user's Our Journey state: display name, partner (if paired), days together, current streak, and total XP.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_solo_reflections",
+        "title": "List solo reflections",
+        "description": "List the signed-in user's private solo reflections, newest first. These are the user's own journal-style entries and are never shared with the partner.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "default": 10,
+              "description": "Max entries to return (1-50).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "write_solo_reflection",
+        "title": "Write today's solo reflection",
+        "description": "Create or update the signed-in user's private solo reflection for today (dated in their timezone). Solo reflections are never shared with the partner.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "body": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000,
+              "description": "The reflection text (max 2000 chars)."
+            }
+          },
+          "required": [
+            "body"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_time_capsules",
+        "title": "List time capsules",
+        "description": "List the couple's time capsules the signed-in user can see. Splits into sealed (unlocks in the future, metadata only) and opened (already unlocked, with a short body preview).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}

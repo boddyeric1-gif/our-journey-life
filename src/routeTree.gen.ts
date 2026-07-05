@@ -13,6 +13,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SecurityRouteImport } from './routes/security'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout-return'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -29,12 +30,16 @@ import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/h
 import { Route as AuthenticatedDailyRouteImport } from './routes/_authenticated/daily'
 import { Route as AuthenticatedAtlasRouteImport } from './routes/_authenticated/atlas'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as AuthenticatedQuestsIndexRouteImport } from './routes/_authenticated/quests.index'
 import { Route as AuthenticatedCapsuleIndexRouteImport } from './routes/_authenticated/capsule.index'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as AuthenticatedQuestsChapterRouteImport } from './routes/_authenticated/quests.$chapter'
 import { Route as AuthenticatedCapsuleNewRouteImport } from './routes/_authenticated/capsule.new'
 import { Route as AuthenticatedCapsuleIdRouteImport } from './routes/_authenticated/capsule.$id'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const TermsRoute = TermsRouteImport.update({
@@ -55,6 +60,11 @@ const SecurityRoute = SecurityRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
@@ -137,6 +147,18 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedQuestsIndexRoute =
   AuthenticatedQuestsIndexRouteImport.update({
     id: '/quests/',
@@ -170,6 +192,17 @@ const AuthenticatedCapsuleIdRoute = AuthenticatedCapsuleIdRouteImport.update({
   path: '/capsule/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -181,10 +214,13 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
   '/checkout-return': typeof CheckoutReturnRoute
+  '/mcp': typeof McpRoute
   '/privacy': typeof PrivacyRoute
   '/security': typeof SecurityRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/atlas': typeof AuthenticatedAtlasRoute
   '/daily': typeof AuthenticatedDailyRoute
@@ -197,6 +233,8 @@ export interface FileRoutesByFullPath {
   '/resources/36-questions': typeof Resources36QuestionsRoute
   '/resources/check-in-questions': typeof ResourcesCheckInQuestionsRoute
   '/resources/would-you-rather': typeof ResourcesWouldYouRatherRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/capsule/$id': typeof AuthenticatedCapsuleIdRoute
   '/capsule/new': typeof AuthenticatedCapsuleNewRoute
   '/quests/$chapter': typeof AuthenticatedQuestsChapterRoute
@@ -209,10 +247,13 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
   '/checkout-return': typeof CheckoutReturnRoute
+  '/mcp': typeof McpRoute
   '/privacy': typeof PrivacyRoute
   '/security': typeof SecurityRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/atlas': typeof AuthenticatedAtlasRoute
   '/daily': typeof AuthenticatedDailyRoute
@@ -225,6 +266,8 @@ export interface FileRoutesByTo {
   '/resources/36-questions': typeof Resources36QuestionsRoute
   '/resources/check-in-questions': typeof ResourcesCheckInQuestionsRoute
   '/resources/would-you-rather': typeof ResourcesWouldYouRatherRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/capsule/$id': typeof AuthenticatedCapsuleIdRoute
   '/capsule/new': typeof AuthenticatedCapsuleNewRoute
   '/quests/$chapter': typeof AuthenticatedQuestsChapterRoute
@@ -239,10 +282,13 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRouteWithChildren
   '/checkout-return': typeof CheckoutReturnRoute
+  '/mcp': typeof McpRoute
   '/privacy': typeof PrivacyRoute
   '/security': typeof SecurityRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/atlas': typeof AuthenticatedAtlasRoute
   '/_authenticated/daily': typeof AuthenticatedDailyRoute
@@ -255,6 +301,8 @@ export interface FileRoutesById {
   '/resources/36-questions': typeof Resources36QuestionsRoute
   '/resources/check-in-questions': typeof ResourcesCheckInQuestionsRoute
   '/resources/would-you-rather': typeof ResourcesWouldYouRatherRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/capsule/$id': typeof AuthenticatedCapsuleIdRoute
   '/_authenticated/capsule/new': typeof AuthenticatedCapsuleNewRoute
   '/_authenticated/quests/$chapter': typeof AuthenticatedQuestsChapterRoute
@@ -269,10 +317,13 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/checkout-return'
+    | '/mcp'
     | '/privacy'
     | '/security'
     | '/sitemap.xml'
     | '/terms'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/admin'
     | '/atlas'
     | '/daily'
@@ -285,6 +336,8 @@ export interface FileRouteTypes {
     | '/resources/36-questions'
     | '/resources/check-in-questions'
     | '/resources/would-you-rather'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/capsule/$id'
     | '/capsule/new'
     | '/quests/$chapter'
@@ -297,10 +350,13 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/checkout-return'
+    | '/mcp'
     | '/privacy'
     | '/security'
     | '/sitemap.xml'
     | '/terms'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/admin'
     | '/atlas'
     | '/daily'
@@ -313,6 +369,8 @@ export interface FileRouteTypes {
     | '/resources/36-questions'
     | '/resources/check-in-questions'
     | '/resources/would-you-rather'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/capsule/$id'
     | '/capsule/new'
     | '/quests/$chapter'
@@ -326,10 +384,13 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/checkout-return'
+    | '/mcp'
     | '/privacy'
     | '/security'
     | '/sitemap.xml'
     | '/terms'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/_authenticated/admin'
     | '/_authenticated/atlas'
     | '/_authenticated/daily'
@@ -342,6 +403,8 @@ export interface FileRouteTypes {
     | '/resources/36-questions'
     | '/resources/check-in-questions'
     | '/resources/would-you-rather'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/capsule/$id'
     | '/_authenticated/capsule/new'
     | '/_authenticated/quests/$chapter'
@@ -356,14 +419,19 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
   CheckoutReturnRoute: typeof CheckoutReturnRoute
+  McpRoute: typeof McpRoute
   PrivacyRoute: typeof PrivacyRoute
   SecurityRoute: typeof SecurityRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
+  Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   JoinCodeRoute: typeof JoinCodeRoute
   Resources36QuestionsRoute: typeof Resources36QuestionsRoute
   ResourcesCheckInQuestionsRoute: typeof ResourcesCheckInQuestionsRoute
   ResourcesWouldYouRatherRoute: typeof ResourcesWouldYouRatherRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
+  Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
@@ -396,6 +464,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/checkout-return': {
@@ -510,6 +585,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/list-tools': {
+      id: '/.mcp/list-tools'
+      path: '/.mcp/list-tools'
+      fullPath: '/.mcp/list-tools'
+      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/quests/': {
       id: '/_authenticated/quests/'
       path: '/quests'
@@ -551,6 +640,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/capsule/$id'
       preLoaderRoute: typeof AuthenticatedCapsuleIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
@@ -610,14 +713,20 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
   CheckoutReturnRoute: CheckoutReturnRoute,
+  McpRoute: McpRoute,
   PrivacyRoute: PrivacyRoute,
   SecurityRoute: SecurityRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
+  Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   JoinCodeRoute: JoinCodeRoute,
   Resources36QuestionsRoute: Resources36QuestionsRoute,
   ResourcesCheckInQuestionsRoute: ResourcesCheckInQuestionsRoute,
   ResourcesWouldYouRatherRoute: ResourcesWouldYouRatherRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
+  Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
