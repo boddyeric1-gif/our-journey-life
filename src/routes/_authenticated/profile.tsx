@@ -195,10 +195,16 @@ function ProfilePage() {
       </section>
 
       <section className="mx-5 mt-6 surface-card-quiet p-5">
-        <h2 className="font-serif text-base text-ink">How streaks work</h2>
+        <h2 className="font-serif text-base text-ink">Customer support</h2>
         <p className="mt-2 text-sm text-ink-soft text-pretty">
-          Any meaningful action keeps your streak alive. The couple streak only advances when both of you engage. Freezes auto-save one missed day.
+          Experiencing a bug? Have a question or a concern? We're here 24/7 — reach out any time and we'll help you sort it out.
         </p>
+        <a
+          href="mailto:emb.creations.llc@gmail.com"
+          className="mt-3 inline-flex items-center rounded-2xl bg-canvas-deep px-4 py-2 text-sm text-ink hover:bg-canvas-deep/80 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-rust/60"
+        >
+          emb.creations.llc@gmail.com
+        </a>
       </section>
 
       <p className="px-5 mt-8 text-center text-xs text-ink-mute">Our Journey · Volume One · Beta</p>
