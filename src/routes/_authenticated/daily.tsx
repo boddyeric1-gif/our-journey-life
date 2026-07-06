@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getHomeState, submitDailyResponse, submitSoloReflection } from "@/lib/home.functions";
+import { soloPromptFor } from "@/lib/soloPrompts";
 import { AppShell } from "@/components/app-shell";
 import { RouteError, RouteNotFound } from "@/components/route-boundaries";
 import { HeaderSkeleton, HeroSkeleton } from "@/components/skeletons";
@@ -181,36 +182,68 @@ function DailyPage() {
         />
       )}
 
-      <section className="mx-5 mt-8">
-        <div className="flex items-center gap-2 mb-2">
-          <Sparkles className="h-4 w-4 text-rust" />
-          <h2 className="font-serif text-xl text-ink">Solo reflection</h2>
-        </div>
-        <p className="text-sm text-ink-soft">A private journal entry, for you alone. Counts toward your streak.</p>
-        {data.soloToday ? (
-          <div className="mt-3 surface-card-quiet p-4">
-            <p className="serif-italic text-ink-soft">"{data.soloToday.body}"</p>
-            <p className="mt-2 text-[11px] text-ink-mute">Saved today · private</p>
-          </div>
-        ) : (
-          <>
-            <textarea
-              value={solo} onChange={e => setSolo(e.target.value.slice(0, 2000))}
-              rows={4}
-              placeholder="What made you write what you wrote? Or — what would you have liked to say?"
-              className="mt-3 w-full rounded-2xl border border-border bg-card px-5 py-4 text-base text-ink placeholder:text-ink-mute outline-none focus:border-rust"
-            />
-            <button
-              onClick={() => mutateSolo.mutate()}
-              disabled={!solo.trim() || mutateSolo.isPending}
-              className="mt-3 w-full rounded-full border border-border bg-card px-5 py-3 text-sm font-medium text-ink hover:bg-canvas-deep disabled:opacity-60"
-            >
-              {mutateSolo.isPending ? "Saving…" : "Save reflection"}
-            </button>
-          </>
-        )}
-      </section>
+      <SoloReflectionSection
+        dateISO={(data as { userLocalToday?: string }).userLocalToday ?? data.today}
+        existing={data.soloToday}
+        value={solo}
+        onChange={setSolo}
+        onSubmit={() => mutateSolo.mutate()}
+        submitting={mutateSolo.isPending}
+      />
     </AppShell>
+  );
+}
+
+function SoloReflectionSection({
+  dateISO,
+  existing,
+  value,
+  onChange,
+  onSubmit,
+  submitting,
+}: {
+  dateISO: string;
+  existing: { id: string; body: string } | null;
+  value: string;
+  onChange: (v: string) => void;
+  onSubmit: () => void;
+  submitting: boolean;
+}) {
+  const today = soloPromptFor(dateISO);
+  return (
+    <section className="mx-5 mt-8">
+      <div className="flex items-center gap-2 mb-2">
+        <Sparkles className="h-4 w-4 text-rust" />
+        <h2 className="font-serif text-xl text-ink">Solo reflection</h2>
+      </div>
+      <p className="text-sm text-ink-soft">A private journal entry, for you alone. Counts toward your streak.</p>
+      {existing ? (
+        <div className="mt-3 surface-card-quiet p-4">
+          <p className="serif-italic text-ink-soft">"{existing.body}"</p>
+          <p className="mt-2 text-[11px] text-ink-mute">Saved today · private</p>
+        </div>
+      ) : (
+        <>
+          <div className="mt-3 surface-card-quiet p-4">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-ink-mute">Today · {today.theme}</p>
+            <p className="mt-2 font-serif text-lg text-ink leading-snug text-balance">{today.body}</p>
+          </div>
+          <textarea
+            value={value} onChange={e => onChange(e.target.value.slice(0, 2000))}
+            rows={4}
+            placeholder="Write freely. A sentence or two is plenty."
+            className="mt-3 w-full rounded-2xl border border-border bg-card px-5 py-4 text-base text-ink placeholder:text-ink-mute outline-none focus:border-rust"
+          />
+          <button
+            onClick={onSubmit}
+            disabled={!value.trim() || submitting}
+            className="mt-3 w-full rounded-full border border-border bg-card px-5 py-3 text-sm font-medium text-ink hover:bg-canvas-deep disabled:opacity-60"
+          >
+            {submitting ? "Saving…" : "Save reflection"}
+          </button>
+        </>
+      )}
+    </section>
   );
 }
 

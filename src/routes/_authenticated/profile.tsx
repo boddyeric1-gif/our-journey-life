@@ -207,7 +207,7 @@ function ProfilePage() {
         </a>
       </section>
 
-      <p className="px-5 mt-8 text-center text-xs text-ink-mute">Our Journey · Volume One · Beta</p>
+      <p className="px-5 mt-8 text-center text-xs text-ink-mute">Our Journey · Made with care · Kept quiet</p>
 
       {confirmLeave && (
         <div
