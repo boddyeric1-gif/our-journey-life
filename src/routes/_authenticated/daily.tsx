@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getHomeState, submitDailyResponse, submitSoloReflection } from "@/lib/home.functions";
+import { soloPromptFor } from "@/lib/soloPrompts";
 import { AppShell } from "@/components/app-shell";
 import { RouteError, RouteNotFound } from "@/components/route-boundaries";
 import { HeaderSkeleton, HeroSkeleton } from "@/components/skeletons";
