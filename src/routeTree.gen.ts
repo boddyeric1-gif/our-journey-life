@@ -19,6 +19,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ResourcesWouldYouRatherRouteImport } from './routes/resources.would-you-rather'
+import { Route as ResourcesNeverHaveIEverRouteImport } from './routes/resources.never-have-i-ever'
 import { Route as ResourcesCheckInQuestionsRouteImport } from './routes/resources.check-in-questions'
 import { Route as Resources36QuestionsRouteImport } from './routes/resources.36-questions'
 import { Route as JoinCodeRouteImport } from './routes/join.$code'
@@ -89,6 +90,11 @@ const IndexRoute = IndexRouteImport.update({
 const ResourcesWouldYouRatherRoute = ResourcesWouldYouRatherRouteImport.update({
   id: '/resources/would-you-rather',
   path: '/resources/would-you-rather',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResourcesNeverHaveIEverRoute = ResourcesNeverHaveIEverRouteImport.update({
+  id: '/resources/never-have-i-ever',
+  path: '/resources/never-have-i-ever',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResourcesCheckInQuestionsRoute =
@@ -232,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/join/$code': typeof JoinCodeRoute
   '/resources/36-questions': typeof Resources36QuestionsRoute
   '/resources/check-in-questions': typeof ResourcesCheckInQuestionsRoute
+  '/resources/never-have-i-ever': typeof ResourcesNeverHaveIEverRoute
   '/resources/would-you-rather': typeof ResourcesWouldYouRatherRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -265,6 +272,7 @@ export interface FileRoutesByTo {
   '/join/$code': typeof JoinCodeRoute
   '/resources/36-questions': typeof Resources36QuestionsRoute
   '/resources/check-in-questions': typeof ResourcesCheckInQuestionsRoute
+  '/resources/never-have-i-ever': typeof ResourcesNeverHaveIEverRoute
   '/resources/would-you-rather': typeof ResourcesWouldYouRatherRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -300,6 +308,7 @@ export interface FileRoutesById {
   '/join/$code': typeof JoinCodeRoute
   '/resources/36-questions': typeof Resources36QuestionsRoute
   '/resources/check-in-questions': typeof ResourcesCheckInQuestionsRoute
+  '/resources/never-have-i-ever': typeof ResourcesNeverHaveIEverRoute
   '/resources/would-you-rather': typeof ResourcesWouldYouRatherRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -335,6 +344,7 @@ export interface FileRouteTypes {
     | '/join/$code'
     | '/resources/36-questions'
     | '/resources/check-in-questions'
+    | '/resources/never-have-i-ever'
     | '/resources/would-you-rather'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
@@ -368,6 +378,7 @@ export interface FileRouteTypes {
     | '/join/$code'
     | '/resources/36-questions'
     | '/resources/check-in-questions'
+    | '/resources/never-have-i-ever'
     | '/resources/would-you-rather'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
@@ -402,6 +413,7 @@ export interface FileRouteTypes {
     | '/join/$code'
     | '/resources/36-questions'
     | '/resources/check-in-questions'
+    | '/resources/never-have-i-ever'
     | '/resources/would-you-rather'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
@@ -429,6 +441,7 @@ export interface RootRouteChildren {
   JoinCodeRoute: typeof JoinCodeRoute
   Resources36QuestionsRoute: typeof Resources36QuestionsRoute
   ResourcesCheckInQuestionsRoute: typeof ResourcesCheckInQuestionsRoute
+  ResourcesNeverHaveIEverRoute: typeof ResourcesNeverHaveIEverRoute
   ResourcesWouldYouRatherRoute: typeof ResourcesWouldYouRatherRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -506,6 +519,13 @@ declare module '@tanstack/react-router' {
       path: '/resources/would-you-rather'
       fullPath: '/resources/would-you-rather'
       preLoaderRoute: typeof ResourcesWouldYouRatherRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resources/never-have-i-ever': {
+      id: '/resources/never-have-i-ever'
+      path: '/resources/never-have-i-ever'
+      fullPath: '/resources/never-have-i-ever'
+      preLoaderRoute: typeof ResourcesNeverHaveIEverRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/resources/check-in-questions': {
@@ -724,6 +744,7 @@ const rootRouteChildren: RootRouteChildren = {
   JoinCodeRoute: JoinCodeRoute,
   Resources36QuestionsRoute: Resources36QuestionsRoute,
   ResourcesCheckInQuestionsRoute: ResourcesCheckInQuestionsRoute,
+  ResourcesNeverHaveIEverRoute: ResourcesNeverHaveIEverRoute,
   ResourcesWouldYouRatherRoute: ResourcesWouldYouRatherRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
