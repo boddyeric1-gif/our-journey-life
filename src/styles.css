@@ -423,31 +423,59 @@
 }
 
 
-/* Primary CTA — properly cushioned pill with elevation and inner highlight. */
+/* Primary CTA — warm candlelight pill, subtle inner highlight, deep drop. */
 @utility btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
   border-radius: 9999px;
-  background-color: var(--ink);
+  background: var(--gradient-ink);
   color: var(--canvas);
   font-weight: 500;
   font-size: 0.9375rem;
   padding: 0.875rem 1.5rem;
+  letter-spacing: 0.005em;
   box-shadow:
-    0 1px 0 0 oklch(1 0 0 / 0.4) inset,
+    0 1px 0 0 oklch(1 0 0 / 0.55) inset,
+    0 -1px 0 0 oklch(0 0 0 / 0.12) inset,
     0 1px 2px 0 oklch(0 0 0 / 0.4),
-    0 12px 28px -14px oklch(0 0 0 / 0.6);
+    0 14px 32px -14px oklch(0 0 0 / 0.6),
+    0 20px 60px -30px oklch(0.71 0.075 32 / 0.35);
   transition: transform var(--duration-quick) var(--ease-quiet),
               box-shadow var(--duration-quick) var(--ease-quiet),
-              opacity var(--duration-quick) var(--ease-quiet);
-  &:hover { opacity: 0.94; }
+              filter var(--duration-quick) var(--ease-quiet);
+  &:hover { filter: brightness(1.03); }
   &:active { transform: scale(0.985); box-shadow:
-    0 1px 0 0 oklch(1 0 0 / 0.3) inset,
+    0 1px 0 0 oklch(1 0 0 / 0.35) inset,
     0 1px 2px 0 oklch(0 0 0 / 0.35),
     0 4px 12px -6px oklch(0 0 0 / 0.5);
   }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+/* Rose CTA — signature warm gradient for the moments that matter most. */
+@utility btn-rose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  background: var(--gradient-rose);
+  color: oklch(0.98 0.02 75);
+  font-weight: 500;
+  font-size: 0.9375rem;
+  padding: 0.875rem 1.5rem;
+  border: 1px solid oklch(1 0 0 / 0.12);
+  box-shadow:
+    0 1px 0 0 oklch(1 0 0 / 0.3) inset,
+    0 -1px 0 0 oklch(0 0 0 / 0.2) inset,
+    0 14px 32px -14px oklch(0.66 0.085 25 / 0.55),
+    0 24px 60px -28px oklch(0.71 0.075 32 / 0.5);
+  transition: transform var(--duration-quick) var(--ease-quiet),
+              filter var(--duration-quick) var(--ease-quiet);
+  &:hover { filter: brightness(1.05); }
+  &:active { transform: scale(0.985); }
 }
 
 /* Ghost CTA — hairline border, sits on canvas-deep. */
@@ -457,16 +485,18 @@
   justify-content: center;
   gap: 0.5rem;
   border-radius: 9999px;
-  background-color: var(--canvas-deep);
+  background-color: oklch(0.31 0.055 312 / 0.6);
   color: var(--ink);
   font-weight: 500;
   font-size: 0.9375rem;
   padding: 0.875rem 1.5rem;
-  border: 1px solid oklch(1 0 0 / 0.08);
-  box-shadow: 0 1px 0 0 oklch(1 0 0 / 0.04) inset;
+  border: 1px solid oklch(1 0 0 / 0.09);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 1px 0 0 oklch(1 0 0 / 0.05) inset;
   transition: transform var(--duration-quick) var(--ease-quiet),
               background-color var(--duration-quick) var(--ease-quiet);
-  &:hover { background-color: oklch(0.31 0.055 312 / 0.8); }
+  &:hover { background-color: oklch(0.34 0.055 312 / 0.85); }
   &:active { transform: scale(0.985); }
 }
+
 
