@@ -194,11 +194,12 @@ function HeroFrame({
 }: { eyebrow: string; tone: "rust" | "quiet"; children: React.ReactNode }) {
   return (
     <section
-      className={`mx-5 ${tone === "rust" ? "surface-card-lifted seal-top" : "surface-card"} p-6 relative`}
+      className={`mx-5 ${tone === "rust" ? "surface-card-lifted seal-top candle-glow" : "surface-card"} p-6 relative animate-rise`}
     >
-      <p className="t-eyebrow mb-3">{eyebrow}</p>
-      {children}
+      <p className="t-eyebrow mb-3 relative">{eyebrow}</p>
+      <div className="relative">{children}</div>
     </section>
   );
 }
+
 

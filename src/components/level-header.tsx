@@ -37,8 +37,9 @@ export function LevelHeader({
   onOpenLetters?: () => void;
 }) {
   const lvl = levelFromXp(totalXp);
+  const pct = Math.round(lvl.percent * 100);
   return (
-    <header className="px-5 pt-6 pb-2">
+    <header className="px-5 pt-6 pb-2 animate-rise">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
         <h1 className="min-w-0 truncate font-serif text-2xl text-ink leading-tight">
           {pickGreeting(displayName)}
@@ -50,29 +51,36 @@ export function LevelHeader({
               aria-label={unreadLetters > 0
                 ? `Open letters — ${unreadLetters} unread`
                 : "Open letters"}
-              className="relative h-9 w-9 inline-flex items-center justify-center rounded-full border border-border bg-card text-ink-soft hover:text-ink hover:bg-canvas-deep transition focus:outline-none focus-visible:ring-2 focus-visible:ring-rust/60"
+              className="tap relative h-10 w-10 inline-flex items-center justify-center rounded-full border border-border bg-card/80 backdrop-blur-sm text-ink-soft hover:text-ink hover:bg-canvas-deep transition shadow-[0_1px_0_0_oklch(1_0_0_/_0.06)_inset,0_6px_18px_-8px_oklch(0_0_0/0.5)]"
             >
-              <Mail className="h-4 w-4" aria-hidden />
+              <Mail className="h-[16px] w-[16px]" aria-hidden />
               {unreadLetters > 0 && (
                 <span
-                  className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-rust ring-2 ring-canvas"
+                  className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-rust ring-2 ring-canvas shadow-[0_0_8px_oklch(0.71_0.075_32/0.7)]"
                   aria-hidden
                 />
               )}
             </button>
           )}
-          <div className="text-right">
-            <p className="text-[10px] uppercase tracking-[0.14em] text-ink-mute">Level</p>
-            <p className="font-serif text-xl text-ink leading-none">{lvl.level}</p>
-            <p className="text-[10px] text-ink-mute mt-0.5">{Math.round(lvl.percent * 100)}%</p>
+          {/* Level chip — small ring showing progress. */}
+          <div
+            className="relative h-10 w-10 rounded-full grid place-items-center"
+            style={{
+              background: `conic-gradient(oklch(0.71 0.075 32 / 0.9) ${pct}%, oklch(1 0 0 / 0.08) ${pct}%)`,
+            }}
+            aria-label={`Level ${lvl.level}, ${pct}% to next`}
+          >
+            <div className="absolute inset-[2px] rounded-full bg-card grid place-items-center">
+              <span className="font-serif text-[15px] text-ink leading-none">{lvl.level}</span>
+            </div>
           </div>
         </div>
       </div>
 
       {rhythm && rhythm.length > 0 && (
-        <div className="mt-3 flex items-center gap-3">
+        <div className="mt-4 flex items-center gap-3">
           <RhythmRing days={rhythm} paired={paired} />
-          <span className="text-[11px] uppercase tracking-[0.14em] text-ink-mute">
+          <span className="text-[11px] uppercase tracking-[0.16em] text-ink-mute">
             Last fortnight
           </span>
         </div>
@@ -80,3 +88,4 @@ export function LevelHeader({
     </header>
   );
 }
+

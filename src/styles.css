@@ -77,22 +77,37 @@
   --duration-soft: 280ms;
   --duration-quick: 160ms;
 
+  /* Signature gradients — the visual glue of Soft Dusk. */
+  --gradient-rose:
+    linear-gradient(135deg, oklch(0.74 0.09 32) 0%, oklch(0.66 0.10 22) 55%, oklch(0.58 0.09 15) 100%);
+  --gradient-candle:
+    radial-gradient(120% 100% at 50% 0%, oklch(0.82 0.09 80 / 0.35) 0%, transparent 60%);
+  --gradient-hero:
+    linear-gradient(180deg, oklch(0.34 0.055 312) 0%, oklch(0.27 0.05 312) 100%);
+  --gradient-ink:
+    linear-gradient(180deg, oklch(0.96 0.045 75) 0%, oklch(0.86 0.045 65) 100%);
+
   /* Elevation tuned for the plum canvas — deep, narrow, faintly rose-tinted. */
   --shadow-soft:
     0 1px 0 0 oklch(1 0 0 / 0.05) inset,
     0 1px 2px -1px oklch(0 0 0 / 0.5),
     0 8px 24px -16px oklch(0 0 0 / 0.55);
   --shadow-lifted:
-    0 1px 0 0 oklch(1 0 0 / 0.06) inset,
-    0 2px 4px -2px oklch(0 0 0 / 0.55),
-    0 18px 40px -22px oklch(0 0 0 / 0.6),
-    0 30px 80px -40px oklch(0.71 0.075 32 / 0.18);
-  --shadow-floating:
     0 1px 0 0 oklch(1 0 0 / 0.07) inset,
+    0 2px 4px -2px oklch(0 0 0 / 0.55),
+    0 22px 48px -24px oklch(0 0 0 / 0.65),
+    0 40px 90px -46px oklch(0.71 0.075 32 / 0.22);
+  --shadow-floating:
+    0 1px 0 0 oklch(1 0 0 / 0.08) inset,
     0 4px 10px -4px oklch(0 0 0 / 0.55),
     0 30px 80px -32px oklch(0 0 0 / 0.7),
-    0 40px 120px -50px oklch(0.71 0.075 32 / 0.22);
+    0 40px 120px -50px oklch(0.71 0.075 32 / 0.24);
+  --shadow-glow-rose:
+    0 0 0 1px oklch(0.71 0.075 32 / 0.28),
+    0 10px 30px -12px oklch(0.71 0.075 32 / 0.45),
+    0 30px 80px -30px oklch(0.66 0.085 25 / 0.35);
 }
+
 
 :root {
   --radius: 1.25rem;
@@ -200,7 +215,7 @@
       0 0 18px -2px oklch(0.71 0.075 32 / 0.4);
     border-radius: inherit;
   }
-  /* Candlelit grain — a faint warm bloom from below, with a subtle bottom vignette. */
+  /* Candlelit atmosphere — layered bloom with a soft breathing pulse. */
   body::before {
     content: "";
     position: fixed;
@@ -208,9 +223,11 @@
     pointer-events: none;
     z-index: 0;
     background:
-      radial-gradient(60% 50% at 50% 110%, oklch(0.71 0.075 32 / 0.18), transparent 70%),
-      radial-gradient(80% 60% at 50% -10%, oklch(0.62 0.045 295 / 0.13), transparent 70%),
-      linear-gradient(180deg, transparent 70%, oklch(0.15 0.035 312 / 0.35) 100%);
+      radial-gradient(55% 45% at 50% 108%, oklch(0.71 0.075 32 / 0.22), transparent 72%),
+      radial-gradient(40% 30% at 15% 15%, oklch(0.82 0.09 80 / 0.10), transparent 70%),
+      radial-gradient(80% 60% at 50% -10%, oklch(0.62 0.045 295 / 0.14), transparent 70%),
+      linear-gradient(180deg, transparent 68%, oklch(0.14 0.035 312 / 0.4) 100%);
+    animation: candle-breathe 9s ease-in-out infinite;
   }
   body::after {
     content: "";
@@ -219,11 +236,20 @@
     pointer-events: none;
     z-index: 0;
     background-image:
-      radial-gradient(oklch(0.92 0.045 75 / 0.035) 1px, transparent 1px);
+      radial-gradient(oklch(0.92 0.045 75 / 0.04) 1px, transparent 1px);
     background-size: 3px 3px;
-    opacity: 0.6;
+    opacity: 0.55;
+    mix-blend-mode: overlay;
+  }
+  @keyframes candle-breathe {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.86; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    body::before { animation: none; }
   }
 }
+
 
 @layer utilities {
   .text-balance { text-wrap: balance; }
@@ -291,7 +317,46 @@
     [data-reveal="enter"] .reveal-theirs,
     [data-reveal="enter"] .reveal-seal-line { animation: none; }
   }
+
+  /* Ornament — a hairline flanked by a rose diamond. */
+  .divider-ornate {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: oklch(0.71 0.075 32 / 0.7);
+  }
+  .divider-ornate::before,
+  .divider-ornate::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, oklch(1 0 0 / 0.12), transparent);
+  }
+
+  /* Rose text gradient for accent italics. */
+  .text-rose-gradient {
+    background: var(--gradient-rose);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Gentle rise-in on mount. */
+  @keyframes rise-in {
+    0%   { opacity: 0; transform: translateY(6px); }
+    100% { opacity: 1; transform: none; }
+  }
+  .animate-rise { animation: rise-in 600ms var(--ease-quiet) both; }
+  @media (prefers-reduced-motion: reduce) { .animate-rise { animation: none; } }
+
+  /* Slow flicker — for the wax seal accent. */
+  @keyframes seal-flicker {
+    0%, 100% { opacity: 1; }
+    45%      { opacity: 0.75; }
+    55%      { opacity: 0.92; }
+  }
 }
+
 
 @utility surface-card {
   background-color: var(--color-card);
@@ -320,7 +385,7 @@
   border: 1px solid oklch(1 0 0 / 0.05);
 }
 
-/* Wax-seal top edge for hero/premium surfaces. Apply on the card itself. */
+/* Wax-seal top edge — subtle flicker draws the eye. */
 @utility seal-top {
   position: relative;
   overflow: hidden;
@@ -333,45 +398,84 @@
       90deg,
       transparent 0%,
       oklch(0.71 0.075 32 / 0.9) 20%,
-      oklch(0.66 0.085 25 / 0.95) 50%,
+      oklch(0.82 0.09 80 / 0.95) 50%,
       oklch(0.71 0.075 32 / 0.9) 80%,
       transparent 100%
     );
+    pointer-events: none;
+    animation: seal-flicker 6s ease-in-out infinite;
+  }
+  &::after {
+    content: "";
+    position: absolute;
+    top: -40%; left: 50%;
+    width: 60%;
+    aspect-ratio: 2 / 1;
+    transform: translateX(-50%);
+    background: var(--gradient-candle);
+    filter: blur(20px);
     pointer-events: none;
   }
 }
 
 @utility candle-glow {
-  box-shadow:
-    0 0 0 1px oklch(0.71 0.075 32 / 0.25),
-    0 12px 40px -12px oklch(0.71 0.075 32 / 0.35);
+  box-shadow: var(--shadow-glow-rose);
 }
 
-/* Primary CTA — properly cushioned pill with elevation and inner highlight. */
+
+/* Primary CTA — warm candlelight pill, subtle inner highlight, deep drop. */
 @utility btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
   border-radius: 9999px;
-  background-color: var(--ink);
+  background: var(--gradient-ink);
   color: var(--canvas);
   font-weight: 500;
   font-size: 0.9375rem;
   padding: 0.875rem 1.5rem;
+  letter-spacing: 0.005em;
   box-shadow:
-    0 1px 0 0 oklch(1 0 0 / 0.4) inset,
+    0 1px 0 0 oklch(1 0 0 / 0.55) inset,
+    0 -1px 0 0 oklch(0 0 0 / 0.12) inset,
     0 1px 2px 0 oklch(0 0 0 / 0.4),
-    0 12px 28px -14px oklch(0 0 0 / 0.6);
+    0 14px 32px -14px oklch(0 0 0 / 0.6),
+    0 20px 60px -30px oklch(0.71 0.075 32 / 0.35);
   transition: transform var(--duration-quick) var(--ease-quiet),
               box-shadow var(--duration-quick) var(--ease-quiet),
-              opacity var(--duration-quick) var(--ease-quiet);
-  &:hover { opacity: 0.94; }
+              filter var(--duration-quick) var(--ease-quiet);
+  &:hover { filter: brightness(1.03); }
   &:active { transform: scale(0.985); box-shadow:
-    0 1px 0 0 oklch(1 0 0 / 0.3) inset,
+    0 1px 0 0 oklch(1 0 0 / 0.35) inset,
     0 1px 2px 0 oklch(0 0 0 / 0.35),
     0 4px 12px -6px oklch(0 0 0 / 0.5);
   }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+/* Rose CTA — signature warm gradient for the moments that matter most. */
+@utility btn-rose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  background: var(--gradient-rose);
+  color: oklch(0.98 0.02 75);
+  font-weight: 500;
+  font-size: 0.9375rem;
+  padding: 0.875rem 1.5rem;
+  border: 1px solid oklch(1 0 0 / 0.12);
+  box-shadow:
+    0 1px 0 0 oklch(1 0 0 / 0.3) inset,
+    0 -1px 0 0 oklch(0 0 0 / 0.2) inset,
+    0 14px 32px -14px oklch(0.66 0.085 25 / 0.55),
+    0 24px 60px -28px oklch(0.71 0.075 32 / 0.5);
+  transition: transform var(--duration-quick) var(--ease-quiet),
+              filter var(--duration-quick) var(--ease-quiet);
+  &:hover { filter: brightness(1.05); }
+  &:active { transform: scale(0.985); }
 }
 
 /* Ghost CTA — hairline border, sits on canvas-deep. */
@@ -381,16 +485,18 @@
   justify-content: center;
   gap: 0.5rem;
   border-radius: 9999px;
-  background-color: var(--canvas-deep);
+  background-color: oklch(0.31 0.055 312 / 0.6);
   color: var(--ink);
   font-weight: 500;
   font-size: 0.9375rem;
   padding: 0.875rem 1.5rem;
-  border: 1px solid oklch(1 0 0 / 0.08);
-  box-shadow: 0 1px 0 0 oklch(1 0 0 / 0.04) inset;
+  border: 1px solid oklch(1 0 0 / 0.09);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 1px 0 0 oklch(1 0 0 / 0.05) inset;
   transition: transform var(--duration-quick) var(--ease-quiet),
               background-color var(--duration-quick) var(--ease-quiet);
-  &:hover { background-color: oklch(0.31 0.055 312 / 0.8); }
+  &:hover { background-color: oklch(0.34 0.055 312 / 0.85); }
   &:active { transform: scale(0.985); }
 }
+
 
