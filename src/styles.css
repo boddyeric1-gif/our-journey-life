@@ -317,7 +317,46 @@
     [data-reveal="enter"] .reveal-theirs,
     [data-reveal="enter"] .reveal-seal-line { animation: none; }
   }
+
+  /* Ornament — a hairline flanked by a rose diamond. */
+  .divider-ornate {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: oklch(0.71 0.075 32 / 0.7);
+  }
+  .divider-ornate::before,
+  .divider-ornate::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, oklch(1 0 0 / 0.12), transparent);
+  }
+
+  /* Rose text gradient for accent italics. */
+  .text-rose-gradient {
+    background: var(--gradient-rose);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Gentle rise-in on mount. */
+  @keyframes rise-in {
+    0%   { opacity: 0; transform: translateY(6px); }
+    100% { opacity: 1; transform: none; }
+  }
+  .animate-rise { animation: rise-in 600ms var(--ease-quiet) both; }
+  @media (prefers-reduced-motion: reduce) { .animate-rise { animation: none; } }
+
+  /* Slow flicker — for the wax seal accent. */
+  @keyframes seal-flicker {
+    0%, 100% { opacity: 1; }
+    45%      { opacity: 0.75; }
+    55%      { opacity: 0.92; }
+  }
 }
+
 
 @utility surface-card {
   background-color: var(--color-card);
@@ -346,7 +385,7 @@
   border: 1px solid oklch(1 0 0 / 0.05);
 }
 
-/* Wax-seal top edge for hero/premium surfaces. Apply on the card itself. */
+/* Wax-seal top edge — subtle flicker draws the eye. */
 @utility seal-top {
   position: relative;
   overflow: hidden;
@@ -359,19 +398,30 @@
       90deg,
       transparent 0%,
       oklch(0.71 0.075 32 / 0.9) 20%,
-      oklch(0.66 0.085 25 / 0.95) 50%,
+      oklch(0.82 0.09 80 / 0.95) 50%,
       oklch(0.71 0.075 32 / 0.9) 80%,
       transparent 100%
     );
+    pointer-events: none;
+    animation: seal-flicker 6s ease-in-out infinite;
+  }
+  &::after {
+    content: "";
+    position: absolute;
+    top: -40%; left: 50%;
+    width: 60%;
+    aspect-ratio: 2 / 1;
+    transform: translateX(-50%);
+    background: var(--gradient-candle);
+    filter: blur(20px);
     pointer-events: none;
   }
 }
 
 @utility candle-glow {
-  box-shadow:
-    0 0 0 1px oklch(0.71 0.075 32 / 0.25),
-    0 12px 40px -12px oklch(0.71 0.075 32 / 0.35);
+  box-shadow: var(--shadow-glow-rose);
 }
+
 
 /* Primary CTA — properly cushioned pill with elevation and inner highlight. */
 @utility btn-primary {
