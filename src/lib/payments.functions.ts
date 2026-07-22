@@ -145,7 +145,7 @@ export const getCoupleEntitlements = createServerFn({ method: 'GET' })
     }
 
     // Fetch couple members' trial timestamps (RLS: partner readable via shares_couple_with).
-    const [{ data: rows }, { data: xpVal }, { data: daysVal }, tcUnlockedRes, atlasUnlockedRes, { data: memberProfiles }] = await Promise.all([
+    const [{ data: rows }, { data: xpVal }, { data: daysVal }, tcUnlockedRes, atlasUnlockedRes, { data: members }] = await Promise.all([
       supabase
         .from('couple_entitlements')
         .select('product, status')
@@ -157,9 +157,19 @@ export const getCoupleEntitlements = createServerFn({ method: 'GET' })
       supabase.rpc('couple_unlocked', { _couple_id: coupleId, _product: 'the_atlas' }),
       supabase
         .from('couple_members')
-        .select('user_id, profiles!inner(atlas_trial_started_at, timecapsule_trial_started_at)')
+        .select('user_id')
         .eq('couple_id', coupleId),
     ]);
+
+    const memberIds = (members ?? []).map(m => m.user_id);
+    const { data: memberProfiles } = memberIds.length
+      ? await supabase
+          .from('profiles')
+          .select('id, atlas_trial_started_at, timecapsule_trial_started_at')
+          .in('id', memberIds)
+      : { data: [] as Array<{ id: string; atlas_trial_started_at: string | null; timecapsule_trial_started_at: string | null }> };
+
+
 
     const set = new Set((rows ?? []).map(r => r.product as string));
     const paid = { timeCapsule: set.has('time_capsule'), atlas: set.has('the_atlas') };
