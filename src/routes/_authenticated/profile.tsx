@@ -266,6 +266,8 @@ function ProfilePage() {
           onSave={(next) => goalsMutation.mutate(next)}
         />
       )}
+
+      {showInstall && <PwaInstallTrigger onClose={() => setShowInstall(false)} />}
     </AppShell>
   );
 }
