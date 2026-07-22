@@ -73,7 +73,7 @@ function Landing() {
       </header>
 
       <section className="relative flex-1 px-6 pt-14 pb-16 max-w-xl mx-auto w-full">
-        <p className="text-xs uppercase tracking-[0.22em] text-ink-mute animate-rise">Volume One · For couples</p>
+        <p className="text-xs uppercase tracking-[0.22em] text-ink-mute animate-rise">Volume One — For everyone</p>
         <h1 className="mt-5 font-serif text-[46px] sm:text-[54px] leading-[1.03] text-ink text-balance animate-rise" style={{ animationDelay: "80ms" }}>
           A quieter way <em className="serif-italic text-rose-gradient">to grow</em> closer.
         </h1>
