@@ -118,22 +118,34 @@ export const getCoupleEntitlements = createServerFn({ method: 'GET' })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const { computeCoupleProgress } = await import('@/lib/coupleLevel');
+    const { trialSnapshot } = await import('@/lib/trial.functions');
+
     const { data: profile } = await supabase
-      .from('profiles').select('current_couple_id').eq('id', userId).maybeSingle();
+      .from('profiles')
+      .select('current_couple_id, atlas_trial_started_at, timecapsule_trial_started_at')
+      .eq('id', userId)
+      .maybeSingle();
     const coupleId = profile?.current_couple_id as string | null | undefined;
+
+    const myAtlasTrial = trialSnapshot(profile?.atlas_trial_started_at ?? null);
+    const myTimeCapsuleTrial = trialSnapshot(profile?.timecapsule_trial_started_at ?? null);
+
     if (!coupleId) {
       return {
         coupleId: null,
         timeCapsule: false,
         atlas: false,
         paid: { timeCapsule: false, atlas: false },
+        trials: {
+          atlas: { mine: myAtlasTrial, coupleActive: myAtlasTrial.active, eligible: !myAtlasTrial.used },
+          timeCapsule: { mine: myTimeCapsuleTrial, coupleActive: myTimeCapsuleTrial.active, eligible: !myTimeCapsuleTrial.used },
+        },
         progress: null as ReturnType<typeof computeCoupleProgress> | null,
       };
     }
 
-    // Paid entitlements, couple progress, and authoritative unlock checks
-    // (which include the admin-couple bypass) in parallel.
-    const [{ data: rows }, { data: xpVal }, { data: daysVal }, tcUnlockedRes, atlasUnlockedRes] = await Promise.all([
+    // Fetch couple members' trial timestamps (RLS: partner readable via shares_couple_with).
+    const [{ data: rows }, { data: xpVal }, { data: daysVal }, tcUnlockedRes, atlasUnlockedRes, { data: memberProfiles }] = await Promise.all([
       supabase
         .from('couple_entitlements')
         .select('product, status')
@@ -143,6 +155,10 @@ export const getCoupleEntitlements = createServerFn({ method: 'GET' })
       supabase.rpc('couple_shared_days', { _couple_id: coupleId }),
       supabase.rpc('couple_unlocked', { _couple_id: coupleId, _product: 'time_capsule' }),
       supabase.rpc('couple_unlocked', { _couple_id: coupleId, _product: 'the_atlas' }),
+      supabase
+        .from('couple_members')
+        .select('user_id, profiles!inner(atlas_trial_started_at, timecapsule_trial_started_at)')
+        .eq('couple_id', coupleId),
     ]);
 
     const set = new Set((rows ?? []).map(r => r.product as string));
@@ -152,17 +168,29 @@ export const getCoupleEntitlements = createServerFn({ method: 'GET' })
       the_atlas: paid.atlas,
     });
 
-    // Authoritative unlock = DB function result (admin bypass + paid + earned).
-    // Fall back to the locally-computed progress only if the RPC returned null.
-    const timeCapsule = tcUnlockedRes.data ?? progress.unlocks.time_capsule;
-    const atlas = atlasUnlockedRes.data ?? progress.unlocks.the_atlas;
+    let atlasCoupleActive = false;
+    let timeCapsuleCoupleActive = false;
+    for (const m of memberProfiles ?? []) {
+      const p = (m as unknown as { profiles: { atlas_trial_started_at: string | null; timecapsule_trial_started_at: string | null } }).profiles;
+      if (trialSnapshot(p?.atlas_trial_started_at).active) atlasCoupleActive = true;
+      if (trialSnapshot(p?.timecapsule_trial_started_at).active) timeCapsuleCoupleActive = true;
+    }
+
+    // Authoritative unlock includes admin bypass + paid + earned + trial (via DB fn).
+    const timeCapsule = tcUnlockedRes.data ?? (progress.unlocks.time_capsule || timeCapsuleCoupleActive);
+    const atlas = atlasUnlockedRes.data ?? (progress.unlocks.the_atlas || atlasCoupleActive);
 
     return {
       coupleId,
       timeCapsule,
       atlas,
       paid,
+      trials: {
+        atlas: { mine: myAtlasTrial, coupleActive: atlasCoupleActive, eligible: !myAtlasTrial.used && !paid.atlas },
+        timeCapsule: { mine: myTimeCapsuleTrial, coupleActive: timeCapsuleCoupleActive, eligible: !myTimeCapsuleTrial.used && !paid.timeCapsule },
+      },
       progress,
     };
   });
+
 
