@@ -59,18 +59,28 @@ function Landing() {
 
   return (
     <main className="relative z-10 min-h-[100svh] flex flex-col overflow-hidden">
-      {/* Ambient hero glow — layered behind everything. */}
+      {/* Ambient cinematic bloom — layered auras behind content. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 h-[520px] w-[520px] rounded-full opacity-60 blur-3xl"
-        style={{ background: "radial-gradient(closest-side, oklch(0.71 0.075 32 / 0.35), transparent 70%)" }}
-      />
+        className="pointer-events-none absolute inset-0 -z-0 overflow-hidden"
+      >
+        <div className="aura-blob aura-drift absolute -top-40 left-1/2 -translate-x-1/2 h-[560px] w-[560px] rounded-full opacity-60 blur-3xl"
+          style={{ background: "radial-gradient(closest-side, oklch(0.71 0.075 32 / 0.35), transparent 70%)" }}
+        />
+        <div className="aura-blob aura-drift-slow absolute top-1/3 -right-32 h-[420px] w-[420px] rounded-full opacity-30 blur-3xl"
+          style={{ background: "radial-gradient(closest-side, oklch(0.82 0.09 80 / 0.22), transparent 70%)" }}
+        />
+        <div className="aura-blob aura-drift absolute bottom-0 -left-24 h-[420px] w-[420px] rounded-full opacity-35 blur-3xl"
+          style={{ background: "radial-gradient(closest-side, oklch(0.62 0.045 295 / 0.30), transparent 70%)", animationDelay: "-5s" }}
+        />
+      </div>
       <header className="relative px-6 pt-8 flex items-center justify-between">
         <p className="serif-italic text-rust text-xl tracking-tight">Our Journey</p>
         <Link to="/auth" className="tap text-sm text-ink-soft hover:text-ink underline-offset-4 hover:underline">
           Sign in
         </Link>
       </header>
+
 
       <section className="relative flex-1 px-6 pt-14 pb-16 max-w-xl mx-auto w-full">
         <p className="text-xs uppercase tracking-[0.22em] text-ink-mute animate-rise">Volume One — For everyone</p>
@@ -125,7 +135,7 @@ function Landing() {
 
 function FeatureRow({ num, title, children }: { num: string; title: string; children: React.ReactNode }) {
   return (
-    <div className="surface-card p-5 flex gap-4 hover:bg-card/80 transition tap">
+    <div className="surface-card glow-hover p-5 flex gap-4 tap">
       <span className="serif-italic text-rose-gradient text-2xl leading-none mt-1 shrink-0">{num}</span>
       <div className="min-w-0">
         <h3 className="font-serif text-lg text-ink">{title}</h3>
@@ -134,4 +144,5 @@ function FeatureRow({ num, title, children }: { num: string; title: string; chil
     </div>
   );
 }
+
 
