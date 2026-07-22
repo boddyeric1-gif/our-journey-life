@@ -13,6 +13,8 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { AudioProvider } from "@/components/audio-provider";
+import { AudioToggle } from "@/components/audio-toggle";
 
 function NotFoundComponent() {
   return (
