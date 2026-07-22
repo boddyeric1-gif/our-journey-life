@@ -8,7 +8,8 @@ import { AppShell } from "@/components/app-shell";
 import { RouteError, RouteNotFound } from "@/components/route-boundaries";
 import { HeaderSkeleton } from "@/components/skeletons";
 import { supabase } from "@/integrations/supabase/client";
-import { Flame, LogOut, Snowflake, Heart, X, Compass, Pencil } from "lucide-react";
+import { Flame, LogOut, Snowflake, Heart, X, Compass, Pencil, Smartphone } from "lucide-react";
+import { PwaInstallTrigger } from "@/components/pwa-install-prompt";
 import { levelFromXp } from "@/lib/xp";
 import { COUPLE_UNLOCKS } from "@/lib/coupleLevel";
 import { toast } from "sonner";
@@ -47,6 +48,7 @@ function ProfilePage() {
 
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [editGoals, setEditGoals] = useState(false);
+  const [showInstall, setShowInstall] = useState(false);
 
   const q = useQuery({ queryKey: ["home-state"], queryFn: () => fetcher(), staleTime: 30_000 });
   const unpair = useMutation({
