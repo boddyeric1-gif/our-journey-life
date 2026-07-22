@@ -3,15 +3,18 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Home, Sparkles, Compass, User } from "lucide-react";
 import { getHomeState } from "@/lib/home.functions";
+import { AmbientAura } from "@/components/ambient-aura";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative z-10 min-h-[100svh] pb-28 max-w-xl mx-auto">
-      {children}
+      <AmbientAura variant="screen" />
+      <div className="relative z-10">{children}</div>
       <BottomTabs />
     </div>
   );
 }
+
 
 function BottomTabs() {
   const { pathname } = useLocation();

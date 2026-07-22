@@ -194,12 +194,26 @@ function HeroFrame({
 }: { eyebrow: string; tone: "rust" | "quiet"; children: React.ReactNode }) {
   return (
     <section
-      className={`mx-5 ${tone === "rust" ? "surface-card-lifted seal-top candle-glow" : "surface-card"} p-6 relative animate-rise`}
+      className={`mx-5 ${tone === "rust" ? "surface-card-lifted seal-top candle-glow" : "surface-card"} glow-hover p-6 relative animate-rise overflow-hidden`}
     >
+      {tone === "rust" && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 -z-0"
+        >
+          <div className="aura-blob aura-drift-slow absolute -top-16 -right-16 h-56 w-56 rounded-full opacity-40 blur-3xl"
+            style={{ background: "radial-gradient(closest-side, oklch(0.71 0.075 32 / 0.35), transparent 70%)" }}
+          />
+          <div className="aura-blob aura-drift absolute -bottom-20 -left-16 h-52 w-52 rounded-full opacity-30 blur-3xl"
+            style={{ background: "radial-gradient(closest-side, oklch(0.82 0.09 80 / 0.22), transparent 70%)", animationDelay: "-4s" }}
+          />
+        </div>
+      )}
       <p className="t-eyebrow mb-3 relative">{eyebrow}</p>
       <div className="relative">{children}</div>
     </section>
   );
 }
+
 
 
