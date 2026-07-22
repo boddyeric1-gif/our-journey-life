@@ -4,6 +4,8 @@ import { Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
+import { AmbientAura } from "@/components/ambient-aura";
+
 
 type Mode = "signin" | "signup";
 
@@ -129,11 +131,13 @@ function AuthPage() {
 
   if (emailPending) {
     return (
-      <main className="relative z-10 min-h-[100svh] flex flex-col">
-        <header className="px-6 pt-8">
+      <main className="relative z-10 min-h-[100svh] flex flex-col overflow-hidden">
+        <AmbientAura variant="hero" />
+        <header className="relative px-6 pt-8">
           <Link to="/" className="serif-italic text-rust text-xl">Our Journey</Link>
         </header>
-        <section className="flex-1 px-6 pt-16 pb-12 max-w-md mx-auto w-full flex flex-col items-center text-center">
+        <section className="relative flex-1 px-6 pt-16 pb-12 max-w-md mx-auto w-full flex flex-col items-center text-center animate-rise">
+
           <div className="w-14 h-14 rounded-full bg-card border border-border flex items-center justify-center">
             <Mail className="w-6 h-6 text-rust" aria-hidden />
           </div>
@@ -161,13 +165,15 @@ function AuthPage() {
   }
 
   return (
-    <main className="relative z-10 min-h-[100svh] flex flex-col">
-      <header className="px-6 pt-8">
+    <main className="relative z-10 min-h-[100svh] flex flex-col overflow-hidden">
+      <AmbientAura variant="hero" />
+      <header className="relative px-6 pt-8">
         <Link to="/" className="serif-italic text-rust text-xl">Our Journey</Link>
       </header>
 
 
-      <section className="flex-1 px-6 pt-12 pb-12 max-w-md mx-auto w-full">
+      <section className="relative flex-1 px-6 pt-12 pb-12 max-w-md mx-auto w-full animate-rise">
+
         <p className="text-xs uppercase tracking-[0.18em] text-ink-mute">{mode === "signup" ? "Begin" : "Return"}</p>
         <h1 className="mt-4 font-serif text-4xl text-ink leading-tight">
           {mode === "signup" ? <>A quieter way <em className="serif-italic text-rust">to grow</em> closer.</> : <>Welcome <em className="serif-italic text-rust">back</em>.</>}
