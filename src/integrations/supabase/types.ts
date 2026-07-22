@@ -494,6 +494,33 @@ export type Database = {
           },
         ]
       }
+      pwa_install_events: {
+        Row: {
+          created_at: string
+          id: string
+          outcome: string
+          platform: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          outcome: string
+          platform?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          outcome?: string
+          platform?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       quest_categories: {
         Row: {
           accent: string | null
