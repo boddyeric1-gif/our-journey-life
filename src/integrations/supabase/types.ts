@@ -317,6 +317,24 @@ export type Database = {
           },
         ]
       }
+      feature_trial_usage: {
+        Row: {
+          email_hash: string
+          product: string
+          used_at: string
+        }
+        Insert: {
+          email_hash: string
+          product: string
+          used_at?: string
+        }
+        Update: {
+          email_hash?: string
+          product?: string
+          used_at?: string
+        }
+        Relationships: []
+      }
       insights: {
         Row: {
           body: string
@@ -432,6 +450,7 @@ export type Database = {
       profiles: {
         Row: {
           anniversary: string | null
+          atlas_trial_started_at: string | null
           avatar_url: string | null
           created_at: string
           current_couple_id: string | null
@@ -445,11 +464,13 @@ export type Database = {
             | Database["public"]["Enums"]["relationship_stage"]
             | null
           subscription_tier: Database["public"]["Enums"]["subscription_tier"]
+          timecapsule_trial_started_at: string | null
           timezone: string
           updated_at: string
         }
         Insert: {
           anniversary?: string | null
+          atlas_trial_started_at?: string | null
           avatar_url?: string | null
           created_at?: string
           current_couple_id?: string | null
@@ -463,11 +484,13 @@ export type Database = {
             | Database["public"]["Enums"]["relationship_stage"]
             | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
+          timecapsule_trial_started_at?: string | null
           timezone?: string
           updated_at?: string
         }
         Update: {
           anniversary?: string | null
+          atlas_trial_started_at?: string | null
           avatar_url?: string | null
           created_at?: string
           current_couple_id?: string | null
@@ -481,6 +504,7 @@ export type Database = {
             | Database["public"]["Enums"]["relationship_stage"]
             | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
+          timecapsule_trial_started_at?: string | null
           timezone?: string
           updated_at?: string
         }
@@ -854,6 +878,10 @@ export type Database = {
       }
       couple_has_admin: { Args: { _couple_id: string }; Returns: boolean }
       couple_has_entitlement: {
+        Args: { _couple_id: string; _product: string }
+        Returns: boolean
+      }
+      couple_has_trial: {
         Args: { _couple_id: string; _product: string }
         Returns: boolean
       }
