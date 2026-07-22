@@ -327,7 +327,88 @@ function AdminPage() {
             )}
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Trial testing</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6 text-sm">
+            <div className="space-y-2">
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">
+                Reset trial for an email
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Input
+                  className="flex-1 min-w-[220px]"
+                  placeholder="user@example.com"
+                  value={trialEmail}
+                  onChange={(e) => setTrialEmail(e.target.value)}
+                  type="email"
+                />
+                <select
+                  value={trialResetProduct}
+                  onChange={(e) => setTrialResetProduct(e.target.value as "the_atlas" | "time_capsule")}
+                  className="rounded-md border bg-background px-3 text-sm"
+                >
+                  <option value="the_atlas">The Atlas</option>
+                  <option value="time_capsule">Time Capsule</option>
+                </select>
+                <Button
+                  onClick={() => resetTrial.mutate()}
+                  disabled={!trialEmail.trim() || resetTrial.isPending}
+                >
+                  Reset
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Clears the permanent email record AND nulls the trial timestamp on any profile with that email.
+              </p>
+            </div>
+
+            <Separator />
+
+            <div className="space-y-2">
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">
+                Force a trial start (days ago) for testing expiry
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Input
+                  className="flex-1 min-w-[240px]"
+                  placeholder="user_id (uuid)"
+                  value={trialUserId}
+                  onChange={(e) => setTrialUserId(e.target.value)}
+                />
+                <select
+                  value={trialSetProduct}
+                  onChange={(e) => setTrialSetProduct(e.target.value as "the_atlas" | "time_capsule")}
+                  className="rounded-md border bg-background px-3 text-sm"
+                >
+                  <option value="the_atlas">The Atlas</option>
+                  <option value="time_capsule">Time Capsule</option>
+                </select>
+                <Input
+                  className="w-24"
+                  type="number"
+                  min={0}
+                  max={60}
+                  value={trialDaysAgo}
+                  onChange={(e) => setTrialDaysAgo(e.target.value)}
+                />
+                <Button
+                  onClick={() => setTrial.mutate()}
+                  disabled={!trialUserId.trim() || setTrial.isPending}
+                >
+                  Set
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Set days_ago to 6 for "1 day left", 7+ for expired.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
+
     </AppShell>
   );
 }
