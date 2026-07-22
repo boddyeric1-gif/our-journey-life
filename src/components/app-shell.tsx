@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Home, Sparkles, Compass, User } from "lucide-react";
 import { getHomeState } from "@/lib/home.functions";
 import { AmbientAura } from "@/components/ambient-aura";
+import { PwaInstallNudge } from "@/components/pwa-install-prompt";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
@@ -11,6 +12,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <AmbientAura variant="screen" />
       <div className="relative z-10">{children}</div>
       <BottomTabs />
+      <PwaInstallNudge />
     </div>
   );
 }

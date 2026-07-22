@@ -8,7 +8,8 @@ import { AppShell } from "@/components/app-shell";
 import { RouteError, RouteNotFound } from "@/components/route-boundaries";
 import { HeaderSkeleton } from "@/components/skeletons";
 import { supabase } from "@/integrations/supabase/client";
-import { Flame, LogOut, Snowflake, Heart, X, Compass, Pencil } from "lucide-react";
+import { Flame, LogOut, Snowflake, Heart, X, Compass, Pencil, Smartphone } from "lucide-react";
+import { PwaInstallTrigger } from "@/components/pwa-install-prompt";
 import { levelFromXp } from "@/lib/xp";
 import { COUPLE_UNLOCKS } from "@/lib/coupleLevel";
 import { toast } from "sonner";
@@ -47,6 +48,7 @@ function ProfilePage() {
 
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [editGoals, setEditGoals] = useState(false);
+  const [showInstall, setShowInstall] = useState(false);
 
   const q = useQuery({ queryKey: ["home-state"], queryFn: () => fetcher(), staleTime: 30_000 });
   const unpair = useMutation({
@@ -180,6 +182,11 @@ function ProfilePage() {
       </section>
 
       <section className="mx-5 mt-6 space-y-2">
+        <button onClick={() => setShowInstall(true)}
+          className="w-full inline-flex items-center justify-between rounded-2xl border border-border bg-card px-5 py-4 text-sm text-ink hover:bg-canvas-deep">
+          <span className="inline-flex items-center gap-2"><Smartphone className="h-4 w-4 text-rust" aria-hidden /> Add to Home Screen</span>
+          <span className="text-xs text-ink-mute">Feels like an app</span>
+        </button>
         {d.kind === "paired" && (
           <button onClick={() => setConfirmLeave(true)}
             className="w-full inline-flex items-center justify-between rounded-2xl border border-border bg-card px-5 py-4 text-sm text-ink hover:bg-canvas-deep">
@@ -193,6 +200,7 @@ function ProfilePage() {
           <LogOut className="h-4 w-4 text-ink-mute" aria-hidden />
         </button>
       </section>
+
 
       <section className="mx-5 mt-6 surface-card-quiet p-5">
         <h2 className="font-serif text-base text-ink">Customer support</h2>
@@ -258,6 +266,8 @@ function ProfilePage() {
           onSave={(next) => goalsMutation.mutate(next)}
         />
       )}
+
+      {showInstall && <PwaInstallTrigger onClose={() => setShowInstall(false)} />}
     </AppShell>
   );
 }
