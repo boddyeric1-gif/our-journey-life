@@ -29,6 +29,11 @@ import {
   revokeAdmin,
   inspectCouple,
 } from "@/lib/admin.functions";
+import {
+  adminResetFeatureTrial,
+  adminSetTrialStartedAt,
+} from "@/lib/trial.functions";
+
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -94,6 +99,35 @@ function AdminPage() {
     mutationFn: (id: string) => inspectFn({ data: { couple_id: id } }),
     onError: (e: Error) => toast.error(e.message),
   });
+
+  // --- Trial testing ---
+  const resetTrialFn = useServerFn(adminResetFeatureTrial);
+  const setTrialFn = useServerFn(adminSetTrialStartedAt);
+  const [trialEmail, setTrialEmail] = useState("");
+  const [trialResetProduct, setTrialResetProduct] = useState<"the_atlas" | "time_capsule">("the_atlas");
+  const [trialUserId, setTrialUserId] = useState("");
+  const [trialSetProduct, setTrialSetProduct] = useState<"the_atlas" | "time_capsule">("the_atlas");
+  const [trialDaysAgo, setTrialDaysAgo] = useState("6");
+
+  const resetTrial = useMutation({
+    mutationFn: () => resetTrialFn({ data: { email: trialEmail.trim(), product: trialResetProduct } }),
+    onSuccess: (r) => {
+      toast.success(`Reset — cleared ${r.resetUsers} profile timestamp(s).`);
+      qc.invalidateQueries({ queryKey: ["entitlements"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const setTrial = useMutation({
+    mutationFn: () => setTrialFn({
+      data: { user_id: trialUserId.trim(), product: trialSetProduct, days_ago: Number(trialDaysAgo) || 0 },
+    }),
+    onSuccess: () => {
+      toast.success("Trial timestamp set.");
+      qc.invalidateQueries({ queryKey: ["entitlements"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
 
   if (isLoading || !data) {
     return (
@@ -293,7 +327,88 @@ function AdminPage() {
             )}
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Trial testing</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6 text-sm">
+            <div className="space-y-2">
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">
+                Reset trial for an email
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Input
+                  className="flex-1 min-w-[220px]"
+                  placeholder="user@example.com"
+                  value={trialEmail}
+                  onChange={(e) => setTrialEmail(e.target.value)}
+                  type="email"
+                />
+                <select
+                  value={trialResetProduct}
+                  onChange={(e) => setTrialResetProduct(e.target.value as "the_atlas" | "time_capsule")}
+                  className="rounded-md border bg-background px-3 text-sm"
+                >
+                  <option value="the_atlas">The Atlas</option>
+                  <option value="time_capsule">Time Capsule</option>
+                </select>
+                <Button
+                  onClick={() => resetTrial.mutate()}
+                  disabled={!trialEmail.trim() || resetTrial.isPending}
+                >
+                  Reset
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Clears the permanent email record AND nulls the trial timestamp on any profile with that email.
+              </p>
+            </div>
+
+            <Separator />
+
+            <div className="space-y-2">
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">
+                Force a trial start (days ago) for testing expiry
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Input
+                  className="flex-1 min-w-[240px]"
+                  placeholder="user_id (uuid)"
+                  value={trialUserId}
+                  onChange={(e) => setTrialUserId(e.target.value)}
+                />
+                <select
+                  value={trialSetProduct}
+                  onChange={(e) => setTrialSetProduct(e.target.value as "the_atlas" | "time_capsule")}
+                  className="rounded-md border bg-background px-3 text-sm"
+                >
+                  <option value="the_atlas">The Atlas</option>
+                  <option value="time_capsule">Time Capsule</option>
+                </select>
+                <Input
+                  className="w-24"
+                  type="number"
+                  min={0}
+                  max={60}
+                  value={trialDaysAgo}
+                  onChange={(e) => setTrialDaysAgo(e.target.value)}
+                />
+                <Button
+                  onClick={() => setTrial.mutate()}
+                  disabled={!trialUserId.trim() || setTrial.isPending}
+                >
+                  Set
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Set days_ago to 6 for "1 day left", 7+ for expired.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
+
     </AppShell>
   );
 }

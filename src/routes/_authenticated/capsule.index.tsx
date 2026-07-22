@@ -5,7 +5,9 @@ import { listTimeCapsules } from "@/lib/timeCapsule.functions";
 import { getCoupleEntitlements } from "@/lib/payments.functions";
 import { AppShell } from "@/components/app-shell";
 import { RouteError, RouteNotFound } from "@/components/route-boundaries";
+import { TrialCta, TrialBanner } from "@/components/trial-cta";
 import { Lock, Mic, Mail, Plus, Clock } from "lucide-react";
+
 
 export const Route = createFileRoute("/_authenticated/capsule/")({
   head: () => ({
@@ -45,6 +47,8 @@ function CapsuleIndex() {
 
   if (!ent.isLoading && !owns) {
     const p = ent.data?.progress;
+    const trial = ent.data?.trials?.timeCapsule;
+    const hasCouple = Boolean(ent.data?.coupleId);
     const t = { level: 11, sharedDays: 21 };
     return (
       <AppShell>
@@ -55,6 +59,15 @@ function CapsuleIndex() {
             Sealed letters and voice notes that unlock on a future date — an anniversary,
             a birthday, the quiet moment you'll want them most.
           </p>
+
+          {trial && (
+            <TrialCta
+              product="time_capsule"
+              eligible={trial.eligible}
+              mine={trial.mine}
+              hasCouple={hasCouple}
+            />
+          )}
 
           {p && (
             <div className="mt-6 surface-card-quiet p-5">
@@ -80,11 +93,17 @@ function CapsuleIndex() {
     );
   }
 
+
   const sealed = list.data?.sealed ?? [];
   const opened = list.data?.opened ?? [];
 
+  const tcTrial = ent.data?.trials?.timeCapsule;
+
   return (
     <AppShell>
+      {tcTrial?.coupleActive && !ent.data?.paid?.timeCapsule && (
+        <TrialBanner product="time_capsule" coupleActive={tcTrial.coupleActive} mine={tcTrial.mine} />
+      )}
       <header className="px-5 pt-8 pb-4">
         <p className="serif-italic text-rust">Premium</p>
         <h1 className="mt-1 font-serif text-2xl text-ink">The Time Capsule</h1>
@@ -92,6 +111,7 @@ function CapsuleIndex() {
           Letters and voice notes that wait for you.
         </p>
       </header>
+
 
       <div className="px-5">
         <Link
