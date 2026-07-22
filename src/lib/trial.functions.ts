@@ -99,7 +99,7 @@ export const startFeatureTrial = createServerFn({ method: "POST" })
     const startedAt = new Date();
     const { error: upErr } = await supabaseAdmin
       .from("profiles")
-      .update({ [col]: startedAt.toISOString() })
+      .update({ [col]: startedAt.toISOString() } as never)
       .eq("id", userId);
     if (upErr) throw new Error(upErr.message);
 
@@ -159,7 +159,7 @@ export const adminResetFeatureTrial = createServerFn({ method: "POST" })
     if (ids.length) {
       const { error } = await supabaseAdmin
         .from("profiles")
-        .update({ [COL[data.product]]: null })
+        .update({ [COL[data.product]]: null } as never)
         .in("id", ids);
       if (error) throw new Error(error.message);
     }
@@ -185,7 +185,7 @@ export const adminSetTrialStartedAt = createServerFn({ method: "POST" })
     const ts = new Date(Date.now() - data.days_ago * 24 * 60 * 60 * 1000).toISOString();
     const { error } = await supabaseAdmin
       .from("profiles")
-      .update({ [COL[data.product]]: ts })
+      .update({ [COL[data.product]]: ts } as never)
       .eq("id", data.user_id);
     if (error) throw new Error(error.message);
     return { ok: true, startedAt: ts, daysAgo: data.days_ago };
