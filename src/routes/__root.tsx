@@ -132,10 +132,13 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="relative min-h-[100svh]">
-        <Outlet />
-        <Toaster position="top-center" toastOptions={{ style: { fontFamily: "Instrument Sans, system-ui" } }} />
-      </div>
+      <AudioProvider>
+        <div className="relative min-h-[100svh]">
+          <Outlet />
+          <AudioToggle />
+          <Toaster position="top-center" toastOptions={{ style: { fontFamily: "Instrument Sans, system-ui" } }} />
+        </div>
+      </AudioProvider>
     </QueryClientProvider>
   );
 }
