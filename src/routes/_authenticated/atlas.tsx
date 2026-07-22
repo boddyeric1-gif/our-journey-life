@@ -6,8 +6,10 @@ import { getAtlas, saveAtlasNote, exportAtlasPdf } from "@/lib/atlas.functions";
 import { getCoupleEntitlements } from "@/lib/payments.functions";
 import { AppShell } from "@/components/app-shell";
 import { RouteError, RouteNotFound } from "@/components/route-boundaries";
+import { TrialCta, TrialBanner } from "@/components/trial-cta";
 import { Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/_authenticated/atlas")({
   head: () => ({
@@ -76,6 +78,8 @@ function AtlasPage() {
 
   if (!ent.isLoading && !owns) {
     const p = ent.data?.progress;
+    const trial = ent.data?.trials?.atlas;
+    const hasCouple = Boolean(ent.data?.coupleId);
     const t = { level: 15, sharedDays: 30 };
     return (
       <AppShell>
@@ -86,6 +90,15 @@ function AtlasPage() {
             Your story together, gathered into a quiet scrapbook you can re-read
             or save to your device as a keepsake.
           </p>
+
+          {trial && (
+            <TrialCta
+              product="the_atlas"
+              eligible={trial.eligible}
+              mine={trial.mine}
+              hasCouple={hasCouple}
+            />
+          )}
 
           {p && (
             <div className="mt-6 surface-card-quiet p-5">
@@ -111,14 +124,20 @@ function AtlasPage() {
     );
   }
 
+
   if (atlas.isLoading || !atlas.data) {
     return <AppShell><div className="px-5 pt-10 text-ink-mute">Gathering your story…</div></AppShell>;
   }
 
   const a = atlas.data;
+  const atlasTrial = ent.data?.trials?.atlas;
   return (
     <AppShell>
+      {atlasTrial?.coupleActive && !ent.data?.paid?.atlas && (
+        <TrialBanner product="the_atlas" coupleActive={atlasTrial.coupleActive} mine={atlasTrial.mine} />
+      )}
       <div className="snap-y snap-mandatory">
+
         {/* COVER */}
         <Page>
           <p className="serif-italic text-rust text-lg">The Atlas</p>
