@@ -355,6 +355,56 @@
     45%      { opacity: 0.75; }
     55%      { opacity: 0.92; }
   }
+
+  /* Ambient aura drift — slow, cinematic, low-intensity. */
+  @keyframes aura-drift {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+    50%      { transform: translate3d(2%, -1.5%, 0) scale(1.06); }
+  }
+  @keyframes aura-drift-slow {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+    50%      { transform: translate3d(-2.5%, 2%, 0) scale(1.08); }
+  }
+  .aura-blob { will-change: transform, opacity; }
+  .aura-drift { animation: aura-drift 12s var(--ease-quiet) infinite; }
+  .aura-drift-slow { animation: aura-drift-slow 15s var(--ease-quiet) infinite; }
+  @media (prefers-reduced-motion: reduce) {
+    .aura-drift, .aura-drift-slow { animation: none; }
+  }
+
+  /* Hover glow — subtle rose halo on interactive surfaces. */
+  .glow-hover {
+    transition: box-shadow var(--duration-soft) var(--ease-quiet),
+                transform var(--duration-quick) var(--ease-quiet),
+                border-color var(--duration-soft) var(--ease-quiet);
+  }
+  .glow-hover:hover {
+    box-shadow:
+      0 1px 0 0 oklch(1 0 0 / 0.07) inset,
+      0 12px 32px -14px oklch(0 0 0 / 0.55),
+      0 22px 60px -28px oklch(0.71 0.075 32 / 0.45);
+    border-color: oklch(0.71 0.075 32 / 0.28);
+  }
+
+  /* Branded loading shimmer — soft rose bloom in place of spinners. */
+  @keyframes bloom-shimmer {
+    0%   { background-position: 100% 0; }
+    100% { background-position: -100% 0; }
+  }
+  .loading-bloom {
+    background: linear-gradient(
+      100deg,
+      var(--card) 0%,
+      oklch(0.35 0.06 312) 45%,
+      var(--card) 100%
+    );
+    background-size: 200% 100%;
+    animation: bloom-shimmer 2.4s var(--ease-quiet) infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .loading-bloom { animation: none; background: var(--card); }
+  }
+
 }
 
 
