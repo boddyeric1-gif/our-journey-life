@@ -180,11 +180,11 @@ export const getCoupleEntitlements = createServerFn({ method: 'GET' })
 
     let atlasCoupleActive = false;
     let timeCapsuleCoupleActive = false;
-    for (const m of memberProfiles ?? []) {
-      const p = (m as unknown as { profiles: { atlas_trial_started_at: string | null; timecapsule_trial_started_at: string | null } }).profiles;
-      if (trialSnapshot(p?.atlas_trial_started_at).active) atlasCoupleActive = true;
-      if (trialSnapshot(p?.timecapsule_trial_started_at).active) timeCapsuleCoupleActive = true;
+    for (const p of memberProfiles ?? []) {
+      if (trialSnapshot(p?.atlas_trial_started_at ?? null).active) atlasCoupleActive = true;
+      if (trialSnapshot(p?.timecapsule_trial_started_at ?? null).active) timeCapsuleCoupleActive = true;
     }
+
 
     // Authoritative unlock includes admin bypass + paid + earned + trial (via DB fn).
     const timeCapsule = tcUnlockedRes.data ?? (progress.unlocks.time_capsule || timeCapsuleCoupleActive);
