@@ -13,6 +13,8 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { AudioProvider } from "@/components/audio-provider";
+import { AudioToggle } from "@/components/audio-toggle";
 
 function NotFoundComponent() {
   return (
@@ -130,10 +132,13 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="relative min-h-[100svh]">
-        <Outlet />
-        <Toaster position="top-center" toastOptions={{ style: { fontFamily: "Instrument Sans, system-ui" } }} />
-      </div>
+      <AudioProvider>
+        <div className="relative min-h-[100svh]">
+          <Outlet />
+          <AudioToggle />
+          <Toaster position="top-center" toastOptions={{ style: { fontFamily: "Instrument Sans, system-ui" } }} />
+        </div>
+      </AudioProvider>
     </QueryClientProvider>
   );
 }

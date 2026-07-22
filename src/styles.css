@@ -499,4 +499,51 @@
   &:active { transform: scale(0.985); }
 }
 
+/* Audio toggle — soft rose glow pulse when playing. */
+@keyframes oj-audio-pulse {
+  0%, 100% {
+    box-shadow:
+      0 6px 20px -8px oklch(0.2 0.05 320 / 0.7),
+      0 0 0 0 oklch(0.71 0.075 32 / 0.5);
+  }
+  50% {
+    box-shadow:
+      0 6px 20px -8px oklch(0.2 0.05 320 / 0.7),
+      0 0 0 8px oklch(0.71 0.075 32 / 0);
+  }
+}
+@utility audio-glow {
+  animation: oj-audio-pulse 2.6s var(--ease-quiet) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .audio-glow { animation: none; }
+}
+
+/* Volume slider — matches soft dusk tokens. */
+.oj-volume::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 14px;
+  width: 14px;
+  border-radius: 9999px;
+  background: var(--rust);
+  border: 2px solid oklch(0.98 0.02 75);
+  box-shadow: 0 2px 6px -1px oklch(0 0 0 / 0.4);
+  cursor: pointer;
+}
+.oj-volume::-moz-range-thumb {
+  height: 14px;
+  width: 14px;
+  border-radius: 9999px;
+  background: var(--rust);
+  border: 2px solid oklch(0.98 0.02 75);
+  box-shadow: 0 2px 6px -1px oklch(0 0 0 / 0.4);
+  cursor: pointer;
+}
+.oj-volume:focus-visible {
+  outline: 2px solid oklch(0.71 0.075 32 / 0.55);
+  outline-offset: 3px;
+}
+
+
 
