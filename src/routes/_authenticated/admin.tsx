@@ -29,6 +29,11 @@ import {
   revokeAdmin,
   inspectCouple,
 } from "@/lib/admin.functions";
+import {
+  adminResetFeatureTrial,
+  adminSetTrialStartedAt,
+} from "@/lib/trial.functions";
+
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -94,6 +99,35 @@ function AdminPage() {
     mutationFn: (id: string) => inspectFn({ data: { couple_id: id } }),
     onError: (e: Error) => toast.error(e.message),
   });
+
+  // --- Trial testing ---
+  const resetTrialFn = useServerFn(adminResetFeatureTrial);
+  const setTrialFn = useServerFn(adminSetTrialStartedAt);
+  const [trialEmail, setTrialEmail] = useState("");
+  const [trialResetProduct, setTrialResetProduct] = useState<"the_atlas" | "time_capsule">("the_atlas");
+  const [trialUserId, setTrialUserId] = useState("");
+  const [trialSetProduct, setTrialSetProduct] = useState<"the_atlas" | "time_capsule">("the_atlas");
+  const [trialDaysAgo, setTrialDaysAgo] = useState("6");
+
+  const resetTrial = useMutation({
+    mutationFn: () => resetTrialFn({ data: { email: trialEmail.trim(), product: trialResetProduct } }),
+    onSuccess: (r) => {
+      toast.success(`Reset — cleared ${r.resetUsers} profile timestamp(s).`);
+      qc.invalidateQueries({ queryKey: ["entitlements"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const setTrial = useMutation({
+    mutationFn: () => setTrialFn({
+      data: { user_id: trialUserId.trim(), product: trialSetProduct, days_ago: Number(trialDaysAgo) || 0 },
+    }),
+    onSuccess: () => {
+      toast.success("Trial timestamp set.");
+      qc.invalidateQueries({ queryKey: ["entitlements"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
 
   if (isLoading || !data) {
     return (
