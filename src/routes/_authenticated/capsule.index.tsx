@@ -97,8 +97,13 @@ function CapsuleIndex() {
   const sealed = list.data?.sealed ?? [];
   const opened = list.data?.opened ?? [];
 
+  const tcTrial = ent.data?.trials?.timeCapsule;
+
   return (
     <AppShell>
+      {tcTrial?.coupleActive && !ent.data?.paid?.timeCapsule && (
+        <TrialBanner product="time_capsule" coupleActive={tcTrial.coupleActive} mine={tcTrial.mine} />
+      )}
       <header className="px-5 pt-8 pb-4">
         <p className="serif-italic text-rust">Premium</p>
         <h1 className="mt-1 font-serif text-2xl text-ink">The Time Capsule</h1>
@@ -106,6 +111,7 @@ function CapsuleIndex() {
           Letters and voice notes that wait for you.
         </p>
       </header>
+
 
       <div className="px-5">
         <Link
