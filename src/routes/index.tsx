@@ -78,8 +78,8 @@ function Landing() {
           A quieter way <em className="serif-italic text-rose-gradient">to grow</em> closer.
         </h1>
         <p className="mt-6 text-ink-soft text-lg leading-relaxed text-pretty animate-rise" style={{ animationDelay: "160ms" }}>
-          Daily prompts, gentle quests, and the small rituals that make love feel
-          tended-to. Built for two — meaningful even when only one of you opens it.
+          Daily prompts, gentle quests, and the small rituals that make connection feel
+          tended-to. For couples, for family, for yourself — meaningful whether you open it together or alone.
         </p>
 
         <div className="mt-10 flex flex-col gap-3 animate-rise" style={{ animationDelay: "240ms" }}>
@@ -105,13 +105,13 @@ function Landing() {
         <h2 className="sr-only">Features</h2>
         <div className="mt-8 grid gap-4">
           <FeatureRow num="01" title="A daily Spark">
-            One prompt a day. Both write. Both reveal together.
+            Write it, reveal it, or just sit with it — however you show up today.
           </FeatureRow>
           <FeatureRow num="02" title="Quests, not quizzes">
-            Multi-day chapters on listening, trust, and repair.
+            Multi-day chapters on listening, trust, and repair — built for real relationships, not personality quizzes.
           </FeatureRow>
           <FeatureRow num="03" title="Meaningful alone, too">
-            Solo reflections and private letters when your partner is offline.
+            Solo reflections and prompts that hold their own weight, whether your partner's offline or it's just you tonight.
           </FeatureRow>
         </div>
       </section>

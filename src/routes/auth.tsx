@@ -170,7 +170,7 @@ function AuthPage() {
       <section className="flex-1 px-6 pt-12 pb-12 max-w-md mx-auto w-full">
         <p className="text-xs uppercase tracking-[0.18em] text-ink-mute">{mode === "signup" ? "Begin" : "Return"}</p>
         <h1 className="mt-4 font-serif text-4xl text-ink leading-tight">
-          {mode === "signup" ? <>The quieter way <em className="serif-italic text-rust">to grow</em> closer.</> : <>Welcome <em className="serif-italic text-rust">back</em>.</>}
+          {mode === "signup" ? <>A quieter way <em className="serif-italic text-rust">to grow</em> closer.</> : <>Welcome <em className="serif-italic text-rust">back</em>.</>}
         </h1>
         {(join || code) && (
           <p className="mt-3 text-sm text-ink-soft serif-italic">You've been invited to a couple. Sign in to accept.</p>
