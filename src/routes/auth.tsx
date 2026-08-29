@@ -22,7 +22,7 @@ export const Route = createFileRoute("/auth")({
     ],
     links: [{ rel: "canonical", href: "https://our-journey.life/auth" }],
   }),
-  validateSearch: (s: Record<string, unknown>) => ({
+  validateSearch: (s: Record<string, unknown>): { mode?: Mode; join?: string; next?: string } => ({
     mode: (s.mode === "signup" ? "signup" : "signin") as Mode,
     join: typeof s.join === "string" ? (s.join as string) : undefined,
     next: typeof s.next === "string" && s.next.startsWith("/") && !s.next.startsWith("//") ? (s.next as string) : undefined,
