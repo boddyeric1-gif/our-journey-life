@@ -5,10 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Our Journey — daily rituals for closer love" },
-      { name: "description", content: "A quiet quest log for couples. Daily prompts, gentle quests, and the small rituals that keep love alive — meaningful even when only one of you opens it." },
-      { property: "og:title", content: "Our Journey — daily rituals for closer love" },
-      { property: "og:description", content: "A quiet quest log for couples. Daily prompts, gentle quests, and the small rituals that keep love alive — meaningful even when only one of you opens it." },
+      { title: "Our Journey — daily rituals for closer connection" },
+      { name: "description", content: "Daily prompts, gentle quests, and the small rituals that make connection feel tended-to. For couples, for family, for yourself — meaningful whether you open it together or alone." },
+      { property: "og:title", content: "Our Journey — daily rituals for closer connection" },
+      { property: "og:description", content: "Daily prompts, gentle quests, and the small rituals that make connection feel tended-to. For couples, for family, for yourself — meaningful whether you open it together or alone." },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://our-journey.life/" },
       { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/7834a996-3245-4d23-b9ec-2b733934de09" },
@@ -23,7 +23,7 @@ export const Route = createFileRoute("/")({
           "@type": "WebSite",
           name: "Our Journey",
           url: "https://our-journey.life/",
-          description: "Daily rituals, prompts, and gentle quests for couples.",
+          description: "Daily prompts, gentle quests, and the small rituals that make connection feel tended-to.",
         }),
       },
       {
