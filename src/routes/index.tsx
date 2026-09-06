@@ -5,10 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Our Journey — daily rituals for closer connection" },
-      { name: "description", content: "Daily prompts, gentle quests, and the small rituals that make connection feel tended-to. For couples, for family, for yourself — meaningful whether you open it together or alone." },
-      { property: "og:title", content: "Our Journey — daily rituals for closer connection" },
-      { property: "og:description", content: "Daily prompts, gentle quests, and the small rituals that make connection feel tended-to. For couples, for family, for yourself — meaningful whether you open it together or alone." },
+      { title: "Our Journey — daily rituals for closer love" },
+      { name: "description", content: "A private couple sanctuary for daily check-ins, argument aftercare, and sealed time capsules. Quiet rituals that make love feel tended-to." },
+      { property: "og:title", content: "Our Journey — daily rituals for closer love" },
+      { property: "og:description", content: "A private couple sanctuary for daily check-ins, argument aftercare, and sealed time capsules. Quiet rituals that make love feel tended-to." },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://our-journey.life/" },
       { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/7834a996-3245-4d23-b9ec-2b733934de09" },
@@ -23,7 +23,7 @@ export const Route = createFileRoute("/")({
           "@type": "WebSite",
           name: "Our Journey",
           url: "https://our-journey.life/",
-          description: "Daily prompts, gentle quests, and the small rituals that make connection feel tended-to.",
+          description: "A private couple sanctuary for daily check-ins, argument aftercare, and sealed time capsules.",
         }),
       },
       {
@@ -83,13 +83,12 @@ function Landing() {
 
 
       <section className="relative flex-1 px-6 pt-14 pb-16 max-w-xl mx-auto w-full">
-        <p className="text-xs uppercase tracking-[0.22em] text-ink-mute animate-rise">Volume One — For everyone</p>
+        <p className="text-xs uppercase tracking-[0.22em] text-ink-mute animate-rise">Volume One — For couples</p>
         <h1 className="mt-5 font-serif text-[46px] sm:text-[54px] leading-[1.03] text-ink text-balance animate-rise" style={{ animationDelay: "80ms" }}>
           A quieter way <em className="serif-italic text-rose-gradient">to grow</em> closer.
         </h1>
         <p className="mt-6 text-ink-soft text-lg leading-relaxed text-pretty animate-rise" style={{ animationDelay: "160ms" }}>
-          Daily prompts, gentle quests, and the small rituals that make connection feel
-          tended-to. For couples, for family, for yourself — meaningful whether you open it together or alone.
+          Daily check-ins, argument aftercare, and sealed time capsules — the small rituals that make love feel tended-to. Built for two.
         </p>
 
         <div className="mt-10 flex flex-col gap-3 animate-rise" style={{ animationDelay: "240ms" }}>
@@ -98,7 +97,7 @@ function Landing() {
             search={{ mode: "signup" }}
             className="btn-primary tap"
           >
-            Begin your quest
+            Begin with your partner
           </Link>
           <Link
             to="/auth"
@@ -117,17 +116,17 @@ function Landing() {
           <FeatureRow num="01" title="A daily Spark">
             Write it, reveal it, or just sit with it — however you show up today.
           </FeatureRow>
-          <FeatureRow num="02" title="Quests, not quizzes">
-            Multi-day chapters on listening, trust, and repair — built for real relationships, not personality quizzes.
+          <FeatureRow num="02" title="Argument Aftercare">
+            A structured bridge out of the freeze after conflict — calm, private, and ready when you need it.
           </FeatureRow>
-          <FeatureRow num="03" title="Meaningful alone, too">
-            Solo reflections and prompts that hold their own weight, whether your partner's offline or it's just you tonight.
+          <FeatureRow num="03" title="Sealed Time Capsules">
+            Letters and memories that unlock later. Shared history that grows more valuable over time.
           </FeatureRow>
         </div>
       </section>
 
       <footer className="relative px-6 pb-10 text-xs text-ink-mute text-center">
-        Made with care by Eric Boddy for iOS &amp; Android
+        Made with care by Eric Boddy for iOS & Android
       </footer>
     </main>
   );
@@ -144,5 +143,4 @@ function FeatureRow({ num, title, children }: { num: string; title: string; chil
     </div>
   );
 }
-
 
