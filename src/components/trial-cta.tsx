@@ -27,7 +27,7 @@ export function TrialCta({
   const mut = useMutation({
     mutationFn: () => start({ data: { product } }),
     onSuccess: () => {
-      toast.success(`Your 7-day trial is on. Enjoy ${LABELS[product]}.`);
+      toast.success(`Your 7-day trial is on. Both of you have full access.`);
       qc.invalidateQueries({ queryKey: ["entitlements"] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -36,7 +36,7 @@ export function TrialCta({
   if (mine.used && !mine.active) {
     return (
       <p className="mt-4 text-xs text-ink-mute italic">
-        Your free trial for {LABELS[product]} has ended.
+        Your free trial has ended. One subscription covers both of you.
       </p>
     );
   }
@@ -48,18 +48,18 @@ export function TrialCta({
         <Sparkles className="h-3 w-3" /> Try it free
       </p>
       <p className="mt-2 text-sm text-ink-soft leading-relaxed">
-        Seven days, no card needed. Full access for both of you.
+        Seven days, no card needed. One trial unlocks full access for both of you.
       </p>
       <button
         onClick={() => mut.mutate()}
         disabled={!hasCouple || mut.isPending}
         className="btn-primary mt-3 w-full text-sm disabled:opacity-40"
       >
-        {mut.isPending ? "Starting…" : "Start 7-day free trial"}
+        {mut.isPending ? "Starting…" : "Start 7-day couple trial"}
       </button>
       {!hasCouple && (
         <p className="mt-2 text-[11px] text-ink-mute">
-          Pair with your partner to activate your trial.
+          Pair with your partner to activate the trial for both of you.
         </p>
       )}
     </div>
@@ -76,7 +76,6 @@ export function TrialBanner({
   mine: TrialSnapshot;
 }) {
   if (!coupleActive) return null;
-  // Prefer showing the caller's own trial if active; otherwise it's the partner's.
   const showing = mine.active ? mine : null;
   const daysLeft = showing?.daysLeft ?? null;
 
@@ -86,14 +85,14 @@ export function TrialBanner({
       <div className="flex-1">
         {showing ? (
           <>
-            <span className="text-ink">Free trial · {LABELS[product]}</span>{" "}
+            <span className="text-ink">Couple trial · {LABELS[product]}</span>{" "}
             <span className="text-ink-mute">
-              — {daysLeft} day{daysLeft === 1 ? "" : "s"} left.
+              — {daysLeft} day{daysLeft === 1 ? "" : "s"} left for both of you.
             </span>
           </>
         ) : (
           <span className="text-ink">
-            You're on your partner's free trial for {LABELS[product]}.
+            You're on your partner's couple trial for {LABELS[product]}.
           </span>
         )}
       </div>
