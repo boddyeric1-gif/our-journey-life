@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_authenticated/onboarding")({
   head: () => ({
     meta: [
       { title: "Begin your quest — Our Journey" },
-      { name: "description", content: "A few quiet questions to set up your quest together." },
+      { name: "description", content: "A few quiet questions to set up your space together." },
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),
@@ -49,8 +49,6 @@ const GOALS = [
   "Grow trust",
 ];
 
-// Eyebrow labels keyed by step index. Single source of truth so step renumber
-// doesn't require touching every block.
 const EYEBROWS = ["One", "Two", "Three", "Four", "Five", "Six · the magic moment", "Seven · sent"] as const;
 
 function OnboardingPage() {
@@ -297,12 +295,11 @@ function OnboardingPage() {
         )}
 
         {step === 6 && inviteCode && !isJoiningPartner && (
-          <StepBlock eyebrow={EYEBROWS[6]} title={<><em className="serif-italic text-rust">A small archive of you two.</em></>}>
+          <StepBlock eyebrow={EYEBROWS[6]} title={<><em className="serif-italic text-rust">Send this to them.</em></>}>
             <div className="mt-5 surface-card p-6">
-              <p className="text-[11px] uppercase tracking-[0.18em] text-ink-mute">Your bond</p>
-              <p className="mt-2 font-serif text-2xl text-ink leading-tight">{name} &amp; <span className="serif-italic text-rust">your partner</span></p>
+              <p className="text-[11px] uppercase tracking-[0.18em] text-ink-mute">Your invite</p>
+              <p className="mt-2 font-serif text-2xl text-ink leading-tight">{name} & <span className="serif-italic text-rust">your partner</span></p>
               {anniversary && <p className="mt-1 text-sm text-ink-soft">Since {new Date(anniversary).toLocaleDateString(undefined, { year: "numeric", month: "long" })}</p>}
-              <p className="mt-1 text-sm text-ink-soft capitalize">{stage.replace("_"," ")}</p>
 
               {letter && (
                 <blockquote className="mt-5 border-l-2 border-rust pl-4 serif-italic text-ink text-base leading-relaxed">
@@ -314,14 +311,18 @@ function OnboardingPage() {
                 <p className="text-[11px] uppercase tracking-[0.18em] text-ink-mute">Invite code · expires in 14 days</p>
                 <button
                   onClick={async () => {
-                    await navigator.clipboard.writeText(inviteCode);
-                    toast.success("Code copied. Send it to your partner.");
+                    const msg = `I started a private space for us on Our Journey.\n\nJoin me here: https://our-journey.life/join/${inviteCode}\n\nCode: ${inviteCode}`;
+                    await navigator.clipboard.writeText(msg);
+                    toast.success("Invite message copied. Send it to your partner.");
                   }}
                   className="mt-2 w-full inline-flex items-center justify-between rounded-2xl bg-canvas-deep px-5 py-4"
                 >
                   <span className="font-serif text-3xl tracking-[0.3em] text-ink">{inviteCode}</span>
                   <Copy className="h-4 w-4 text-ink-mute" />
                 </button>
+                <p className="mt-2 text-xs text-ink-mute leading-relaxed">
+                  Tap to copy a ready-to-send message with the link.
+                </p>
               </div>
             </div>
 
