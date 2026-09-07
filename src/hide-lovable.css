@@ -1,0 +1,19 @@
+/* Hide the "Edit with Lovable" badge that Lovable re-injects on publish */
+#lovable-badge,
+[id*="lovable"],
+[class*="lovable-badge"],
+[class*="LovableBadge"],
+a[href*="lovable.dev"],
+a[href*="lovable.dev"][target="_blank"],
+div[style*="lovable"],
+iframe[src*="lovable"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  position: absolute !important;
+  left: -9999px !important;
+}
