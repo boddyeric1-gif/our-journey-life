@@ -12,10 +12,10 @@ const PENDING_INVITE_KEY = "rq_pending_invite";
 export const Route = createFileRoute("/join/$code")({
   head: () => ({
     meta: [
-      { title: "Accept your invite — Our Journey" },
-      { name: "description", content: "You've been invited to a couple on Our Journey. Sign in to accept." },
-      { property: "og:title", content: "You've been invited — Our Journey" },
-      { property: "og:description", content: "Accept your partner's invite to begin your quest together." },
+      { title: "Your partner invited you — Our Journey" },
+      { name: "description", content: "You've been invited to a private couple space on Our Journey. Accept to begin." },
+      { property: "og:title", content: "Your partner invited you — Our Journey" },
+      { property: "og:description", content: "A quiet place for the two of you. Daily rituals, argument aftercare, and letters that wait." },
       { property: "og:image", content: "https://our-journey.life/og-cover.jpg" },
       { name: "twitter:image", content: "https://our-journey.life/og-cover.jpg" },
       { name: "robots", content: "noindex,nofollow" },
@@ -69,7 +69,7 @@ function JoinPage() {
     onSuccess: () => {
       if (typeof window !== "undefined") window.localStorage.removeItem(PENDING_INVITE_KEY);
       qc.invalidateQueries();
-      toast.success("You're paired.");
+      toast.success("You're paired. Welcome.");
       navigate({ to: "/onboarding" });
     },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Couldn't accept"),
@@ -87,10 +87,13 @@ function JoinPage() {
   return (
     <main className="relative z-10 min-h-[100svh] max-w-md mx-auto px-6 py-12">
       <p className="serif-italic text-rust text-lg">Our Journey</p>
-      <p className="mt-8 text-[11px] uppercase tracking-[0.2em] text-ink-mute">A letter for you</p>
+      <p className="mt-8 text-[11px] uppercase tracking-[0.2em] text-ink-mute">A private invitation</p>
       <h1 className="mt-2 font-serif text-3xl text-ink leading-tight">
-        <em className="serif-italic text-rust">{data.inviterName}</em> wrote you something.
+        <em className="serif-italic text-rust">{data.inviterName}</em> is waiting for you.
       </h1>
+      <p className="mt-3 text-ink-soft text-sm leading-relaxed">
+        A quiet space for the two of you — daily prompts, argument aftercare, and letters that wait.
+      </p>
 
       <article className="mt-6 surface-card p-6">
         {data.firstLetter ? (
@@ -98,7 +101,7 @@ function JoinPage() {
             "{data.firstLetter}"
           </blockquote>
         ) : (
-          <p className="text-ink-soft serif-italic">No letter yet. They're keeping you a small mystery.</p>
+          <p className="text-ink-soft serif-italic">No letter yet. They're keeping the first words for you.</p>
         )}
         <p className="mt-6 text-[11px] uppercase tracking-[0.16em] text-ink-mute">From</p>
         <p className="font-serif text-lg text-ink mt-1">{data.inviterName}</p>
@@ -109,7 +112,7 @@ function JoinPage() {
         disabled={accepting.isPending}
         className="mt-8 w-full btn-primary disabled:opacity-60"
       >
-        {accepting.isPending ? "Accepting…" : "Accept and begin"} <ArrowRight className="h-4 w-4" />
+        {accepting.isPending ? "Accepting…" : "Accept and begin together"} <ArrowRight className="h-4 w-4" />
       </button>
     </main>
   );
