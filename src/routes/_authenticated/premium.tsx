@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
@@ -31,24 +31,24 @@ const PRODUCTS: Array<{
     id: 'time_capsule_onetime',
     name: 'The Time Capsule',
     price: '$9.99',
-    tagline: 'Letters that wait for you.',
-    body: 'Schedule sealed letters and voice notes that unlock on a future date — an anniversary, a birthday, the moment you need it most.',
+    tagline: 'Letters that wait for you both.',
+    body: 'Schedule sealed letters and voice notes that unlock on a future date — an anniversary, a hard week, the moment you need them most. One payment, both of you keep access forever.',
     owns: (e) => e.timeCapsule,
   },
   {
     id: 'the_atlas_onetime',
     name: 'The Atlas',
     price: '$9.99',
-    tagline: 'A living scrapbook of you two.',
-    body: 'Your rhythm, letters, chapters, and themes gathered into a scrapbook you can page through inside the app — and export to your device whenever you want a copy to keep.',
+    tagline: 'A living scrapbook of the two of you.',
+    body: 'Your rhythm, letters, chapters, and themes gathered into a scrapbook you can page through — and export anytime. One payment covers both partners.',
     owns: (e) => e.atlas,
   },
   {
     id: 'capsule_atlas_bundle_onetime',
     name: 'Both, together',
     price: '$14.99',
-    tagline: 'Capsule + Atlas.',
-    body: 'Unlock both. A small saving for keeping the whole story.',
+    tagline: 'Capsule + Atlas for the couple.',
+    body: 'Unlock everything. One small payment, both of you, forever. The cleanest way to keep the whole story.',
     owns: (e) => e.timeCapsule && e.atlas,
   },
 ];
@@ -75,14 +75,14 @@ function PremiumPage() {
         <div className="px-5 pt-8 pb-6">
           <h1 className="text-2xl font-serif text-ink">Lasting things</h1>
           <p className="mt-2 text-sm text-ink-mute leading-relaxed">
-            Two optional unlocks. One-time payment. Yours forever, for both of you.
+            Optional unlocks. One-time payment. Covers both of you, forever.
           </p>
         </div>
 
         {!data.coupleId && (
           <div className="mx-5 mb-6 surface-card p-4 text-sm text-ink-mute">
             <Lock className="inline h-4 w-4 mr-1.5 -mt-0.5" />
-            Pair with your partner first. Premium unlocks live on your shared journey.
+            Pair with your partner first. Premium lives on your shared journey.
             <div className="mt-3">
               <Link to="/profile" className="text-rust underline">Go to pairing</Link>
             </div>
@@ -103,7 +103,7 @@ function PremiumPage() {
                 <div className="mt-4">
                   {owned ? (
                     <span className="inline-flex items-center gap-1.5 text-sm text-rust">
-                      <Check className="h-4 w-4" /> Unlocked
+                      <Check className="h-4 w-4" /> Unlocked for both of you
                     </span>
                   ) : (
                     <button
@@ -111,7 +111,7 @@ function PremiumPage() {
                       disabled={!data.coupleId || !configured}
                       className="w-full rounded-xl bg-ink text-card py-3 text-sm font-medium disabled:opacity-40"
                     >
-                      Unlock
+                      Unlock for both of you
                     </button>
                   )}
                 </div>
@@ -121,7 +121,7 @@ function PremiumPage() {
         </div>
 
         <p className="px-5 mt-6 text-xs text-ink-mute leading-relaxed">
-          14-day refund, no questions. Refunds and disputes revoke access automatically.
+          14-day refund, no questions. One payment covers both partners.
         </p>
 
         {active && (
