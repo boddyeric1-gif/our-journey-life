@@ -16,7 +16,7 @@ Lifecycle: `user_signed_up`, `profile_completed`, `app_opened`, `session_started
 
 Couple funnel: `couple_created`, `couple_invite_sent`, `couple_invite_accepted`, `couple_joined`, `couple_activated`.
 
-Engagement: `activity_completed`, `first_activity_completed`, `prompt_completed`, `quest_completed`.
+Engagement: `activity_started`, `activity_completed`, `first_activity_completed`, `prompt_completed`, `quest_completed`.
 
 Monetization: `premium_viewed`, `purchase_started`, `purchase_completed`.
 
