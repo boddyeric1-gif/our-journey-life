@@ -1,13 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getCoupleEntitlements } from "@/lib/payments.functions";
 import { AppShell } from "@/components/app-shell";
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { isPaymentsConfigured } from "@/lib/stripe";
 import { RouteError, RouteNotFound } from "@/components/route-boundaries";
+import { trackClientEvent } from "@/lib/analytics";
 import { Lock, Check } from "lucide-react";
 
 type PriceId = 'time_capsule_onetime' | 'the_atlas_onetime' | 'capsule_atlas_bundle_onetime';
@@ -63,10 +64,19 @@ function PremiumPage() {
   const [active, setActive] = useState<PriceId | null>(null);
   const configured = isPaymentsConfigured();
 
+  useEffect(() => {
+    void trackClientEvent("premium_viewed");
+  }, []);
+
   const data = ent.data ?? { coupleId: null, timeCapsule: false, atlas: false };
   const returnUrl = typeof window !== 'undefined'
     ? `${window.location.origin}/checkout-return?session_id={CHECKOUT_SESSION_ID}`
     : '';
+
+  const openCheckout = (priceId: PriceId) => {
+    void trackClientEvent("purchase_started", { product: priceId });
+    setActive(priceId);
+  };
 
   return (
     <>
@@ -107,7 +117,7 @@ function PremiumPage() {
                     </span>
                   ) : (
                     <button
-                      onClick={() => setActive(p.id)}
+                      onClick={() => openCheckout(p.id)}
                       disabled={!data.coupleId || !configured}
                       className="w-full rounded-xl bg-ink text-card py-3 text-sm font-medium disabled:opacity-40"
                     >

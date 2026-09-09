@@ -15,6 +15,7 @@ import { Toaster } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AudioProvider } from "@/components/audio-provider";
 import { AudioToggle } from "@/components/audio-toggle";
+import { initializeAnalytics } from "@/lib/analytics";
 
 function NotFoundComponent() {
   return (
@@ -24,12 +25,7 @@ function NotFoundComponent() {
         <h1 className="mt-6 font-serif text-6xl text-ink">404</h1>
         <h2 className="mt-2 text-lg text-ink-soft">This page slipped between us.</h2>
         <div className="mt-8">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-full bg-rust px-6 py-3 text-sm font-medium text-primary-foreground transition hover:opacity-90"
-          >
-            Back home
-          </Link>
+          <Link to="/" className="inline-flex items-center justify-center rounded-full bg-rust px-6 py-3 text-sm font-medium text-primary-foreground transition hover:opacity-90">Back home</Link>
         </div>
       </div>
     </div>
@@ -50,18 +46,8 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         <h1 className="mt-4 font-serif text-3xl text-ink">This page didn't load</h1>
         <p className="mt-3 text-sm text-ink-mute">A small hiccup on our end. Try again, or head home.</p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
-          <button
-            onClick={() => { router.invalidate(); reset(); }}
-            className="rounded-full bg-rust px-5 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90"
-          >
-            Try again
-          </button>
-          <a
-            href="/"
-            className="rounded-full border border-border bg-card px-5 py-2.5 text-sm font-medium text-ink hover:bg-canvas-deep"
-          >
-            Go home
-          </a>
+          <button onClick={() => { router.invalidate(); reset(); }} className="rounded-full bg-rust px-5 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90">Try again</button>
+          <a href="/" className="rounded-full border border-border bg-card px-5 py-2.5 text-sm font-medium text-ink hover:bg-canvas-deep">Go home</a>
         </div>
       </div>
     </div>
@@ -109,17 +95,10 @@ function RootShell({ children }: { children: ReactNode }) {
       <head>
         {/* Google tag (gtag.js) */}
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-J15NVG1VDX"></script>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `window.dataLayer = window.dataLayer || [];\nfunction gtag(){dataLayer.push(arguments);}\ngtag('js', new Date());\ngtag('config', 'G-J15NVG1VDX');`,
-          }}
-        />
+        <script dangerouslySetInnerHTML={{ __html: `window.dataLayer = window.dataLayer || [];\nfunction gtag(){dataLayer.push(arguments);}\ngtag('js', new Date());\ngtag('config', 'G-J15NVG1VDX');` }} />
         <HeadContent />
       </head>
-      <body>
-        {children}
-        <Scripts />
-      </body>
+      <body>{children}<Scripts /></body>
     </html>
   );
 }
@@ -129,10 +108,14 @@ function RootComponent() {
   const router = useRouter();
 
   useEffect(() => {
+    void initializeAnalytics();
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();
-      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
+      if (event !== "SIGNED_OUT") {
+        queryClient.invalidateQueries();
+        void initializeAnalytics();
+      }
     });
     return () => data.subscription.unsubscribe();
   }, [router, queryClient]);
