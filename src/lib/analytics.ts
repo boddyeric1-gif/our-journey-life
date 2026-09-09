@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export type AnalyticsEvent = "app_opened" | "session_started" | "premium_viewed" | "purchase_started";
+export type AnalyticsEvent = "app_opened" | "session_started" | "activity_started" | "first_activity_started" | "premium_viewed" | "purchase_started";
 type Attribution = { source?: string; medium?: string; campaign?: string; content?: string; term?: string };
 const SESSION_KEY = "oj.analytics.session";
 const ATTRIBUTION_KEY = "oj.analytics.attribution";
@@ -47,11 +47,15 @@ export async function initializeAnalytics() {
   } catch { sessionId = crypto.randomUUID(); }
 
   const attribution = readAttribution();
-  if (attribution) {
-    await (supabase as any).rpc("capture_marketing_attribution", { _source: attribution.source ?? "direct", _medium: attribution.medium ?? null, _campaign: attribution.campaign ?? null, _content: attribution.content ?? null, _term: attribution.term ?? null });
-  }
+  if (attribution) await (supabase as any).rpc("capture_marketing_attribution", { _source: attribution.source ?? "direct", _medium: attribution.medium ?? null, _campaign: attribution.campaign ?? null, _content: attribution.content ?? null, _term: attribution.term ?? null });
   const { data: profile } = await supabase.from("profiles").select("current_couple_id").eq("id", user.id).maybeSingle();
   const props = { session_id: sessionId, path: window.location.pathname, referrer: document.referrer || null, ...(attribution ? { attribution } : {}) };
   await supabase.from("app_events").insert({ user_id: user.id, couple_id: profile?.current_couple_id ?? null, event: "app_opened", props });
   if (shouldStartSession) await supabase.from("app_events").insert({ user_id: user.id, couple_id: profile?.current_couple_id ?? null, event: "session_started", props });
+
+  const activity = window.location.pathname.includes("/daily") ? "daily_prompt" : window.location.pathname.includes("/quests") ? "quest" : null;
+  if (activity) {
+    await supabase.from("app_events").insert({ user_id: user.id, couple_id: profile?.current_couple_id ?? null, event: "activity_started", props: { ...props, activity_type: activity } });
+    await supabase.from("app_events").insert({ user_id: user.id, couple_id: profile?.current_couple_id ?? null, event: "first_activity_started", props: { ...props, activity_type: activity } });
+  }
 }
