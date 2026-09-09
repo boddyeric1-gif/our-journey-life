@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export type AnalyticsEvent = "app_opened" | "session_started" | "activity_started" | "first_activity_started" | "premium_viewed" | "purchase_started";
+export type AnalyticsEvent = "app_opened" | "session_started" | "activity_started" | "premium_viewed" | "purchase_started";
 type Attribution = { source?: string; medium?: string; campaign?: string; content?: string; term?: string };
 const SESSION_KEY = "oj.analytics.session";
 const ATTRIBUTION_KEY = "oj.analytics.attribution";
@@ -54,8 +54,5 @@ export async function initializeAnalytics() {
   if (shouldStartSession) await supabase.from("app_events").insert({ user_id: user.id, couple_id: profile?.current_couple_id ?? null, event: "session_started", props });
 
   const activity = window.location.pathname.includes("/daily") ? "daily_prompt" : window.location.pathname.includes("/quests") ? "quest" : null;
-  if (activity) {
-    await supabase.from("app_events").insert({ user_id: user.id, couple_id: profile?.current_couple_id ?? null, event: "activity_started", props: { ...props, activity_type: activity } });
-    await supabase.from("app_events").insert({ user_id: user.id, couple_id: profile?.current_couple_id ?? null, event: "first_activity_started", props: { ...props, activity_type: activity } });
-  }
+  if (activity) await supabase.from("app_events").insert({ user_id: user.id, couple_id: profile?.current_couple_id ?? null, event: "activity_started", props: { ...props, activity_type: activity } });
 }
